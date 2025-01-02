@@ -1,8 +1,7 @@
-package com.tutu.eat;
+package com.tutu.eat.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
 @SpringBootApplication()
 public class EatApplication {

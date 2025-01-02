@@ -16,6 +16,7 @@
     <modules>
         <module>eat_api</module>
         <module>eat_user</module>
+        <module>eat_common</module>
     </modules>
     <packaging>pom</packaging>
     <properties>
@@ -26,6 +27,23 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <!-- Sa-Token 权限认证，在线文档：https://sa-token.cc -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-spring-boot3-starter</artifactId>
+            <version>1.39.0</version>
+        </dependency>
+        <!--Mybatis-plus-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <version>3.5.9</version>
+        </dependency>
+
     </dependencies>
 
     <build>
