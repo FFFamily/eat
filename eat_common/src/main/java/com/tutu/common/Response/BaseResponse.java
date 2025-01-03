@@ -6,14 +6,13 @@ import lombok.Data;
 /**
  * 基础响应
  */
-@Data
-public class BaseResponse {
+public class BaseResponse<T> {
     // 状态码
     private int code;
     // 消息体
     private String msg;
     // 数据
-    private Object data;
+    private T data;
 
     /**
      * 成功返回
