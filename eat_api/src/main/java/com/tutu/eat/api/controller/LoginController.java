@@ -1,8 +1,13 @@
 package com.tutu.eat.api.controller;
 
+import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.User;
+import com.tutu.user.request.LoginRequest;
+import com.tutu.user.response.LoginUserResponse;
 import com.tutu.user.service.UserService;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
@@ -20,31 +25,28 @@ public class LoginController {
     @Resource
     private UserService userService;
     @PostMapping("/login")
-    public BaseResponse<String> login(@RequestBody LoginDTO loginDTO) {
+    public BaseResponse<String> login(@RequestBody LoginRequest loginRequest) {
         // 参数校验
-        if (StrUtil.isBlank(loginDTO.getUsername()) || StrUtil.isBlank(loginDTO.getPassword())) {
-            return BaseResponse.fail("用户名或密码不能为空");
+        if (StrUtil.isBlank(loginRequest.getUsername()) || StrUtil.isBlank(loginRequest.getPassword())) {
+            return BaseResponse.error("用户名或密码不能为空");
         }
         
         // 获取用户信息
-        User user = userService.getByUsername(loginDTO.getUsername());
+        User user = userService.getUserByUsername(loginRequest.getUsername());
         if (user == null) {
             return BaseResponse.error("用户不存在");
         }
-        
         // 验证密码（假设密码已经加密存储）
-        if (!PasswordUtil.verify(loginDTO.getPassword(), user.getPassword())) {
-            return BaseResponse.error("密码错误");
+        String md5 = SaSecureUtil.md5(loginRequest.getPassword());
+        if (!md5.equals(user.getPassword())){
+            return BaseResponse.error("账号密码错误");
         }
-        
         // 检查用户状态
         if (!"1".equals(user.getStatus())) {
             return BaseResponse.error("账号已被禁用");
         }
-        
         // 执行登录
         StpUtil.login(user.getId());
-        
         // 返回token
         return BaseResponse.success(StpUtil.getTokenValue());
     }
@@ -56,16 +58,15 @@ public class LoginController {
     }
     
 
-    @GetMapping("/info")
-    public BaseResponse<UserInfoVO> getUserInfo() {
+    @GetMapping("/getLoginInfo")
+    public BaseResponse<LoginUserResponse> getUserInfo() {
         // 获取当前登录用户ID
         Long userId = StpUtil.getLoginIdAsLong();
         User user = userService.getById(userId);
         if (user == null) {
-            return BaseResponse.fail("用户不存在");
+            return BaseResponse.error("用户不存在");
         }
-        
-        UserInfoVO userInfo = new UserInfoVO();
+        LoginUserResponse userInfo = new LoginUserResponse();
         BeanUtil.copyProperties(user, userInfo);
         return BaseResponse.success(userInfo);
     }

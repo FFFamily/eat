@@ -6,6 +6,7 @@ import lombok.Data;
 /**
  * 基础响应
  */
+@Data
 public class BaseResponse<T> {
     // 状态码
     private int code;
@@ -17,8 +18,8 @@ public class BaseResponse<T> {
     /**
      * 成功返回
      */
-    public static BaseResponse success() {
-        BaseResponse baseResponse = new BaseResponse();
+    public static <T> BaseResponse<T> success() {
+        BaseResponse<T> baseResponse = new BaseResponse<>();
         baseResponse.setCode(ResponseCodeEnum.SUCCESS.getCode());
         baseResponse.setMsg(ResponseCodeEnum.SUCCESS.getMsg());
         return baseResponse;
@@ -26,19 +27,21 @@ public class BaseResponse<T> {
     /**
      * 成功返回
      */
-    public static BaseResponse success(String msg) {
-        BaseResponse baseResponse = new BaseResponse();
+    public static <T> BaseResponse<T> success(T data) {
+        BaseResponse<T> baseResponse = new BaseResponse<>();
         baseResponse.setCode(ResponseCodeEnum.SUCCESS.getCode());
-        baseResponse.setMsg(msg);
+        baseResponse.setMsg(ResponseCodeEnum.SUCCESS.getMsg());
+        baseResponse.setData(data);
         return baseResponse;
     }
     /**
      * 失败返回
      */
-    public static BaseResponse error(String msg) {
-        BaseResponse baseResponse = new BaseResponse();
+    public static <T> BaseResponse<T> error(String msg) {
+        BaseResponse<T> baseResponse = new BaseResponse<>();
         baseResponse.setCode(ResponseCodeEnum.ERROR.getCode());
         baseResponse.setMsg(msg);
         return baseResponse;
     }
+
 }

@@ -17,4 +17,5 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         queryWrapper.eq("username", username);
         return getOne(queryWrapper);
     }
+
 }
