@@ -9,7 +9,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>eat_api</artifactId>
+    <artifactId>eat_food</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -20,18 +20,6 @@
         <dependency>
             <groupId>com.tutu</groupId>
             <artifactId>eat_common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tutu</groupId>
-            <artifactId>eat_user</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.tutu</groupId>
-            <artifactId>eat_food</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

@@ -17,6 +17,7 @@
         <module>eat_api</module>
         <module>eat_user</module>
         <module>eat_common</module>
+        <module>eat_food</module>
     </modules>
     <packaging>pom</packaging>
     <properties>
