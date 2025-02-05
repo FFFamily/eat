@@ -1,5 +1,11 @@
 server:
   port: 8080
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://8.134.152.53:3306/eat?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
+    username: root
+    password: root
 sa-token:
   # token 名称（同时也是 cookie 名称）
   token-name: token

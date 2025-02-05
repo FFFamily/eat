@@ -15,6 +15,15 @@ public class BaseResponse<T> {
     // 数据
     private T data;
 
+    public BaseResponse() {
+
+    }
+    public BaseResponse(int code, String msg, T data) {
+        this.code = code;
+        this.msg = msg;
+        this.data = data;
+    }
+
     /**
      * 成功返回
      */

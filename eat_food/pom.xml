@@ -18,6 +18,10 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.tutu</groupId>
             <artifactId>eat_common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
