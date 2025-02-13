@@ -10,7 +10,7 @@
     "url": "https://github.com/element-plus/element-plus-vite-starter"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --open",
     "build": "vite build",
     "generate": "vite-ssg build",
     "lint": "eslint .",

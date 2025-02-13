@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BaseHeader: typeof import('./components/layouts/BaseHeader.vue')['default']
     BaseSide: typeof import('./components/layouts/BaseSide.vue')['default']
+    Components: typeof import('./components/index.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElConfigProvider: typeof import('element-plus/es')['ElConfigProvider']
     ElDatePicker: typeof import('element-plus/es')['ElDatePicker']
@@ -25,5 +26,6 @@ declare module 'vue' {
     MessageBoxDemo: typeof import('./components/MessageBoxDemo.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Svg_icon: typeof import('./components/svg_icon/index.vue')['default']
   }
 }
