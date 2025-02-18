@@ -15,7 +15,19 @@ export default defineConfig({
       '~/': `${path.resolve(__dirname, 'src')}/`,
     },
   },
-
+  // server:{
+    // proxy:{
+    //   "/api":{
+    //     target: 'http://127.0.0.1:8080',
+    //     changeOrigin: true,
+    //     rewrite: (path) => {
+    //       console.log('Rewriting path:', path);
+    //       path.replace(/^\/api/, '')
+    //     }
+    //   }
+    // }
+  // },
+  // scss 全局变量配置
   css: {
     preprocessorOptions: {
       scss: {

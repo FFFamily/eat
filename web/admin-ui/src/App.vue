@@ -9,6 +9,20 @@
     </div>
   </el-config-provider>
 </template>
+<script setup lang="ts">
+import service from './utils/request'
+import {onMounted} from 'vue'
+
+onMounted(() => {
+  console.log(import.meta.env)
+  service({
+    url: '/admin/auth/test',
+    method: 'get',
+  }).then(res => {
+    console.log(res)
+  })
+})
+</script>
 
 <style>
 #app {
