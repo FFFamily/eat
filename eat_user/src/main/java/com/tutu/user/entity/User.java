@@ -21,7 +21,4 @@ public class User extends BaseEntity {
     private String status;
     // 用户昵称
     private String nickname;
-    // 角色
-    private String roleId;
-
 }

@@ -1,36 +1,26 @@
-<template>
-  <el-config-provider namespace="ep">
-    <BaseHeader />
-    <div class="main-container flex">
-      <BaseSide />
-      <div w="full" py="4">
-        <RouterView />
-      </div>
-    </div>
-  </el-config-provider>
-</template>
+<!--
+ * @Description: Stay hungry，Stay foolish
+ * @Author: Huccct
+ * @Date: 2023-05-17 14:32:02
+ * @LastEditors: Huccct
+ * @LastEditTime: 2023-05-21 14:01:31
+-->
 <script setup lang="ts">
-import service from './utils/request'
-import {onMounted} from 'vue'
+import { ElConfigProvider } from 'element-plus'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import { ref } from 'vue'
 
-onMounted(() => {
-  console.log(import.meta.env)
-  service({
-    url: '/admin/auth/test',
-    method: 'get',
-  }).then(res => {
-    console.log(res)
-  })
-})
+const locale = ref(zhCn)
 </script>
 
-<style>
-#app {
-  text-align: center;
-  color: var(--ep-text-color-primary);
-}
+<template>
+  <el-config-provider :locale="locale">
+    <router-view></router-view>
+  </el-config-provider>
+</template>
 
-.main-container {
-  height: calc(100vh - var(--ep-menu-item-height) - 4px);
+<style scoped lang="scss">
+h1 {
+  color: $color;
 }
 </style>

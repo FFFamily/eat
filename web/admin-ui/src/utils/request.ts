@@ -5,7 +5,7 @@ import { ElMessageBox, ElMessage } from 'element-plus'
 
 
 // 创建 axios
-const service = axios.create({
+const request = axios.create({
     // 请求地址
     baseURL: 'http://127.0.0.1:8080',
     // baseURL: import.meta.env.VITE_APP_BASE_API as String,
@@ -17,7 +17,7 @@ const service = axios.create({
 })
 
 // request interceptor
-service.interceptors.request.use(
+request.interceptors.request.use(
     config => {
         // if (store.getters.token) {
         //     config.headers['X-Token'] = getToken()
@@ -31,13 +31,13 @@ service.interceptors.request.use(
 )
 
 // 响应拦截器
-service.interceptors.response.use(
+request.interceptors.response.use(
     response => {
         const res = response.data
-        console.log(response)
+        const msg = res.msg;
         if (res.code !== 200) {
             ElMessage({
-                message: res.message || 'Error',
+                message: msg || 'Error',
                 type: 'error',
                 duration: 5 * 1000
             })
@@ -70,4 +70,4 @@ service.interceptors.response.use(
     }
 )
 
-export default service;
+export default request;

@@ -5,8 +5,10 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.enums.BaseEnum;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.user.entity.User;
+import com.tutu.user.enums.UserStatusEnum;
 import com.tutu.user.request.LoginRequest;
 import com.tutu.user.response.LoginUserResponse;
 import com.tutu.user.service.UserService;
@@ -37,14 +39,14 @@ public class LoginController {
             throw new ServiceException("用户不存在");
         }
         // 验证密码（假设密码已经加密存储）
-        String md5 = SaSecureUtil.md5(loginRequest.getPassword());
-        if (!md5.equals(user.getPassword())){
-            return BaseResponse.error("账号密码错误");
-        }
-        // 检查用户状态
-//        if (!"1".equals(user.getStatus())) {
-//            return BaseResponse.error("账号已被禁用");
+//        String md5 = SaSecureUtil.md5(loginRequest.getPassword());
+//        if (!md5.equals(user.getPassword())){
+//            return BaseResponse.error("账号密码错误");
 //        }
+        // 检查用户状态
+        if (!UserStatusEnum.USE.getCode().equals(user.getStatus())) {
+            return BaseResponse.error("账号已被禁用");
+        }
         // 登录
         StpUtil.login(user.getId());
         // 返回token

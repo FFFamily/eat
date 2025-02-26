@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 public class FoodType extends BaseEntity {
     // ID
-    @TableId(type = IdType.ASSIGN_UUID)
+    @TableId(type = IdType.ASSIGN_ID)
     private String id;
     // 类型名称
     private String name;
