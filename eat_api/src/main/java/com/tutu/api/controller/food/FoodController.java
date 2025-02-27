@@ -3,6 +3,7 @@ package com.tutu.api.controller.food;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.food.entity.Food;
 import com.tutu.food.entity.FoodType;
+import com.tutu.food.schema.FoodSchema;
 import com.tutu.food.service.FoodService;
 import com.tutu.food.service.FoodTypeService;
 import jakarta.annotation.Resource;
@@ -16,18 +17,11 @@ import java.util.List;
 public class FoodController {
     @Resource
     private FoodService foodService;
-    /**
-     * 添加食物类型
-     */
-    @PostMapping("/addOrUpdate")
-    public BaseResponse<Void> addOrUpdate(@RequestBody Food food) {
-        return BaseResponse.success();
-    }
 
     // 创建食物
     @PostMapping
-    public BaseResponse<String> createFood(@RequestBody Food food) {
-        foodService.save(food);
+    public BaseResponse<String> createFood(@RequestBody FoodSchema food) {
+        foodService.createFood(food);
         return BaseResponse.success();
     }
 

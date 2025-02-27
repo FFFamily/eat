@@ -25,12 +25,11 @@ public class LoginController {
     @Resource
     private UserService userService;
 
-    @GetMapping("/test")
-    public BaseResponse<String> test() {
-        return BaseResponse.success();
-    }
-
-
+    /**
+     * 登录
+     * @param loginRequest 登录请求
+     * @return  登录结果
+     */
     @PostMapping("/login")
     public BaseResponse<String> login(@RequestBody @Valid LoginRequest loginRequest) {
         // 获取用户信息
@@ -39,10 +38,10 @@ public class LoginController {
             throw new ServiceException("用户不存在");
         }
         // 验证密码（假设密码已经加密存储）
-//        String md5 = SaSecureUtil.md5(loginRequest.getPassword());
-//        if (!md5.equals(user.getPassword())){
-//            return BaseResponse.error("账号密码错误");
-//        }
+        String md5 = SaSecureUtil.md5(loginRequest.getPassword());
+        if (!md5.equals(user.getPassword())){
+            return BaseResponse.error("账号密码错误");
+        }
         // 检查用户状态
         if (!UserStatusEnum.USE.getCode().equals(user.getStatus())) {
             return BaseResponse.error("账号已被禁用");
@@ -52,18 +51,23 @@ public class LoginController {
         // 返回token
         return BaseResponse.success(StpUtil.getTokenValue());
     }
-    
+    /**
+     * 登出
+     */
     @PostMapping("/logout")
     public BaseResponse<Void> logout() {
         StpUtil.logout();
         return BaseResponse.success();
     }
     
-
+    /**
+     * 获取当前登录用户信息
+     * @return 当前登录用户信息
+     */
     @GetMapping("/getLoginInfo")
     public BaseResponse<LoginUserResponse> getUserInfo() {
         // 获取当前登录用户ID
-        Long userId = StpUtil.getLoginIdAsLong();
+        String userId = StpUtil.getLoginIdAsString();
         User user = userService.getById(userId);
         if (user == null) {
             return BaseResponse.error("用户不存在");
@@ -72,7 +76,5 @@ public class LoginController {
         BeanUtil.copyProperties(user, userInfo);
         return BaseResponse.success(userInfo);
     }
-
-    
 
 }

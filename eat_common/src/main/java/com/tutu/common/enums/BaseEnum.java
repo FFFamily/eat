@@ -9,7 +9,6 @@ import java.util.Optional;
  */
 public interface BaseEnum<T extends Enum<T> & BaseEnum<T,M>,M> {
     M getCode();
-    String getTitle();
 
     /**
      * 根据code获取枚举
