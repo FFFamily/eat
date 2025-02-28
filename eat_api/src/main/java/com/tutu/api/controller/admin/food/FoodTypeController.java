@@ -1,4 +1,4 @@
-package com.tutu.api.controller.food;
+package com.tutu.api.controller.admin.food;
 
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.food.entity.FoodType;

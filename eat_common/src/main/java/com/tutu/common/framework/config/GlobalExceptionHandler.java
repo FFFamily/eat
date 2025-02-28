@@ -1,4 +1,4 @@
-package com.tutu.api.config;
+package com.tutu.common.framework.config;
 
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.exceptions.ServiceException;

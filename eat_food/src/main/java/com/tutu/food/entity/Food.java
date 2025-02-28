@@ -22,4 +22,6 @@ public class Food extends BaseEntity {
     private Integer status;
     // 描述
     private String desc;
+    // 次数
+    private Long eatCount;
 }

@@ -1,4 +1,4 @@
-package com.tutu.api.config;
+package com.tutu.common.framework.config;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;

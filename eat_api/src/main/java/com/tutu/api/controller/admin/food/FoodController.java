@@ -1,4 +1,4 @@
-package com.tutu.api.controller.food;
+package com.tutu.api.controller.admin.food;
 
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.food.entity.Food;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 @CrossOrigin(originPatterns = "*",allowCredentials="true",allowedHeaders = "*")
 @RestController
-@RequestMapping("/food")
+@RequestMapping("/admin/food")
 public class FoodController {
     @Resource
     private FoodService foodService;
@@ -53,10 +53,7 @@ public class FoodController {
         return BaseResponse.success();
     }
 
-    /**
-     * 随机获取
-     * @return 食物
-     */
+    // 随机获取
     @PostMapping("/random")
     public BaseResponse<List<Food>> getRandomFood(){
         return  BaseResponse.success(foodService.getRandomFood());
