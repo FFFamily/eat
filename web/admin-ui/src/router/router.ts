@@ -16,6 +16,11 @@ export const constantRoutes = [
         name: '404',
     },
     {
+        path: '/food/foodType',
+        component: () => import('~/views/food/foodType/index.vue'),
+        name: 'FoodType',
+    },
+    {
         path: '/:pathMatch(.*)*',
         // 重定向
         redirect: '/404',

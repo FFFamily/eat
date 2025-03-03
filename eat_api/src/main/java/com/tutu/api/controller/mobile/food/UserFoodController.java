@@ -7,5 +7,5 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(originPatterns = "*",allowCredentials="true",allowedHeaders = "*")
 @RestController
 @RequestMapping("/user/food")
-public class FoodController {
+public class UserFoodController {
 }

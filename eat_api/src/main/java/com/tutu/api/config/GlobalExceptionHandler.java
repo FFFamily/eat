@@ -1,4 +1,4 @@
-package com.tutu.common.framework.config;
+package com.tutu.api.config;
 
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.exceptions.ServiceException;
@@ -12,7 +12,8 @@ public class GlobalExceptionHandler {
     // 其他异常
     @ExceptionHandler(value=Exception.class)
     public BaseResponse<Void> handleException(Exception ex){
-        return BaseResponse.error("服务器内部错误: "+ex.getMessage());
+        ex.printStackTrace();
+        return BaseResponse.error("出错啦，请联系管理员:");
     }
 
     // 服务手动抛出异常
