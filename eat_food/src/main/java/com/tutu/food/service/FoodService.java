@@ -2,11 +2,9 @@ package com.tutu.food.service;
 
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tutu.food.entity.Food;
-import com.tutu.food.entity.FoodTypeMapping;
+import com.tutu.food.entity.food.Food;
+import com.tutu.food.entity.food.FoodTypeMapping;
 import com.tutu.food.mapper.FoodMapper;
 import com.tutu.food.mapper.FoodTypeMappingMapper;
 import com.tutu.food.schema.FoodSchema;

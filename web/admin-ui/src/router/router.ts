@@ -16,9 +16,16 @@ export const constantRoutes = [
         name: '404',
     },
     {
-        path: '/food/foodType',
-        component: () => import('~/views/food/foodType/index.vue'),
-        name: 'FoodType',
+        path: '/food',
+        component: () => import('~/views/food/index.vue'),
+        name: 'Food',
+        children: [
+            {
+                path: 'foodType',
+                component: () => import('~/views/food/foodType/index.vue'),
+                name: 'FoodType',
+            }
+        ],
     },
     {
         path: '/:pathMatch(.*)*',

@@ -1,4 +1,4 @@
-package com.tutu.food.entity;
+package com.tutu.food.entity.food;
 
 import lombok.Data;
 

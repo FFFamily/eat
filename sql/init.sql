@@ -15,6 +15,7 @@ CREATE TABLE user (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户表';
 insert into user (id, username, password, status, nickname) VALUE ('1','admin','admin','use','管理员');
+
 DROP TABLE if exists food;
 CREATE TABLE food (
   id VARCHAR(64) NOT NULL COMMENT 'ID',

@@ -1,7 +1,7 @@
 package com.tutu.food.service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tutu.food.entity.FoodType;
+import com.tutu.food.entity.food.FoodType;
 import com.tutu.food.mapper.FoodTypeMapper;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;

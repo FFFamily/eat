@@ -1,7 +1,7 @@
 package com.tutu.api.controller.admin.food;
 
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.food.entity.FoodType;
+import com.tutu.food.entity.food.FoodType;
 import com.tutu.food.service.FoodTypeService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;

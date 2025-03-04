@@ -1,4 +1,4 @@
-package com.tutu.food.entity;
+package com.tutu.food.entity.history;
 
 import com.tutu.common.entity.BaseEntity;
 

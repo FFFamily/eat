@@ -9,8 +9,9 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import {ref,reactive,onMounted} from 'vue'
+<script setup>
+
+import {ref,onMounted} from 'vue'
 import {getFoodTypeList} from '~/api/food/foodTypeApi'
 import FoodTypeDialog from './foodTypeDialog.vue'
 // 列表

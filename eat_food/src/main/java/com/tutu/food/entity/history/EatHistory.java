@@ -1,4 +1,4 @@
-package com.tutu.food.entity;
+package com.tutu.food.entity.history;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

@@ -1,7 +1,6 @@
 package com.tutu.food.schema;
 
-import com.tutu.food.entity.Food;
-import lombok.Data;
+import com.tutu.food.entity.food.Food;
 import lombok.Getter;
 import lombok.Setter;
 

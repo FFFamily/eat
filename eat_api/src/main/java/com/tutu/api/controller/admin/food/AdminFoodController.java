@@ -1,7 +1,7 @@
 package com.tutu.api.controller.admin.food;
 
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.food.entity.Food;
+import com.tutu.food.entity.food.Food;
 import com.tutu.food.schema.FoodSchema;
 import com.tutu.food.service.FoodService;
 import jakarta.annotation.Resource;
@@ -37,7 +37,7 @@ public class AdminFoodController {
     }
 
     // 更新食物
-    @PutMapping("")
+    @PutMapping()
     public BaseResponse<String> updateFood( @RequestBody Food food) {
         foodService.updateById(food);
         return BaseResponse.success();

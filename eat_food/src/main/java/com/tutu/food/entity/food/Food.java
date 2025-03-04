@@ -1,12 +1,10 @@
-package com.tutu.food.entity;
+package com.tutu.food.entity.food;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.tutu.common.entity.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Date;
 
 @Getter
 @Setter
