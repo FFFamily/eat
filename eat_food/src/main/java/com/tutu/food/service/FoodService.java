@@ -39,12 +39,15 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
         BeanUtils.copyProperties(foodSchema, food);
         save(food);
         List<String> foodTypeList = foodSchema.getFoodTypeList();
-        List<FoodTypeMapping> foodTypeMappingList = foodTypeList.stream().map(item -> {
-            FoodTypeMapping foodTypeMapping = new FoodTypeMapping();
-            foodTypeMapping.setFoodId(food.getId());
-            foodTypeMapping.setFoodTypeId(item);
-            return foodTypeMapping;
-        }).toList();
-        foodTypeMappingMapper.insert(foodTypeMappingList);
+        if (foodTypeList != null && !foodTypeList.isEmpty()) {
+            List<FoodTypeMapping> foodTypeMappingList = foodTypeList.stream().map(item -> {
+                FoodTypeMapping foodTypeMapping = new FoodTypeMapping();
+                foodTypeMapping.setFoodId(food.getId());
+                foodTypeMapping.setFoodTypeId(item);
+                return foodTypeMapping;
+            }).toList();
+            foodTypeMappingMapper.insert(foodTypeMappingList);
+        }
+
     }
 }

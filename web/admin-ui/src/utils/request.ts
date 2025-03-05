@@ -7,7 +7,7 @@ import { ElMessageBox, ElMessage } from 'element-plus'
 // 创建 axios
 const request = axios.create({
     // 请求地址
-    baseURL: 'http://127.0.0.1:8080',
+    baseURL: 'http://127.0.0.1:8081',
     // baseURL: import.meta.env.VITE_APP_BASE_API as String,
     // baseURL: "/dev-api",
     // withCredentials: true,

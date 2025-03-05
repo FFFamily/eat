@@ -19,7 +19,7 @@ public class Food extends BaseEntity {
     // 状态
     private Integer status;
     // 描述
-    private String desc;
+    private String description;
     // 次数
     private Long eatCount;
 }

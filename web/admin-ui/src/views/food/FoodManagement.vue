@@ -1,12 +1,12 @@
 <template>
     <div>
-      <h1>食物管理</h1>
+      <!-- <h1>食物管理</h1> -->
       <el-button type="primary" @click="openAddDialog">添加食物</el-button>
       <el-table :data="foods" stripe>
         <el-table-column prop="name" label="食物名称"></el-table-column>
-        <el-table-column prop="price" label="食物价格">
-          <template #default="{ row }">
-            ${{ row.price }}
+        <el-table-column label="操作">
+          <template slot-scope="scope">
+            <el-button type="text" @click="openAddDialog">添加</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -16,16 +16,19 @@
   </template>
   
   <script setup>
-  import { ref } from 'vue';
+  import { ref,onMounted } from 'vue';
   import FoodAddDialog from './foodAddDialog.vue';
-  
+  import {getAllFoods} from '~/api/food'
   // 存储食物列表
-  const foods = ref([
-    { name: '汉堡', price: 10 },
-    { name: '披萨', price: 20 },
-  ]);
+  const foods = ref();
   // 控制对话框显示状态
   const dialogVisible = ref(false);
+  // 从后端获取食物列表
+  onMounted(() => {
+    getAllFoods().then(res=>{
+      foods.value = res.data
+    })
+  });
   // 打开添加食物对话框
   const openAddDialog = () => {
     dialogVisible.value = true;

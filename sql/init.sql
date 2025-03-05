@@ -19,23 +19,24 @@ insert into user (id, username, password, status, nickname) VALUE ('1','admin','
 DROP TABLE if exists food;
 CREATE TABLE food (
   id VARCHAR(64) NOT NULL COMMENT 'ID',
-  name VARCHAR(255) NOT NULL COMMENT '食物名称',
-  food_type_id INT NOT NULL COMMENT '食物类型ID',
-  status INT NOT NULL COMMENT '状态',
-  `desc` TEXT COMMENT '描述',
-  create_time DATETIME NOT NULL COMMENT '创建时间',
-  update_time DATETIME NOT NULL COMMENT '更新时间',
-  create_by VARCHAR(255) NOT NULL COMMENT '创建人',
-  update_by VARCHAR(255) NOT NULL COMMENT '更新人',
+  name VARCHAR(255)  NULL COMMENT '食物名称',
+  food_type_id INT  NULL COMMENT '食物类型ID',
+  status INT  NULL COMMENT '状态',
+  description TEXT COMMENT '描述',
+  eat_count INT  NULL COMMENT '吃的次数',
+  create_time DATETIME  NULL COMMENT '创建时间',
+  update_time DATETIME  NULL COMMENT '更新时间',
+  create_by VARCHAR(255)  NULL COMMENT '创建人',
+  update_by VARCHAR(255)  NULL COMMENT '更新人',
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='食物表';
 
 drop  table if exists food_type;
 CREATE TABLE food_type (
    id VARCHAR(32) not null PRIMARY KEY,  -- ASSIGN_ID 通常是雪花算法 ID，适合 VARCHAR
-   name VARCHAR(100) NOT NULL,  -- 类型名称
-   status INT default 1 NOT NULL,          -- 状态
-       create_time DATETIME NOT NULL COMMENT '创建时间',
+   name VARCHAR(100)  NULL,  -- 类型名称
+   status INT default 1  NULL,          -- 状态
+   create_time DATETIME NOT NULL COMMENT '创建时间',
    update_time DATETIME NOT NULL COMMENT '更新时间',
    create_by VARCHAR(255) NOT NULL COMMENT '创建人',
    update_by VARCHAR(255) NOT NULL COMMENT '更新人'
