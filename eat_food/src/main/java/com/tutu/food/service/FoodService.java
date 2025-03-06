@@ -8,6 +8,7 @@ import com.tutu.food.entity.food.FoodTypeMapping;
 import com.tutu.food.mapper.FoodMapper;
 import com.tutu.food.mapper.FoodTypeMappingMapper;
 import com.tutu.food.schema.FoodSchema;
+import com.tutu.food.schema.RandomFoodGetParamSchema;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
      * 随机获取食物
      * @return 食物
      */
-    public List<Food> getRandomFood() {
+    public List<Food> getRandomFood(RandomFoodGetParamSchema param) {
         // 获取总记录数
         long totalCount = count();
         // 随机数

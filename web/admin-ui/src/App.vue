@@ -6,7 +6,7 @@ const locale = ref(zhCn)
 const activeMenu = ref('MobileHome')
 import { useRouter } from 'vue-router';
 const router = useRouter();
-const handleMenuSelect = (key) => {
+const handleMenuSelect = (key:any) => {
   activeMenu.value = key;
   router.push({ name: key });
 };
@@ -15,10 +15,10 @@ const handleMenuSelect = (key) => {
 <template>
   <el-config-provider :locale="locale">
     <router-view></router-view>
-  
     <el-menu :default-active="activeMenu" class="el-menu-demo" mode="horizontal" @select="handleMenuSelect">
       <el-menu-item index="MobileHome">食</el-menu-item>
       <el-menu-item index="FoodType">Home</el-menu-item>
+      <el-menu-item index="History">日历</el-menu-item>
     </el-menu>
   </el-config-provider>
 </template>

@@ -14,8 +14,7 @@ CREATE TABLE user (
   update_by varchar(32) comment '更新人',
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户表';
-insert into user (id, username, password, status, nickname) VALUE ('1','admin','admin','use','管理员');
-
+insert into user (id, username, password, status, nickname) VALUE ('1','admin','96e79218965eb72c92a549dd5a330112','use','管理员');
 DROP TABLE if exists food;
 CREATE TABLE food (
   id VARCHAR(64) NOT NULL COMMENT 'ID',
@@ -41,3 +40,4 @@ CREATE TABLE food_type (
    create_by VARCHAR(255) NOT NULL COMMENT '创建人',
    update_by VARCHAR(255) NOT NULL COMMENT '更新人'
 );
+
