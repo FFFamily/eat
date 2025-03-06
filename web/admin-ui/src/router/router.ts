@@ -10,11 +10,7 @@ export const constantRoutes = [
         component: () => import('~/views/home/index.vue'),
         name: 'Home',
     },
-    {
-        path: '/404',
-        component: () => import('~/views/404/index.vue'),
-        name: '404',
-    },
+
     {
         path: '/food',
         component: () => import('~/views/food/index.vue'),
@@ -27,6 +23,17 @@ export const constantRoutes = [
             }
         ],
     },
+    {
+        path: '/mobile',
+        component: () => import('~/views/mobile/index.vue'),
+        name: 'MobileHome'
+    },
+    {
+        path: '/404',
+        component: () => import('~/views/404/index.vue'),
+        name: '404',
+    },
+
     {
         path: '/:pathMatch(.*)*',
         // 重定向

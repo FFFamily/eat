@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="添加食物" @close="handleClose">
+  <el-dialog v-model="dialogVisible" title="添加食物" >
     <el-form :model="newFood" @submit.prevent="createFood">
       <el-form-item label="食物名称">
         <el-input v-model="newFood.name" placeholder="请输入食物名称"></el-input>
@@ -33,7 +33,6 @@ let dialogVisible = ref(false);
 watch(() => props.modelValue, (newValue) => {
   dialogVisible.value = newValue;
 });
-
 // 创建食物
 const createFood = () => {
     addFood(newFood.value).then(res => {
@@ -41,13 +40,10 @@ const createFood = () => {
       closeDialog();
     })
 };
-
 // 关闭对话框并通知父组件更新状态
 const closeDialog = () => {
   dialogVisible.value = false;
 };
-
-
 // 处理对话框关闭事件
 const handleClose = () => {
   closeDialog();
