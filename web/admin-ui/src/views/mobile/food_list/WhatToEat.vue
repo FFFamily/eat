@@ -1,9 +1,6 @@
 <template>
+  <Header></Header>
   <div class="what-to-eat-page">
-    <!-- 设置图标按钮 -->
-    <el-button text  size="large" :icon="Operation" class="setting-button" @click="openDrawer">
-      <!-- <el-icon><Operation /></el-icon> -->
-    </el-button>
     <!-- 抽屉 -->
     <el-drawer v-model="drawerVisible" title="设置" direction="ltr" size="80%">
       <!-- 这里可以添加抽屉里的设置内容，比如食物列表的编辑等 -->
@@ -17,12 +14,13 @@
     <!-- 巨大圆形按钮 -->
     <el-button class="big-round-button" @click="openFoodSelection">今天吃什么</el-button>
     <!-- 食物选择对话框 -->
-    <el-dialog v-model="dialogVisible" title="选择食物">
+    <el-dialog v-model="dialogVisible" style="width: 90%;height: 80%;" title="选择食物">
       <ul>
         <li v-for="food in foodList" :key="food" @click="selectFood(food)">{{ food }}</li>
       </ul>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+      <template #footer">
+        <el-button @click="dialogVisible = false">就这个把</el-button>
+        <el-button @click="dialogVisible = false">再选一次</el-button>
       </template>
     </el-dialog>
   </div>
@@ -31,6 +29,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Operation } from '@element-plus/icons-vue'
+import Header from './EatWahtHeader.vue'
 // 控制对话框显示状态
 const dialogVisible = ref(false);
 

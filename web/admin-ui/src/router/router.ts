@@ -23,15 +23,20 @@ export const constantRoutes = [
             }
         ],
     },
-    // {
-    //     path: '/mobile',
-    //     component: () => import('~/views/mobile/index.vue'),
-    //     name: 'MobileHome'
-    // },
+    {
+        path: '/mobile',
+        component: () => import('~/views/mobile/index.vue'),
+        name: 'MobileHome'
+    },
     {
         path: '/history',
         component: () => import('~/views/mobile/history/index.vue'),
         name: 'History',    
+    },
+    {
+        path: '/stats',
+        component: () => import('~/views/mobile/stats/index.vue'),
+        name: 'Stats',    
     },
     {
         path: '/404',
