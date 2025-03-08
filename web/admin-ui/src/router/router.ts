@@ -39,6 +39,11 @@ export const constantRoutes = [
         name: 'Stats',    
     },
     {
+        path: '/user',
+        component: () => import('~/views/mobile/user_home/index.vue'),
+        name: 'UserHome',    
+    },
+    {
         path: '/404',
         component: () => import('~/views/404/index.vue'),
         name: '404',

@@ -1,16 +1,7 @@
 <template>
   <Header></Header>
   <div class="what-to-eat-page">
-    <!-- 抽屉 -->
-    <el-drawer v-model="drawerVisible" title="设置" direction="ltr" size="80%">
-      <!-- 这里可以添加抽屉里的设置内容，比如食物列表的编辑等 -->
-      <template>
-        <p>这里可以放设置相关的内容</p>
-      </template>
-      <template #footer>
-        <el-button @click="drawerVisible = false">关闭</el-button>
-      </template>
-    </el-drawer>
+    
     <!-- 巨大圆形按钮 -->
     <el-button class="big-round-button" @click="openFoodSelection">今天吃什么</el-button>
     <!-- 食物选择对话框 -->
@@ -18,7 +9,7 @@
       <ul>
         <li v-for="food in foodList" :key="food" @click="selectFood(food)">{{ food }}</li>
       </ul>
-      <template #footer">
+      <template #footer>
         <el-button @click="dialogVisible = false">就这个把</el-button>
         <el-button @click="dialogVisible = false">再选一次</el-button>
       </template>
@@ -57,10 +48,7 @@ const selectFood = (food) => {
   dialogVisible.value = false;
 };
 
-// 打开抽屉
-const openDrawer = () => {
-  drawerVisible.value = true;
-};
+
 </script>
 
 <style scoped>
@@ -82,9 +70,5 @@ const openDrawer = () => {
   border: none;
 }
 
-.setting-button {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-}
+
 </style>
