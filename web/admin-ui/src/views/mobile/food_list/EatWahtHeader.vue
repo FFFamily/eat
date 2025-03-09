@@ -1,19 +1,29 @@
 <template>
   <div class="header">
     <!-- <div class="spacer"></div> -->
-    <el-button text size="large" :icon="Operation"  @click="openDrawer"></el-button>
-    <el-button icon="Setting" @click="handleSettingClick"></el-button>
+    <el-button class="button-style" size="large" :icon="MoreFilled" @click="openDrawer"></el-button>
+    <!-- <el-button class="button-style" size="large" :icon="Plus" @click="handleSettingClick"></el-button> -->
+    <el-popover placement="bottom" trigger="click" :width="200">
+      <template #reference>
+        <el-button class="button-style" size="large" :icon="Plus"></el-button>
+      </template>
+      <!-- 修改后的 el-menu 标签，添加自定义类名 -->
+      <el-menu class="small-menu" @select="handleMenuSelect">
+        <el-menu-item index="FoodType">管理食物</el-menu-item>
+        <!-- 这里可以添加其他菜单项 -->
+      </el-menu>
+    </el-popover>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { Setting } from '@element-plus/icons-vue';
-import { Operation } from '@element-plus/icons-vue'
-// 处理设置按钮点击事件
-const handleSettingClick = () => {
-  // 这里可以添加设置按钮点击后的逻辑，比如打开设置弹窗
-  console.log('设置按钮被点击');
+import { MoreFilled, Plus } from '@element-plus/icons-vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
+// 菜单选择方法
+const handleMenuSelect = (key) => {
+  router.push({ name: key });
 };
 
 // 打开抽屉
@@ -24,21 +34,31 @@ const openDrawer = () => {
 
 <style scoped>
 .header {
+  width: 100%;
+  height: 40px;
   display: flex;
-  align-items: center;
-  padding: 10px;
-  background-color: #f0f0f0;
-  /* 添加以下属性实现两端对齐 */
-  justify-content: space-between; 
+  justify-content: space-between;
+}
+
+.el-menu--horizontal {
+  --el-menu-horizontal-height: 20px;
+}
+
+.button-style {
+  border: 0px;
 }
 
 .spacer {
   flex: 1;
 }
 
-/* .setting-button {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-} */
+/* 新增的样式，用于缩小菜单 */
+.small-menu {
+  padding: 0px 0; 
+}
+
+.small-menu .el-menu-item {
+  height: 20px; /* 减小菜单项的高度 */
+  line-height: 24px; /* 确保文字垂直居中 */
+}
 </style>

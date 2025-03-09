@@ -1,7 +1,6 @@
 <template>
   <Header></Header>
   <div class="what-to-eat-page">
-    
     <!-- 巨大圆形按钮 -->
     <el-button class="big-round-button" @click="openFoodSelection">今天吃什么</el-button>
     <!-- 食物选择对话框 -->
@@ -19,7 +18,6 @@
 
 <script setup>
 import { ref } from 'vue';
-import { Operation } from '@element-plus/icons-vue'
 import Header from './EatWahtHeader.vue'
 // 控制对话框显示状态
 const dialogVisible = ref(false);
