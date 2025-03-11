@@ -12,7 +12,7 @@
       </div>
     </div>
     <!-- 用户信息表单 -->
-    <div class="user-info-form">
+    <div class="user-info-form" @click="goToFoodManagement" :class="{ 'active': isClicked }">
       食物管理
     </div>
   </div>
@@ -20,6 +20,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 // 初始化用户信息
 const userInfo = ref({
@@ -64,6 +65,21 @@ const saveAppConfig = () => {
   console.log('保存的程序配置信息：', appConfig.value);
   alert('配置已保存');
 };
+
+// 路由实例
+const router = useRouter();
+
+// 点击状态
+const isClicked = ref(false);
+
+// 跳转到食物管理页面
+const goToFoodManagement = () => {
+  isClicked.value = true;
+  setTimeout(() => {
+    isClicked.value = false;
+    router.push({ name: 'foodManage' });
+  }, 100);
+};
 </script>
 
 <style scoped>
@@ -96,11 +112,14 @@ const saveAppConfig = () => {
 .user-info-form {
   box-shadow: 10px 10px 10px rgba(158, 106, 106, 0.1);
   padding: 10px;
-  border: 0.5px ;
-  border-radius:10px;
-  /* border-radius: 5px; */
+  border: 0.5px solid #ccc;
+  border-radius: 10px;
   margin-bottom: 20px;
-  /* background-color: #ccc; */
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
+.user-info-form.active {
+  background-color: #e0e0e0;
+}
 </style>

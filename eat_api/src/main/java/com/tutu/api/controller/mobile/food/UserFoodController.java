@@ -50,8 +50,8 @@ public class UserFoodController {
         return BaseResponse.success();
     }
     // 随机获取
-    @PostMapping("/random")
-    public BaseResponse<List<Food>> getRandomFood(@RequestBody RandomFoodGetParamSchema param){
+    @PostMapping("/recommendFood")
+    public BaseResponse<List<Food>> getRandomFood(@RequestBody(required = false) RandomFoodGetParamSchema param){
         return  BaseResponse.success(foodService.getRandomFood(param));
     }
 

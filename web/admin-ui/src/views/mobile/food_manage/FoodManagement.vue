@@ -4,11 +4,9 @@
     <el-button type="primary" @click="openAddDialog">添加食物</el-button>
     <el-table :data="foods" stripe>
       <el-table-column prop="name" label="食物名称"></el-table-column>
-      <el-table-column label="操作" fixed="right" min-width="120" width="200">
+      <el-table-column label="操作" fixed="right" min-width="120" width="57">
         <template #default="scope">
-          <el-button link type="primary" size="small" @click.prevent="deleteRow(scope.$index)">
-            Remove
-          </el-button>
+          <el-button  @click.prevent="deleteRow(scope.$index)" type="danger" :icon="Delete" circle />
         </template>
       </el-table-column>
     </el-table>
@@ -20,7 +18,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import FoodAddDialog from './foodAddDialog.vue';
-import { getAllFoods } from '~/api/food'
+import { getAllFoods } from '~/api/food';
+import { Delete } from '@element-plus/icons-vue';
 // 存储食物列表
 const foods = ref();
 // 控制对话框显示状态

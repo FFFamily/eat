@@ -11,22 +11,27 @@ export const constantRoutes = [
         name: 'Home',
     },
 
-    {
-        path: '/food',
-        component: () => import('~/views/food/index.vue'),
-        name: 'Food',
-        children: [
-            {
-                path: 'foodType',
-                component: () => import('~/views/food/foodType/index.vue'),
-                name: 'FoodType',
-            }
-        ],
-    },
+    // {
+    //     path: '/food',
+    //     component: () => import('~/views/food/index.vue'),
+    //     name: 'Food',
+    // },
     {
         path: '/mobile',
-        component: () => import('~/views/mobile/index.vue'),
-        name: 'MobileHome'
+        // component: () => import('~/views/mobile/index.vue'),
+        // name: 'MobileHome',
+        children: [
+            {
+                path: '',
+                component: () => import('~/views/mobile/index.vue'),
+                name: 'MobileHome',
+            },
+            {
+                path: 'foodManage',
+                component: () => import('~/views/mobile/food_manage/index.vue'),
+                name: 'foodManage',
+            }
+        ],
     },
     {
         path: '/history',
