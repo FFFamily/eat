@@ -1,5 +1,6 @@
 <template>
   <div class="login_container">
+  <!-- <div> -->
     <el-row>
       <el-col :span="12" :xs="0"></el-col>
       <el-col :span="12" :xs="24">
@@ -7,34 +8,16 @@
           <h1>Vue-Admin</h1>
           <el-form :model="loginForm" :rules="rules" ref="loginForms">
             <el-form-item prop="username">
-              <el-input
-                  :prefix-icon="User"
-                  v-model="loginForm.username"
-                  clearable
-                  placeholder="Username"
-                  size="large"
-              ></el-input>
+              <el-input :prefix-icon="User" v-model="loginForm.username" clearable placeholder="Username"
+                size="large"></el-input>
             </el-form-item>
             <el-form-item prop="password">
-              <el-input
-                  type="password"
-                  :prefix-icon="Lock"
-                  show-password
-                  v-model="loginForm.password"
-                  size="large"
-                  placeholder="Password"
-                  clearable
-              ></el-input>
+              <el-input type="password" :prefix-icon="Lock" show-password v-model="loginForm.password" size="large"
+                placeholder="Password" clearable></el-input>
             </el-form-item>
           </el-form>
           <el-form-item>
-            <el-button
-                :loading="loading"
-                class="login_btn"
-                type="primary"
-                size="default"
-                @click="login"
-            >
+            <el-button :loading="loading" class="login_btn" type="primary" size="default" @click="login">
               登录
             </el-button>
           </el-form-item>
@@ -45,14 +28,10 @@
 </template>
 <script setup lang="ts">
 import { User, Lock, Warning } from '@element-plus/icons-vue'
-import { Ref, computed, reactive, ref } from 'vue'
+import { Ref, onMounted, reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElNotification } from 'element-plus'
-// import { getTime } from '@/utils/time'
-import useUserStore from '~/store/modules/user'
-// import Identify from '@/components/VerifyCode/index.vue'
-// VerifyCode import
-
+import { ElNotification,ElMessage } from 'element-plus'
+import { useUserStore } from '~/store/modules/user';
 let $router = useRouter()
 let $route = useRoute()
 let loading = ref(false)
@@ -60,30 +39,13 @@ let loading = ref(false)
 const identifyCode = ref('1234')
 const identifyCodes = ref('1234567890abcdefjhijklinopqrsduvwxyz')
 
-// 重置验证码
-const refreshCode = () => {
-  identifyCode.value = ''
-  makeCode(identifyCode, 4)
-}
-
-const makeCode = (o: Ref<any>, l: number) => {
-  for (let i = 0; i < l; i++) {
-    identifyCode.value +=
-        identifyCodes.value[randomNum(0, identifyCodes.value.length)]
-  }
-}
-
-const randomNum = (min: number, max: number) => {
-  return Math.floor(Math.random() * (max - min) + min)
-}
 
 let useStore = useUserStore()
 let loginForms = ref()
 
 const loginForm = reactive({
   username: 'admin',
-  password: '111111',
-  verifyCode: '1234',
+  password: '111111'
 })
 
 const validatorUsername = (rule: any, value: any, callback: any) => {
@@ -104,20 +66,6 @@ const validatorPassword = (rule: any, value: any, callback: any) => {
   }
 }
 
-const validatorVerifyCode = (rule: any, value: any, callback: any) => {
-  console.log(value, identifyCode.value)
-
-  if (value.length === 0) {
-    callback(new Error('请输入验证码'))
-  } else if (value.length < 4) {
-    callback(new Error('请输入正确的验证码'))
-  } else if (identifyCode.value !== value) {
-    callback(new Error('请输入正确的验证码'))
-  } else if (identifyCode.value === value) {
-    callback()
-  }
-}
-
 const login = async () => {
   await loginForms.value.validate()
   loading.value = true
@@ -125,7 +73,6 @@ const login = async () => {
     await useStore.userLogin(loginForm)
     let redirect: string = $route.query.redirect as string
     $router.push({ path: redirect || '/' })
-    $router.push('/')
     loading.value = false
   } catch (error) {
     loading.value = false
@@ -154,6 +101,7 @@ const rules = {
   height: 100vh;
   background-size: cover;
   position: fixed;
+
   //background: url('@/assets/images/background.jpg') no-repeat;
   .login_form {
     position: relative;

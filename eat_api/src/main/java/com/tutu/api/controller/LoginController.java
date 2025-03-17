@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(originPatterns = "*",allowCredentials="true",allowedHeaders = "*")
 @RestController
-@RequestMapping("/admin/auth")
+@RequestMapping("/auth")
 public class LoginController {
     @Resource
     private UserService userService;

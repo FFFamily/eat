@@ -13,6 +13,7 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,6 +27,9 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
     public List<Food> getRandomFood(RandomFoodGetParamSchema param) {
         // 获取总记录数
         long totalCount = count();
+        if(totalCount == 0){
+            return new ArrayList<>();
+        }
         // 随机数
         long randomNum = RandomUtil.randomLong(0, totalCount);
         LambdaQueryWrapper<Food> wrapper = new LambdaQueryWrapper<Food>().last("LIMIT " + randomNum + ", 1");

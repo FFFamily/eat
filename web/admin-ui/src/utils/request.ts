@@ -1,8 +1,6 @@
+import { useUserStore } from '~/store/modules/user';
 import axios from 'axios'
-import { ElMessageBox, ElMessage } from 'element-plus'
-// import store from '@/store'
-// import { getToken } from '@/utils/auth'
-
+import { ElMessageBox, ElMessage } from 'element-plus';
 
 // 创建 axios
 const request = axios.create({
@@ -19,9 +17,10 @@ const request = axios.create({
 // request interceptor
 request.interceptors.request.use(
     config => {
-        // if (store.getters.token) {
-        //     config.headers['X-Token'] = getToken()
-        // }
+        const store = useUserStore();
+        if (store.token) {
+            config.headers['Token'] = store.token
+        }
         return config
     },
     error => {
@@ -43,18 +42,18 @@ request.interceptors.response.use(
             })
 
             // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
-            if (res.code === 5008 || res.code === 5012 || res.code === 5014) {
-                // to re-login
-                ElMessageBox.confirm('You have been logged out, you can cancel to stay on this page, or log in again', 'Confirm logout', {
-                    confirmButtonText: 'Re-Login',
-                    cancelButtonText: 'Cancel',
-                    type: 'warning'
-                }).then(() => {
-                    store.dispatch('user/resetToken').then(() => {
-                        location.reload()
-                    })
-                })
-            }
+            // if (res.code === 5008 || res.code === 5012 || res.code === 5014) {
+            //     // to re-login
+            //     ElMessageBox.confirm('You have been logged out, you can cancel to stay on this page, or log in again', 'Confirm logout', {
+            //         confirmButtonText: 'Re-Login',
+            //         cancelButtonText: 'Cancel',
+            //         type: 'warning'
+            //     }).then(() => {
+            //         store.dispatch('user/resetToken').then(() => {
+            //             location.reload()
+            //         })
+            //     })
+            // }
             return Promise.reject(new Error(res.message || 'Error'))
         } else {
             return res

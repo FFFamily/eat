@@ -13,7 +13,7 @@ public class CorsConfig implements WebMvcConfigurer {
 //                .allowedOrigins("http://localhost:5173")
                 .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE") // 支持方法
-                .allowedHeaders("*")
-                .exposedHeaders("*");
+                .allowedHeaders("*");
+//                .exposedHeaders("*");
     }
 }

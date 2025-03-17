@@ -2,7 +2,8 @@
   <div class="user-home-container">
     <!-- 用户头部信息 -->
     <div class="user-header">
-      <el-avatar class="user-avatar" shape="square" :size="80" src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" />
+      <el-avatar class="user-avatar" shape="square" :size="80"
+        src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" />
       <!-- <img class="user-avatar" src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" alt="用户头像"> -->
       <div class="user-header-info">
         <el-text type="primary" class="mx-1" size="large">{{ userInfo.username }}</el-text>
@@ -15,12 +16,16 @@
     <div class="user-info-form" @click="goToFoodManagement" :class="{ 'active': isClicked }">
       食物管理
     </div>
+    <!-- 退出登录按钮 -->
+    <el-button @click="logout">退出登录</el-button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useUserStore } from '~/store/modules/user';
+import { ElMessage } from 'element-plus';
 
 // 初始化用户信息
 const userInfo = ref({
@@ -79,6 +84,16 @@ const goToFoodManagement = () => {
     isClicked.value = false;
     router.push({ name: 'foodManage' });
   }, 100);
+};
+
+// 退出登录函数
+const logout = async () => {
+  const store = useUserStore();
+  store.userLogout().then(res => {
+    debugger
+    ElMessage({ message: '退出登录成功', type: 'success', })
+    router.push({ name: 'Login' });
+  });
 };
 </script>
 
