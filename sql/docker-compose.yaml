@@ -1,0 +1,34 @@
+version: '2.27'
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: eat
+      MYSQL_USER: root
+      MYSQL_PASSWORD: Tj%&2*hq^aAvUrc!
+    ports:
+      - "3306:3306"
+    volumes:
+#      - /etc/localtime:/etc/localtime:ro
+      - ./data/mysql:/var/lib/mysql/
+      - ./data/mysql/log:/var/log/mysql/
+      - ./data/mysql/conf.d:/etc/mysql/conf.d/
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+      - ./data/redis/conf/redis.conf:/etc/redis/redis.conf
+  nginx:
+    image: nginx:latest
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./data/nginx/conf.d:/etc/nginx/conf.d
+      - ./data/nginx/log:/var/log/nginx
+      - ./data/nginx/html:/html
