@@ -82,7 +82,8 @@ const goToFoodManagement = () => {
   isClicked.value = true;
   setTimeout(() => {
     isClicked.value = false;
-    router.push({ name: 'foodManage' });
+    // 这里假设你要使用路径来跳转，需要确保 'FoodManage' 对应的路径是正确的
+    router.push('/mobile/foodManage');
   }, 100);
 };
 
@@ -92,7 +93,7 @@ const logout = async () => {
   store.userLogout().then(res => {
     debugger
     ElMessage({ message: '退出登录成功', type: 'success', })
-    router.push({ name: 'Login' });
+    router.push('/login');
   });
 };
 </script>

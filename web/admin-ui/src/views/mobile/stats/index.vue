@@ -45,8 +45,10 @@ const processData = () => {
   Object.values(dietData).forEach(meals => {
     meals.forEach(meal => {
       const type = meal.split('：')[0];
-      if (mealCount[type]) {
-        mealCount[type]++;
+      // 修改为使用类型断言确保可以通过 string 类型的键访问对象
+      if (mealCount[type as keyof typeof mealCount]) {
+        // 使用类型断言确保可以通过 string 类型的键访问对象
+        (mealCount as Record<string, number>)[type]++;
       }
     });
   });
@@ -54,7 +56,7 @@ const processData = () => {
   return {
     barData: Object.keys(mealCount).map(type => ({
       name: type,
-      value: mealCount[type]
+      value:mealCount[type as keyof typeof mealCount]
     })),
     pieData: Object.entries(mealCount)
   };

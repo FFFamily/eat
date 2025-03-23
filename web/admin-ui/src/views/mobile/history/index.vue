@@ -1,6 +1,6 @@
 <template>
   <div class="diet-calendar">
-    <el-calendar v-model="currentDate">
+    <!-- <el-calendar v-model="currentDate">
       <template #date-cell="{ data }">
         <div @click="handleDateClick(data.day)">
           <span>{{ data.day.split('-')[2] }}</span>
@@ -9,7 +9,7 @@
           </div>
         </div>
       </template>
-    </el-calendar>
+    </el-calendar> -->
 
     <el-drawer
       v-model="drawerVisible"

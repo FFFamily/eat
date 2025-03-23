@@ -7,9 +7,9 @@ import {
   Setting,
   Avatar
 } from '@element-plus/icons-vue'
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+// import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import { ref } from 'vue'
-const locale = ref(zhCn)
+// const locale = ref(zhCn)
 const activeMenu = ref('MobileHome')
 import { useRouter } from 'vue-router';
 const router = useRouter();
@@ -20,7 +20,7 @@ const handleMenuSelect = (key:any) => {
 </script>
 
 <template>
-  <el-config-provider :locale="locale">
+  <el-config-provider>
     <router-view></router-view>
     <el-menu :default-active="activeMenu" class="el-menu-demo" mode="horizontal" @select="handleMenuSelect">
       <el-menu-item index="MobileHome"><el-icon><location /></el-icon></el-menu-item>

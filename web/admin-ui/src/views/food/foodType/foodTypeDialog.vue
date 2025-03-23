@@ -7,7 +7,7 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="isOpen = false">取消</el-button>
         <el-button type="primary" @click="addFoodTypeFunc">
           提交
         </el-button>
@@ -19,7 +19,7 @@
 import {ref,computed} from 'vue'
 import {addFoodType} from '~/api/food/foodTypeApi'
 const emit = defineEmits(["update:modelValue"])
-const foodType = ref({})
+const foodType = ref({name:''})
 const props = defineProps<{
   dialogVisible: boolean
 }>()

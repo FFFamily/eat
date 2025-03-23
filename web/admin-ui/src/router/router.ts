@@ -29,7 +29,7 @@ export const constantRoutes = [
             {
                 path: 'foodManage',
                 component: () => import('~/views/mobile/food_manage/index.vue'),
-                name: 'foodManage',
+                name: 'FoodManage',
             }
         ],
     },

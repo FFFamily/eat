@@ -15,6 +15,19 @@ export default defineConfig({
       '~/': `${path.resolve(__dirname, 'src')}/`,
     },
   },
+  build:{
+    sourcemap: false,
+    chunkSizeWarningLimit: 1500,//加大限制的大小将500kb改成1500kb或者更大
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return id.toString().split('node_modules/')[1].split('/')[0].toString();
+          }
+        }
+      }
+    }
+  },
   // server:{
     // proxy:{
     //   "/api":{
@@ -31,7 +44,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        javascriptEnabled: true,
+        // javascriptEnabled: true,
         additionalData: `@use "~/styles/variables.scss" as *;`,
         // additionalData: `@use "~/styles/element/index.scss" as *;`,
         // api: 'modern-compiler',
@@ -47,11 +60,8 @@ export default defineConfig({
       extensions: ['.vue', '.md'],
       dts: 'src/typed-router.d.ts',
     }),
-
     Components({
-      // allow auto load markdown components under `./src/components/`
       extensions: ['vue', 'md'],
-      // allow auto import and register components used in markdown
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
       resolvers: [
         ElementPlusResolver({

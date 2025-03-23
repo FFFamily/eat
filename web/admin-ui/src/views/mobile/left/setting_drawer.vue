@@ -11,5 +11,9 @@
     </el-drawer>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { ref } from 'vue'
+// 抽屉可见性
+const drawerVisible = ref(false)
+</script>
 <style scoped></style>

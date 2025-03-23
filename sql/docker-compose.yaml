@@ -1,4 +1,4 @@
-version: '2.27'
+version: '3'
 services:
   db:
     image: mysql:latest
@@ -27,5 +27,6 @@ services:
       - "80:80"
     volumes:
       - ./data/nginx/conf.d:/etc/nginx/conf.d
+      -
       - ./data/nginx/log:/var/log/nginx
       - ./data/nginx/html:/html
