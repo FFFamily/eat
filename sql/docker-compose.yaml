@@ -13,7 +13,7 @@ services:
       - ./data/mysql/log:/var/log/mysql
       - ./data/mysql/conf:/etc/mysql/conf.d
   redis:
-    image: redis:latest
+    image: redis:1.25
     restart: always
     ports:
       - "6379:6379"
@@ -27,6 +27,6 @@ services:
       - "80:80"
     volumes:
       - ./data/nginx/conf.d:/etc/nginx/conf.d
-      -
+      - ./data/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./data/nginx/log:/var/log/nginx
-      - ./data/nginx/html:/html
+      - ./data/nginx/html:/usr/share/nginx/html
