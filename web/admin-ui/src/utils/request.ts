@@ -5,8 +5,8 @@ import { ElMessageBox, ElMessage } from 'element-plus';
 // 创建 axios
 const request = axios.create({
     // 请求地址
-    baseURL: 'http://127.0.0.1:8081',
-    // baseURL: import.meta.env.VITE_APP_BASE_API as String,
+    // baseURL: 'http://127.0.0.1:8081',
+    baseURL: import.meta.env.VITE_APP_BASE_API as string,
     // baseURL: "/dev-api",
     // withCredentials: true,
     // 超时时间
@@ -19,7 +19,7 @@ request.interceptors.request.use(
     config => {
         const store = useUserStore();
         if (store.token) {
-            config.headers['Token'] = store.token
+            config.headers['Token-Key'] = store.token
         }
         return config
     },

@@ -1,5 +1,13 @@
 version: '3'
 services:
+  eat:
+    image: openjdk:21
+    restart: always
+    ports:
+      - "8081:8081"
+    command: "java -jar /opt/data/eat.jar"
+    volumes:
+      - ./data/eat_api-0.0.1-SNAPSHOT-exec.jar:/opt/data/eat.jar
   db:
     image: mysql:latest
     restart: always
@@ -13,7 +21,7 @@ services:
       - ./data/mysql/log:/var/log/mysql
       - ./data/mysql/conf:/etc/mysql/conf.d
   redis:
-    image: redis:1.25
+    image: redis:latest
     restart: always
     ports:
       - "6379:6379"
