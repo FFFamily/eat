@@ -1,5 +1,7 @@
 package com.tutu.api.config;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.hutool.http.HttpStatus;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.exceptions.ServiceException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,7 +15,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value=Exception.class)
     public BaseResponse<Void> handleException(Exception ex){
         ex.printStackTrace();
-        return BaseResponse.error("出错啦，请联系管理员:");
+        return BaseResponse.error("出错啦，请联系管理员");
     }
 
     // 服务手动抛出异常
@@ -22,5 +24,9 @@ public class GlobalExceptionHandler {
         return BaseResponse.error("服务器内部错误: "+ex.getMessage());
     }
 
+    @ExceptionHandler(value= NotLoginException.class)
+    public BaseResponse<Void> handleException(NotLoginException ex){
+        return BaseResponse.error(HttpStatus.HTTP_UNAUTHORIZED,"当前登录已过期，请重新登陆: "+ex.getMessage());
+    }
 
 }

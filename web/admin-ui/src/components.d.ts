@@ -24,6 +24,7 @@ declare module 'vue' {
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElMenuItemGroup: typeof import('element-plus/es')['ElMenuItemGroup']
+    ElPagination: typeof import('element-plus/es')['ElPagination']
     ElPopover: typeof import('element-plus/es')['ElPopover']
     ElRow: typeof import('element-plus/es')['ElRow']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']

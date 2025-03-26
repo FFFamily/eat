@@ -2,6 +2,7 @@ import {createRouter, createWebHashHistory} from 'vue-router'
 import {constantRoutes} from './router'
 import { useUserStore } from '~/store/modules/user';
 import { ElMessage } from 'element-plus'
+import { de } from 'element-plus/es/locales.mjs';
 let router = createRouter({
     //路由模式: hash
     history: createWebHashHistory(),
@@ -14,6 +15,7 @@ let router = createRouter({
 router.beforeEach((to, from, next) => {
     const userStore = useUserStore();
     const token = userStore.token;
+
     if (to.path === '/login') {
         next()
     } else {

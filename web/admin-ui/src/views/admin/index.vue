@@ -11,12 +11,14 @@
             <span>用户模块</span>
           </template>
           <el-menu-item index="1-1">用户管理</el-menu-item>
+          <el-menu-item index="1-2">角色管理</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-col>
     <el-col :span="21">
       <!-- <router-view></router-view> -->
       <UserManagement v-if="selectMenu === '1-1'"></UserManagement>
+      <RoleManage v-if="selectMenu === '1-2'"></RoleManage>
     </el-col>
   </el-row>
 </template>
@@ -29,6 +31,7 @@ import {
   Setting,
 } from '@element-plus/icons-vue'
 import UserManagement from '~/views/admin/manage/UserManagement.vue'
+import RoleManage from '~/views/admin/manage/RoleManage.vue'
 import { ref } from 'vue'
 const selectMenu = ref('')
 const handleSelect = (key: string, keyPath: string[]) => {

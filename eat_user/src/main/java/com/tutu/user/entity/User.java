@@ -1,5 +1,6 @@
 package com.tutu.user.entity;
 
+import com.alibaba.fastjson2.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -16,6 +17,7 @@ public class User extends BaseEntity {
     // 登录账号
     private String username;
     // 账号密码
+    @JSONField(serialize = false)
     private String password;
     // 用户状态
     private String status;

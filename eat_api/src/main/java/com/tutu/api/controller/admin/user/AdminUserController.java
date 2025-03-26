@@ -8,6 +8,8 @@ import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 后台用户管理
  */
@@ -21,14 +23,23 @@ public class AdminUserController {
      * 分页查询所有用户
      * GET /api/users?page=0&size=10
      */
-    @GetMapping
-    public BaseResponse<Page<User>> getAllUsers(
+    @GetMapping("/page")
+    public BaseResponse<Page<User>> getPageUsers(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
         // 使用 PageRequest 进行分页查询
         Page<User> pageParam = new Page<>(page, size);
         Page<User> users = userService.page(pageParam);
         return BaseResponse.success(users);
+    }
+    /**
+     * 查询所有用户
+     * GET /api/users
+     */
+    @GetMapping("/list")
+    public BaseResponse<List<User>> getAllUsers() {
+        List<User> list = userService.list();
+        return BaseResponse.success(list);
     }
 
     /**

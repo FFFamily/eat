@@ -23,7 +23,6 @@ public class BaseResponse<T> {
         this.msg = msg;
         this.data = data;
     }
-
     /**
      * 成功返回
      */
@@ -49,6 +48,15 @@ public class BaseResponse<T> {
     public static <T> BaseResponse<T> error(String msg) {
         BaseResponse<T> baseResponse = new BaseResponse<>();
         baseResponse.setCode(ResponseCodeEnum.ERROR.getCode());
+        baseResponse.setMsg(msg);
+        return baseResponse;
+    }
+    /**
+     * 失败返回
+     */
+    public static <T> BaseResponse<T> error(int code, String msg) {
+        BaseResponse<T> baseResponse = new BaseResponse<>();
+        baseResponse.setCode(code);
         baseResponse.setMsg(msg);
         return baseResponse;
     }

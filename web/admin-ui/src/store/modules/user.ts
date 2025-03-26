@@ -5,9 +5,7 @@ import {LoginData} from "~/api/user/type";
 // 定义常量
 const TOKEN_KEY = 'TOKEN';
 const USER_KEY = 'USER_INFO';
-
-
-
+// 用户相关
 export const useUserStore = defineStore('User', {
   state: () => ({
     // 用户标识

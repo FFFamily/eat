@@ -54,7 +54,7 @@ public class LoginController {
     /**
      * 登出
      */
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     public BaseResponse<Void> logout() {
         StpUtil.logout();
         return BaseResponse.success();
