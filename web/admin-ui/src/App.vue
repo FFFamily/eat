@@ -1,24 +1,3 @@
-<script setup lang="ts">
-import { ElConfigProvider } from 'element-plus'
-import {
-  Document,
-  Menu as IconMenu,
-  Location,
-  Setting,
-  Avatar
-} from '@element-plus/icons-vue'
-// import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
-import { ref } from 'vue'
-// const locale = ref(zhCn)
-const activeMenu = ref('MobileHome')
-import { useRouter } from 'vue-router';
-const router = useRouter();
-const handleMenuSelect = (key:any) => {
-  activeMenu.value = key;
-  router.push({ name: key });
-};
-</script>
-
 <template>
   <el-config-provider>
     <router-view></router-view>
@@ -30,6 +9,27 @@ const handleMenuSelect = (key:any) => {
     </el-menu>
   </el-config-provider>
 </template>
+
+<script setup lang="ts">
+import { ElConfigProvider } from 'element-plus'
+import {
+  Document,
+  Menu as IconMenu,
+  Location,
+  Setting,
+  Avatar
+} from '@element-plus/icons-vue'
+import { ref } from 'vue'
+const activeMenu = ref('MobileHome')
+import { useRouter,useRoute } from 'vue-router';
+const router = useRouter();
+const route = useRoute();
+const handleMenuSelect = (key:any) => {
+  activeMenu.value = key;
+  router.push({ name: key });
+  console.log(route.fullPath);
+};
+</script>
 
 <style scoped lang="scss">
 .el-menu-demo {
@@ -43,8 +43,4 @@ const handleMenuSelect = (key:any) => {
 .el-menu--horizontal {
   --el-menu-horizontal-height: 5%;
 }
-// .el-menu--horizontal .el-menu-item {
-//   // flex: 1; /* 让每个菜单项平均分配宽度 */
-//   // text-align: center; /* 菜单项内容居中 */
-// }
 </style>
