@@ -1,4 +1,4 @@
-package com.tutu.api.controller;
+package com.tutu.api.controller.admin.user;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
@@ -6,12 +6,14 @@ import com.tutu.user.entity.User;
 import com.tutu.user.service.UserService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 后台用户管理
+ */
 @RestController
 @RequestMapping("/admin/user")
-public class UserController {
+public class AdminUserController {
     @Resource
     private UserService userService;
 

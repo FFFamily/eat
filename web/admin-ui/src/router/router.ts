@@ -10,16 +10,18 @@ export const constantRoutes = [
         component: () => import('~/views/home/index.vue'),
         name: 'Home',
     },
-
-    // {
-    //     path: '/food',
-    //     component: () => import('~/views/food/index.vue'),
-    //     name: 'Food',
-    // },
+    {
+        path: '/admin',
+        children: [
+            {
+                path: '',
+                component: () => import('~/views/admin/index.vue'),
+                name: 'AdminHome',
+            }
+        ],
+    },
     {
         path: '/mobile',
-        // component: () => import('~/views/mobile/index.vue'),
-        // name: 'MobileHome',
         children: [
             {
                 path: '',
