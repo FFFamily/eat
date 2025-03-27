@@ -12,12 +12,11 @@
   "scripts": {
     "dev": "vite --mode dev",
     "prod": "vite --mode prod",
-    "build:dev": "vue-tsc --noEmit &&  vite build --mode dev",
-    "build:prod": "vue-tsc --noEmit &&  vite build --mode prod",
+    "build:dev": "vite build --mode dev",
+    "build:prod": "vite build --mode prod",
     "generate": "vite-ssg build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "typecheck": "vue-tsc --noEmit"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

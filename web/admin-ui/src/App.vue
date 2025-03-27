@@ -1,7 +1,7 @@
 <template>
   <el-config-provider>
     <router-view></router-view>
-    <el-menu :default-active="activeMenu" class="el-menu-demo" mode="horizontal" @select="handleMenuSelect">
+    <el-menu v-if="activeMenuShow" :default-active="activeMenu" class="el-menu-demo" mode="horizontal" @select="handleMenuSelect">
       <el-menu-item index="MobileHome"><el-icon><location /></el-icon></el-menu-item>
       <el-menu-item index="History"><el-icon><setting /></el-icon></el-menu-item>
       <el-menu-item index="Stats"><el-icon><Avatar /></el-icon></el-menu-item>
@@ -19,11 +19,17 @@ import {
   Setting,
   Avatar
 } from '@element-plus/icons-vue'
-import { ref } from 'vue'
+import { ref,watch } from 'vue'
 const activeMenu = ref('MobileHome')
 import { useRouter,useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
+const activeMenuShow = ref(true);
+// 管理界面的时候就进行隐藏
+watch(() => route.fullPath, (newName) => {
+  activeMenuShow.value = !newName.startsWith('/admin')
+});
+// 切换菜单
 const handleMenuSelect = (key:any) => {
   activeMenu.value = key;
   router.push({ name: key });

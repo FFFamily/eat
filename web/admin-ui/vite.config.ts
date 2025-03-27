@@ -53,7 +53,6 @@ export default defineConfig({
 
   plugins: [
     Vue(),
-
     // https://github.com/posva/unplugin-vue-router
     VueRouter({
       extensions: ['.vue', '.md'],
