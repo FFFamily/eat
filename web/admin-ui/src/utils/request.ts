@@ -48,7 +48,7 @@ request.interceptors.response.use(
                 }).then(() => {
                     const store = useUserStore();
                     store.userLogout().then(() => {
-                        location.reload()
+                        // location.reload()
                         ElMessage.success('退出成功')
                     }).catch(() => {
                         ElMessage.error('注销失败，请重新登录')

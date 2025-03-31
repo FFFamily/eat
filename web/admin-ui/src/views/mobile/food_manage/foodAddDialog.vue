@@ -1,12 +1,17 @@
 <template>
-  <el-dialog v-model="dialogVisible" title="添加食物" >
+  <el-dialog v-model="dialogVisible" width="90%">
     <el-form :model="newFood" @submit.prevent="createFood">
       <el-form-item label="食物名称">
         <el-input v-model="newFood.name" placeholder="请输入食物名称"></el-input>
       </el-form-item>
+      <el-form-item label="饮食方式">
+        <el-select v-model="newFood.foodDietStyleList" multiple placeholder="请输入饮食方式"  style="width: 240px">
+          <el-option v-for="item in foodDietStyleList" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
+      </el-form-item>
     </el-form>
     <template #footer>
-      <el-button @click="closeDialog">取消</el-button>
+      <el-button @click="handleClose">取消</el-button>
       <el-button type="primary" @click="createFood">添加</el-button>
     </template>
   </el-dialog>
@@ -16,6 +21,7 @@
 import { ref, defineProps, defineEmits, watch } from 'vue';
 import { addFood } from '~/api/food';
 import { ElMessage } from 'element-plus'
+import { getAllFoodDietStyleList } from '~/api/food/foodDietStyleApi';
 // 父组件传递的 modelValue 属性
 const props = defineProps({
   modelValue: {
@@ -29,16 +35,21 @@ const newFood = ref({
 });
 // 对话框显示状态
 let dialogVisible = ref(false);
+// 饮食方式列表
+let foodDietStyleList = ref([]);
 // 监听父组件传递的 modelValue 属性变化
 watch(() => props.modelValue, (newValue) => {
   dialogVisible.value = newValue;
+  getAllFoodDietStyleList().then(res => {
+    foodDietStyleList.value = res.data
+  })
 });
 // 创建食物
 const createFood = () => {
-    addFood(newFood.value).then(res => {
-      ElMessage({message: '创建成功',type: 'success',})
-      closeDialog();
-    })
+  addFood(newFood.value).then(res => {
+    ElMessage({ message: '创建成功', type: 'success', })
+    closeDialog();
+  })
 };
 // 关闭对话框并通知父组件更新状态
 const closeDialog = () => {
@@ -50,6 +61,4 @@ const handleClose = () => {
 };
 </script>
 
-<style scoped>
-/* 可以在这里添加样式 */
-</style>
+<style scoped></style>

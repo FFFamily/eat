@@ -11,8 +11,11 @@
     
     <div class="chart-wrapper">
       <div ref="barChart" class="chart" style="height: 400px;"></div>
+    </div>
+    <div class="chart-wrapper">
       <div ref="pieChart" class="chart" style="height: 400px;"></div>
     </div>
+  
   </div>
 </template>
 

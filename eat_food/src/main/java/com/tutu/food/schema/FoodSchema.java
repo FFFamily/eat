@@ -11,4 +11,5 @@ import java.util.List;
 public class FoodSchema extends Food {
     // 食物类型列表
     private List<String> foodTypeList;
+    private List<String> foodDietStyleList;
 }

@@ -16,6 +16,9 @@
     <div class="user-info-form" @click="goToFoodManagement" :class="{ 'active': isClicked }">
       食物管理
     </div>
+    <div class="user-info-form" @click="goToAdminManagement" :class="{ 'active': isClicked }">
+      后台管理
+    </div>
     <!-- 退出登录按钮 -->
     <el-button @click="logout">退出登录</el-button>
   </div>
@@ -86,6 +89,14 @@ const goToFoodManagement = () => {
     router.push('/mobile/foodManage');
   }, 100);
 };
+const goToAdminManagement = () => {
+  isClicked.value = true;
+  setTimeout(() => {
+    isClicked.value = false;
+    router.push('/admin');
+  }, 100);
+};
+
 
 // 退出登录函数
 const logout = async () => {

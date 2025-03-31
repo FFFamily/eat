@@ -26,5 +26,5 @@ public class BaseEntity {
     private String updateBy;
     // 逻辑删除
     @TableLogic(value = CommonConstant.NO_STR, delval = CommonConstant.YES_STR)
-    private String isDelete;
+    private String isDeleted;
 }

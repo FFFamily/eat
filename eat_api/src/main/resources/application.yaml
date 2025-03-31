@@ -91,3 +91,11 @@ sa-token:
   is-log: true
   is-read-cookie: false
   is-read-body: false
+decorator:
+  datasource:
+    p6spy:
+      # 日志格式
+      log-format: "\ntime:%(executionTime) || sql:%(sql)\n"
+      # 自定义日志类
+      logging: custom
+      custom-appender-class: com.tutu.api.config.StdoutLogger
