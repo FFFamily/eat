@@ -26,7 +26,7 @@ public class FoodTypeController {
     }
     // 删除
     @DeleteMapping("/del/{id}")
-    public BaseResponse<Void> delete(@PathVariable Integer id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         foodTypeService.removeById(id);
         return BaseResponse.success();
     }

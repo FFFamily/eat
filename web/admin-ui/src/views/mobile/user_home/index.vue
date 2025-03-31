@@ -13,10 +13,13 @@
       </div>
     </div>
     <!-- 用户信息表单 -->
-    <div class="user-info-form" @click="goToFoodManagement" :class="{ 'active': isClicked }">
+    <div class="user-info-form" @click="goToPage('/mobile/foodManage')" :class="{ 'active': isClicked }">
       食物管理
     </div>
-    <div class="user-info-form" @click="goToAdminManagement" :class="{ 'active': isClicked }">
+    <div class="user-info-form" @click="goToPage('/mobile/foodTypeManage')" :class="{ 'active': isClicked }">
+      食物类型管理
+    </div>
+    <div class="user-info-form" @click="goToPage('/admin')" :class="{ 'active': isClicked }">
       后台管理
     </div>
     <!-- 退出登录按钮 -->
@@ -80,23 +83,14 @@ const router = useRouter();
 // 点击状态
 const isClicked = ref(false);
 
-// 跳转到食物管理页面
-const goToFoodManagement = () => {
+const goToPage = (path: string) => {
   isClicked.value = true;
   setTimeout(() => {
     isClicked.value = false;
     // 这里假设你要使用路径来跳转，需要确保 'FoodManage' 对应的路径是正确的
-    router.push('/mobile/foodManage');
+    router.push(path);
   }, 100);
-};
-const goToAdminManagement = () => {
-  isClicked.value = true;
-  setTimeout(() => {
-    isClicked.value = false;
-    router.push('/admin');
-  }, 100);
-};
-
+}
 
 // 退出登录函数
 const logout = async () => {

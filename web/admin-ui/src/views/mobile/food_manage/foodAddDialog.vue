@@ -4,6 +4,11 @@
       <el-form-item label="食物名称">
         <el-input v-model="newFood.name" placeholder="请输入食物名称"></el-input>
       </el-form-item>
+      <el-form-item label="食物类型">
+        <el-select v-model="newFood.foodTypeId" placeholder="请输入饮食方式"  style="width: 240px">
+          <el-option v-for="item in foodDietStyleList" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="饮食方式">
         <el-select v-model="newFood.foodDietStyleList" multiple placeholder="请输入饮食方式"  style="width: 240px">
           <el-option v-for="item in foodDietStyleList" :key="item.id" :label="item.name" :value="item.id" />
