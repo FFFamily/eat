@@ -11,6 +11,7 @@ import com.tutu.food.entity.food.DietStyle;
 import com.tutu.food.entity.food.Food;
 import com.tutu.food.entity.food.FoodDietStyle;
 import com.tutu.food.entity.food.FoodTypeMapping;
+import com.tutu.food.entity.history.EatHistory;
 import com.tutu.food.mapper.FoodMapper;
 import com.tutu.food.mapper.FoodTypeMappingMapper;
 import com.tutu.food.schema.FoodSchema;
@@ -31,6 +32,8 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
     private FoodTypeMappingMapper foodTypeMappingMapper;
     @Resource
     private FoodDietStyleService foodDietStyleService;
+    @Resource
+    private EatHistoryService eatHistoryService;
     @Resource
     private FoodMapper foodMapper;
 
@@ -94,5 +97,15 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
             foodDietStyleService.saveBatch(foodDietStyles);
         }
 
+    }
+
+    /**
+     * 吃掉食物
+     * @param food 食物
+     */
+    public void eat(FoodSchema food) {
+        EatHistory eatHistory = new EatHistory();
+        eatHistory.setFoodId(food.getId());
+        eatHistoryService.save(eatHistory);
     }
 }

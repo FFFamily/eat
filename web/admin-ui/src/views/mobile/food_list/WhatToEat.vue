@@ -25,7 +25,7 @@
         <p class="food-info">{{ selectedFood.info }}</p>
       </div>
       <template #footer>
-        <el-button @click="dialogVisible = false">就这个吧</el-button>
+        <el-button @click="selectFood">就这个吧</el-button>
         <el-button @click="dialogVisible = false">再选一次</el-button>
       </template>
     </el-dialog>
@@ -35,10 +35,11 @@
 
 <script setup>
 import { ref } from 'vue';
-import {ElMessage} from 'element-plus';
+import { ElMessage } from 'element-plus';
 import Header from './EatWahtHeader.vue'
-import { getRecommendFood } from '~/api/user/userFoodApi'
+import { getRecommendFood, eatFood } from '~/api/user/userFoodApi'
 import { getAllFoodDietStyleList } from '~/api/food/foodDietStyleApi'
+
 // 控制对话框显示状态
 const dialogVisible = ref(false);
 // 控制选择食物配置
@@ -79,10 +80,12 @@ const start = () => {
 }
 
 // 选择食物
-const selectFood = (food) => {
+const selectFood = () => {
   // 这里可以添加选择食物后的逻辑，比如显示提示信息等
-  console.log(`你选择了: ${food}`);
-  dialogVisible.value = false;
+  eatFood(selectedFood.value).then(res => {
+    dialogVisible.value = false;
+  })
+
 };
 </script>
 

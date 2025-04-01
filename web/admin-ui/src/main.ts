@@ -1,4 +1,5 @@
 import ElementPlus from "element-plus";
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import 'element-plus/dist/index.css'
 import App from './App.vue'
 // import '~/styles/index.scss'
@@ -9,7 +10,7 @@ import router from './router'
 import pinia from  './store'
 // 创建应用
 const app = createApp(App);
-app.use(ElementPlus);
+app.use(ElementPlus,{locale: zhCn});
 // 启用路由
 app.use(router)
 // 使用仓库

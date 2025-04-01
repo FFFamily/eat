@@ -54,6 +54,12 @@ public class UserFoodController {
     public BaseResponse<List<Food>> getRandomFood(@RequestBody(required = false) RandomFoodGetParamSchema param){
         return  BaseResponse.success(foodService.getRandomFood(param));
     }
+    // 吃食物ß
+    @PostMapping("/eat")
+    public BaseResponse<Void> eatFood(@RequestBody FoodSchema food) {
+        foodService.eat(food);
+        return BaseResponse.success();
+    }
 
 
 }

@@ -37,13 +37,13 @@ export const constantRoutes = [
                 path: 'foodTypeManage',
                 component: () => import('~/views/mobile/food_manage/food_type/FoodTypeManagement.vue'),
                 name: 'foodTypeManage',
-            }
+            },
+            {
+                path: '/history',
+                component: () => import('~/views/mobile/history/index.vue'),
+                name: 'History',    
+            },
         ],
-    },
-    {
-        path: '/history',
-        component: () => import('~/views/mobile/history/index.vue'),
-        name: 'History',    
     },
     {
         path: '/stats',

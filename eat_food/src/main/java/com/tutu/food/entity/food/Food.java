@@ -21,5 +21,5 @@ public class Food extends BaseEntity {
     // 描述
     private String description;
     // 次数
-    private Long eatCount;
+//    private Long eatCount;
 }
