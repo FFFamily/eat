@@ -1,4 +1,4 @@
-package com.tutu.api.config;
+package com.tutu.api.config.web;
 
 import com.tutu.api.config.interceptor.AuthInterceptor;
 import jakarta.annotation.Resource;

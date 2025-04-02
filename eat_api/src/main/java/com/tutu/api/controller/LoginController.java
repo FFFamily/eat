@@ -11,6 +11,7 @@ import com.tutu.user.entity.User;
 import com.tutu.user.enums.UserStatusEnum;
 import com.tutu.user.request.LoginRequest;
 import com.tutu.user.response.LoginUserResponse;
+import com.tutu.user.service.RoleService;
 import com.tutu.user.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -24,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 public class LoginController {
     @Resource
     private UserService userService;
+    @Resource
+    private RoleService roleService;
 
     /**
      * 登录
@@ -75,6 +78,26 @@ public class LoginController {
         LoginUserResponse userInfo = new LoginUserResponse();
         BeanUtil.copyProperties(user, userInfo);
         return BaseResponse.success(userInfo);
+    }
+
+    /**
+     * 注册
+     * @param loginRequest
+     * @return
+     */
+    public BaseResponse<Void> register(@RequestBody @Valid LoginRequest loginRequest) {
+        // 检查用户名是否已存在
+        User existingUser = userService.getUserByUsername(loginRequest.getUsername());
+        if (existingUser != null) {
+            return BaseResponse.error("用户名已存在");
+        }
+        User user = new User();
+        BeanUtil.copyProperties(loginRequest, user);
+        user.setStatus(UserStatusEnum.USE.getCode());
+        user.setPassword(SaSecureUtil.md5(loginRequest.getPassword()));
+        userService.save(user);
+        roleService.firstCreateUserBindRole(user.getId());
+        return BaseResponse.success();
     }
 
 }

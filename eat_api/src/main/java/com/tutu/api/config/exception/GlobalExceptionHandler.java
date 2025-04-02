@@ -1,4 +1,4 @@
-package com.tutu.api.config;
+package com.tutu.api.config.exception;
 
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.hutool.http.HttpStatus;
@@ -6,8 +6,6 @@ import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.exceptions.ServiceException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.rmi.ServerException;
 
 @RestControllerAdvice//标记该类为全局异常处理类
 public class GlobalExceptionHandler {

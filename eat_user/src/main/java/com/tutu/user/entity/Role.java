@@ -13,6 +13,14 @@ import lombok.Setter;
 public class Role extends BaseEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
+    // 角色名称
     private String name;
+    // 角色编码
     private String code;
+    // 状态
+    private String status;
+    // 来源
+    private String origin;
+    // 权限
+    private String permission;
 }
