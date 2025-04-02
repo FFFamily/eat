@@ -1,9 +1,11 @@
 package com.tutu.api.controller.admin.food;
 
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.annotation.PermissionRequired;
 import com.tutu.food.entity.food.DietStyle;
 import com.tutu.food.service.DietStyleService;
 import com.tutu.food.service.FoodDietStyleService;
+import jakarta.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,6 +47,7 @@ public class FoodDietStyleController {
 
     // 查询所有食物饮食方式
     @GetMapping("/all")
+    @PermissionRequired("admin.dietStyle.all")
     public BaseResponse<List<DietStyle>> list() {
         return BaseResponse.success(dietStyleService.list());
     }

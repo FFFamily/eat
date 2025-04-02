@@ -1,6 +1,7 @@
 package com.tutu.api.config.exception;
 
 import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
 import cn.hutool.http.HttpStatus;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.exceptions.ServiceException;
@@ -25,6 +26,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value= NotLoginException.class)
     public BaseResponse<Void> handleException(NotLoginException ex){
         return BaseResponse.error(HttpStatus.HTTP_UNAUTHORIZED,"当前登录已过期，请重新登陆: "+ex.getMessage());
+    }
+
+    @ExceptionHandler(value= NotPermissionException.class)
+    public BaseResponse<Void> handleException(NotPermissionException ex){
+        return BaseResponse.error(HttpStatus.HTTP_FORBIDDEN,"无权访问");
     }
 
 }

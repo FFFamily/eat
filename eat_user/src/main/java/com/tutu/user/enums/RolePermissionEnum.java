@@ -6,8 +6,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class RolePermissionEnum implements BaseEnum<UserStatusEnum,String> {
-
+public enum RolePermissionEnum implements BaseEnum<RolePermissionEnum,String> {
+    USER("user.*","用户权限"),
+    ADMIN("admin.*","管理员权限")
     ;
     private final String code;
     private final String title;

@@ -98,4 +98,4 @@ decorator:
       log-format: "\ntime:%(executionTime) || sql:%(sql)\n"
       # 自定义日志类
       logging: custom
-      custom-appender-class: com.tutu.api.config.StdoutLogger
+      custom-appender-class: com.tutu.api.config.mybatis.StdoutLogger
