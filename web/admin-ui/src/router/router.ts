@@ -6,6 +6,11 @@ export const constantRoutes = [
         name: 'Login',// 路由命名
     },
     {
+        path: '/register',
+        component: () => import('~/views/login/register.vue'),
+        name: 'MobileRegister',// 路由命名
+    },
+    {
         path: '/',
         component: () => import('~/views/home/index.vue'),
         name: 'Home',

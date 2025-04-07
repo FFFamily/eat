@@ -82,9 +82,8 @@ public class LoginController {
 
     /**
      * 注册
-     * @param loginRequest
-     * @return
      */
+    @PostMapping("/register")
     public BaseResponse<Void> register(@RequestBody @Valid LoginRequest loginRequest) {
         // 检查用户名是否已存在
         User existingUser = userService.getUserByUsername(loginRequest.getUsername());
