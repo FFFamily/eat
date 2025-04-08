@@ -15,8 +15,10 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         this.strictInsertFill(metaObject, "createTime", Date.class, new Date());
         this.strictInsertFill(metaObject, "updateTime", Date.class, new Date());
-        this.strictInsertFill(metaObject, "createBy", String.class, StpUtil.getLoginIdAsString());
-        this.strictInsertFill(metaObject, "updateBy", String.class, StpUtil.getLoginIdAsString());
+        if (StpUtil.isLogin()) {
+            this.strictInsertFill(metaObject, "createBy", String.class, StpUtil.getLoginIdAsString());
+            this.strictInsertFill(metaObject, "updateBy", String.class, StpUtil.getLoginIdAsString());
+        }
     }
 
     @Override

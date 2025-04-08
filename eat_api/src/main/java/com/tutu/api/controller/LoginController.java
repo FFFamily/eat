@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.enums.BaseEnum;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.common.util.redis.RedisUtil;
 import com.tutu.user.entity.User;
 import com.tutu.user.enums.UserStatusEnum;
 import com.tutu.user.request.LoginRequest;
@@ -15,8 +16,8 @@ import com.tutu.user.service.RoleService;
 import com.tutu.user.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(originPatterns = "*",allowCredentials="true",allowedHeaders = "*")
@@ -27,6 +28,8 @@ public class LoginController {
     private UserService userService;
     @Resource
     private RoleService roleService;
+    @Resource
+    private RedisUtil redisUtil;
 
     /**
      * 登录
@@ -52,7 +55,8 @@ public class LoginController {
         // 登录
         StpUtil.login(user.getId());
         // 返回token
-        return BaseResponse.success(StpUtil.getTokenValue());
+        String tokenValue = StpUtil.getTokenValue();
+        return BaseResponse.success(tokenValue);
     }
     /**
      * 登出
@@ -84,6 +88,7 @@ public class LoginController {
      * 注册
      */
     @PostMapping("/register")
+    @Transactional(rollbackFor = Exception.class)
     public BaseResponse<Void> register(@RequestBody @Valid LoginRequest loginRequest) {
         // 检查用户名是否已存在
         User existingUser = userService.getUserByUsername(loginRequest.getUsername());

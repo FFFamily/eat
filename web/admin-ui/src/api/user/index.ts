@@ -8,6 +8,8 @@ enum API {
 
 // 登录
 export  const login = (data:loginForm) => request.post<any,LoginResponse>(API.LOGIN_URL, data);
+// 注册
+export  const register = (data:loginForm) => request.post<any,LoginResponse>(`/auth/register`, data);
 // 获取用户信息
 export  const getLoginInfo = () => request.get(API.GET_USER);
 // 退出登录

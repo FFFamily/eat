@@ -20,7 +20,7 @@
             <el-button :loading="loading" class="login-btn" type="primary" size="default" @click="login">
               登录
             </el-button>
-            <el-button :loading="loading" class="register-btn" type="primary" size="default" @click="login">
+            <el-button :loading="loading" class="register-btn" type="primary" size="default" @click="goToRegister">
               注册
             </el-button>
           </div >
@@ -80,6 +80,10 @@ const login = async () => {
   } catch (error) {
     loading.value = false
   }
+}
+
+const goToRegister = () => {
+  $router.push({ path: '/register' })
 }
 
 const rules = {

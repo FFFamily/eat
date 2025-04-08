@@ -68,7 +68,8 @@
   import { ref, reactive } from 'vue'
   import { useRouter } from 'vue-router'
   import type { FormInstance } from 'element-plus'
-  
+  import {register} from '~/api/user/index'
+
   const router = useRouter()
   const registerFormRef = ref<FormInstance>()
   
@@ -108,8 +109,9 @@
     try {
       await registerFormRef.value?.validate()
       // 这里添加注册API调用
-      console.log('注册信息:', registerForm)
-      router.push('/login')
+      register(registerForm).then((res:any)=>{
+        router.push('/login')
+      })
     } catch (error) {
       console.log('表单验证失败')
     }

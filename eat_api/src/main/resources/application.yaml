@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8090
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -74,6 +74,11 @@ spring:
         login-password: 123456
         allow: 127.0.0.1           # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
         deny:
+  data:
+    redis:
+      host: 8.134.152.53
+      port: 6379
+      database: 0
 sa-token:
   # token 名称（同时也是 cookie 名称）
   token-name: Token-Key
