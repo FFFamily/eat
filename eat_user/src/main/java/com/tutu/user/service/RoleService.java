@@ -23,8 +23,8 @@ public class RoleService extends ServiceImpl<RoleMapper, Role> {
     public void firstCreateUserBindRole(String userId) {
         UserRole userRole = new UserRole();
         userRole.setUserId(userId);
-        Role role = getOne(new LambdaQueryWrapper<Role>().eq(Role::getCode, BaseUserRoleEnum.USER.getCode()));
-        userRole.setRoleId(role.getId());
+//        Role role = getOne(new LambdaQueryWrapper<Role>().eq(Role::getCode, BaseUserRoleEnum.USER.getCode()));
+//        userRole.setRoleId(role.getId());
         userRoleMapper.insert(userRole);
     }
 }

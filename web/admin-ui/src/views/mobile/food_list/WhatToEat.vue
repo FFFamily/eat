@@ -1,9 +1,9 @@
 <template>
-  <Header></Header>
+  <!-- <Header></Header> -->
   <div class="what-to-eat-page">
     <!-- 巨大圆形按钮 -->
     <el-button v-loading.fullscreen.lock="isMatching" class="big-round-button" @click="openFoodConfig">今天吃什么</el-button>
-
+    <el-button @click="openFoodConfig">配置</el-button>
     <el-dialog v-model="chonseFoodConfigVisible" :show-close="false" style="width: 90%;height: 20%;" title="">
       <el-form :model="foodSelectConfig" label-width="auto" style="max-width: 600px">
         <el-form-item label="食物类型">
@@ -127,13 +127,13 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 90vh;
+  /* height: 90vh; */
   position: relative;
 }
 
 .big-round-button {
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   font-size: 24px;
   background-color: #409EFF;
