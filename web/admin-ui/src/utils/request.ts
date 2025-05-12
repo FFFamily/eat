@@ -35,11 +35,11 @@ request.interceptors.response.use(
         const res = response.data
         const msg = res.msg;
         if (res.code !== 200) {
-            ElMessage({
-                message: msg || 'Error',
-                type: 'error',
-                duration: 5 * 1000
-            })
+            // ElMessage({
+            //     message: msg || 'Error',
+            //     type: 'error',
+            //     duration: 5 * 1000
+            // })
             if (res.code === 401) {
                 ElMessageBox.confirm('您已注销，可以取消以留在此页面，或重新登录', '确认注销', {
                     confirmButtonText: '重新登录',
@@ -61,11 +61,19 @@ request.interceptors.response.use(
         }
     },
     error => {
-        console.log('错误' + error)
-        ElMessage({
-            message: error.message,
-            type: 'error'
-        })
+        console.log(error.status)
+        if (error.status === 400) {
+            ElMessage({
+                message: '请求参数错误',
+                type: 'error'
+            })
+        }else{
+            ElMessage({
+                message: error.message,
+                type: 'error'
+            })
+        }
+        
         return Promise.reject(error)
     }
 )

@@ -42,11 +42,12 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
      * @return 食物
      */
     public List<Food> getRandomFood(RandomFoodGetParamSchema param) {
+        assert param != null;
         // 获取总记录数
         long totalCount;
         LambdaQueryWrapper<FoodDietStyle> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FoodDietStyle::getCreateBy, StpUtil.getLoginIdAsString());
-        if (param == null) {
+        if (param.getFoodDietStyleId() == null) {
             totalCount = foodDietStyleService.count();
         }else {
             totalCount = foodDietStyleService.count(
@@ -59,7 +60,7 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
         // 随机数
         long randomNum = RandomUtil.randomLong(0, totalCount);
         List<FoodDietStyle> foodDietStyleList = foodDietStyleService.list(new LambdaQueryWrapper<FoodDietStyle>()
-                .last("LIMIT " + randomNum + ", 1"));
+                .last("LIMIT " + randomNum + ", "+param.getFoodNum()));
         return list(new LambdaQueryWrapper<Food>().in(Food::getId, foodDietStyleList.stream().map(FoodDietStyle::getFoodId).toList()));
     }
     /**
@@ -105,7 +106,7 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
      */
     public void eat(FoodSchema food) {
         EatHistory eatHistory = new EatHistory();
-        eatHistory.setFoodId(food.getId());
+        eatHistory.setFoodName(food.getName());
         eatHistoryService.save(eatHistory);
     }
 }

@@ -13,8 +13,19 @@
         </el-button-group>
       </template>
       <template #date-cell="{ data }">
+      
+        <!-- 在日期单元格中添加图标 -->
         <div @click="handleDateClick(data.day)">
-          <span>{{ data.day.split('-')[2] }}</span>
+          <span class="day-number">{{ data.day.split('-')[2] }}</span>
+          <!-- 新增的饮食图标 -->
+          <svg v-if="hasDietRecord(data.day)" class="diet-icon" viewBox="0 0 24 24">
+            <!-- 碗的造型 -->
+            <path d="M5 18h14v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1z" fill="#4CAF50"/>
+            <!-- 筷子造型 -->
+            <path d="M8 5L5 18M16 5l3 13" stroke="#795548" stroke-width="1.5"/>
+            <!-- 对勾表示完成 -->
+            <path d="M10 12l2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/>
+          </svg>
           <div v-if="dietData[data.day]" class="diet-info">
             <p 
               v-for="(meal, mealIndex) in dietData[data.day].slice(0, 3)" 
@@ -59,12 +70,15 @@ onMounted(() => {
     const history = res.data;
     Object.keys(history).forEach(key => {
       const date = dayjs(key).format('YYYY-MM-DD');
-      dietData[date] = history[key].map((_: any) => _.foodId);
+      dietData[date] = history[key].map((_: any) => _.foodName);
     })
     console.log(dietData)
   })
 });
-
+// 在setup脚本中添加：
+const hasDietRecord = (date: string) => {
+  return dietData[date] && dietData[date].length > 0;
+};
 
 
 
@@ -136,5 +150,26 @@ const selectDate = (val: CalendarDateType) => {
   flex-direction: column;
   padding: 2px !important;
   height: 100%;
+}
+</style>
+
+<style scoped>
+/* 新增图标样式 */
+.diet-icon {
+  width: 18px;
+  height: 18px;
+  position: absolute;
+  top: 2px;
+  right: 2px;
+}
+
+.day-number {
+  position: relative;
+  z-index: 1;
+}
+
+/* 调整原有饮食信息位置 */
+.diet-info {
+  margin-top: 18px; /* 增加顶部间距 */
 }
 </style>

@@ -20,6 +20,8 @@ import { ref, onMounted } from 'vue';
 import { getAllFoods } from '~/api/food';
 import { Delete } from '@element-plus/icons-vue';
 import FoodManageHeader from './FoodManageHeader.vue';
+import {deleteFood} from "~/api/food";
+import { ElMessage } from 'element-plus';
 // 存储食物列表
 const foods = ref();
 // 从后端获取食物列表
@@ -35,6 +37,15 @@ const handleRefresh = () => {
   })
 }
 
+const deleteRow = (index) => {
+  deleteFood(foods.value[index].id).then(res => {
+    ElMessage({
+      type: 'success',
+      message: '删除成功'
+    })
+    handleRefresh()
+  })
+}
 
 
 </script>

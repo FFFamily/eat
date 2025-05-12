@@ -134,8 +134,8 @@
   
   .register-card {
     width: 100%;
-    max-width: 450px;
-    padding: 40px 30px;
+    // max-width: 450px;
+    // padding: 40px 30px;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   }

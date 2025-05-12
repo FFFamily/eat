@@ -1,5 +1,6 @@
 package com.tutu.food.schema;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
@@ -13,4 +14,7 @@ public class RandomFoodGetParamSchema {
     private String foodType;
     // 食物饮食方式
     private List<String> foodDietStyleId;
+    // 获取数量
+    @NotNull(message = "获取数量不能为空")
+    private Integer foodNum;
 }

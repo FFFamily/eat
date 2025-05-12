@@ -2,8 +2,11 @@
   <!-- <Header></Header> -->
   <div class="what-to-eat-page">
     <!-- 巨大圆形按钮 -->
-    <el-button v-loading.fullscreen.lock="isMatching" class="big-round-button" @click="openFoodConfig">今天吃什么</el-button>
+    <el-button v-loading.fullscreen.lock="isMatching" class="big-round-button" @click="generateFood">今天吃什么</el-button>
     <el-button @click="openFoodConfig">配置</el-button>
+    <div v-for="(food, index) in foodList" :key="index" :style="getTempFoodStyle(index)" class="temp-food">
+      {{ food }}
+    </div>
     <el-dialog v-model="chonseFoodConfigVisible" :show-close="false" style="width: 90%;height: 20%;" title="">
       <el-form :model="foodSelectConfig" label-width="auto" style="max-width: 600px">
         <el-form-item label="食物类型">
@@ -48,12 +51,14 @@ const chonseFoodConfigVisible = ref(false);
 const isMatching = ref(false);
 // 选择的食物
 const selectedFood = ref({});
-// 食物列表改为对象数组
+// 食物列表
 const foodList = ref([]);
 // 饮食方式列表
 const dietStyleList = ref([]);
 // 表单数据
-const foodSelectConfig = ref({});
+const foodSelectConfig = ref({
+  foodNum: 1
+});
 
 // 打开食物选择对话框
 const openFoodConfig = () => {
@@ -62,11 +67,13 @@ const openFoodConfig = () => {
     dietStyleList.value = res.data;
   })
 };
-
-const start = () => {
-  isMatching.value = true;
+// 开始匹配食物
+const generateFood = async () => {
+  // isMatching.value = true;
+  foodSelectConfig.value.foodNum = 10;
+  const tempFoods = ref([]);
   getRecommendFood(foodSelectConfig.value).then(res => {
-    isMatching.value = false;
+    // isMatching.value = false;
     if (res.data.length === 0) {
       ElMessage({
         message: '没有匹配的食物',
@@ -74,9 +81,32 @@ const start = () => {
       });
       return
     }
-    selectedFood.value = res.data[0];
-    dialogVisible.value = true
+    tempFoods.value = res.data;
   })
+  selectedFood.value = tempFoods.value[0];
+  // foodList.value = res.data;
+  for (let i = 0; i < tempFoods.length; i++) {
+    foodList.value.push(tempFoods[i])
+    setTimeout(500); // 等待1秒
+    const foods = document.getElementsByClassName('temp-food');
+    if (foods[i]) {
+      foods[i].classList.add('animate');
+    }
+  }
+  // await new Promise(resolve => setTimeout(resolve, 2000));
+  // dialogVisible.value = true
+}
+
+const getTempFoodStyle = (index) => {
+  const randomX = Math.random() * 100 - 50; // 左右随机偏移（-50px ~ 50px）
+  return {
+    left: `calc(50% + ${randomX}px)`,
+    top: `calc(50% + ${index * 40}px)` // 每个食物垂直间隔40px
+  };
+}
+
+const start = () => {
+  chonseFoodConfigVisible.value = false;
 }
 
 // 选择食物
@@ -93,7 +123,6 @@ const selectFood = () => {
 /* 新增食物内容样式 */
 .food-content {
   text-align: center;
-  /* padding: 1000-px; */
 }
 
 .button-center {
@@ -123,12 +152,11 @@ body {
 }
 
 .what-to-eat-page {
-  background-color: #333;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* height: 90vh; */
-  position: relative;
+  height: 100vh;
 }
 
 .big-round-button {
@@ -139,6 +167,26 @@ body {
   background-color: #409EFF;
   color: white;
   border: none;
+  margin: 20px 20px 20px 30px;
+}
+
+.temp-food {
+  position: absolute;
+  font-size: 20px;
+  color: #333;
+  opacity: 0;
+  /* 初始透明度为0 */
+  transition: all 1s ease;
+  /* 控制动画速度 */
+  pointer-events: none;
+  /* 防止遮挡按钮点击 */
+}
+
+/* 动画类：淡入 + 移动 */
+.temp-food.animate {
+  opacity: 1;
+  transform: translateY(-20px);
+  /* 向上移动20px */
 }
 
 .loading-container {

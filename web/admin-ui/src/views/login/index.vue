@@ -1,39 +1,34 @@
 <template>
   <div class="login_container">
-  <!-- <div> -->
-    <el-row>
-      <el-col :span="12" :xs="0"></el-col>
-      <el-col :span="12" :xs="18">
-        <el-card class="login_form">
-          <h1>今天吃什么</h1>
-          <el-form :model="loginForm" :rules="rules" ref="loginForms">
-            <el-form-item prop="username">
-              <el-input :prefix-icon="User" v-model="loginForm.username" clearable placeholder="Username"
-                size="large"></el-input>
-            </el-form-item>
-            <el-form-item prop="password">
-              <el-input type="password" :prefix-icon="Lock" show-password v-model="loginForm.password" size="large"
-                placeholder="Password" clearable></el-input>
-            </el-form-item>
-          </el-form>
-          <div class="button-container">
-            <el-button :loading="loading" class="login-btn" type="primary" size="default" @click="login">
-              登录
-            </el-button>
-            <el-button :loading="loading" class="register-btn" type="primary" size="default" @click="goToRegister">
-              注册
-            </el-button>
-          </div >
-        </el-card>
-      </el-col>
-    </el-row>
+    <el-card class="card-container">
+      <el-form ref="loginForms" :model="loginForm" :rules="rules">
+        <h1>用户登录</h1>
+        <el-form-item label="用户名" prop="username" label-position="top">
+          <el-input v-model="loginForm.username" placeholder="请输入用户名" prefix-icon="User" size="large" clearable />
+        </el-form-item>
+        <el-form-item label="密码" prop="password" label-position="top">
+          <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" prefix-icon="Lock" show-password
+            size="large" clearable />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" size="large" @click="login" class="login-btn">
+            登录
+          </el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="text" size="large" @click="goToRegister" class="login-btn">
+            注册新用户
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
   </div>
 </template>
 <script setup lang="ts">
 import { User, Lock, Warning } from '@element-plus/icons-vue'
 import { Ref, onMounted, reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElNotification,ElMessage } from 'element-plus'
+import { ElNotification, ElMessage } from 'element-plus'
 import { useUserStore } from '~/store/modules/user';
 let $router = useRouter()
 let $route = useRoute()
@@ -104,87 +99,35 @@ const rules = {
 
 <style lang="scss" scoped>
 .login_container {
-  top: 0;
-  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 100vh;
-  background-color: aliceblue;
-  background-size: cover;
-  position: fixed;
-  .login_form {
-    position: relative;
-    width: 55%;
-    top: 25vh;
-    left: 10vw;
-    padding: 10px;
-    background: transparent;
-    h1 {
-      background: linear-gradient(to right, blue, rgb(35, 60, 70));
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-size: 40px;
-      text-align: center;
-      font-weight: 700;
-      margin-bottom: 40px;
-      margin-top: -10px;
-    }
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
 
-    // .login_btn {
-    //   width: 100%;
-    // }
+.card-container {
+  width: 90%;
+  padding: 10px;
+  h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    background: linear-gradient(45deg, #409EFF, #6c5ce7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 28px;
+    font-weight: 600;
   }
 }
-
-.el-card {
-  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+:deep(.el-input__wrapper) {
+    border-radius: 8px;
 }
 
-:deep(.el-input-group__append, .el-input-group__prepend) {
-  padding: 0;
-}
-.button-container{
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
-  // margin-top: 10px;
-}
-.login-btn, .register-btn {
-  flex: 1; /* 等宽分布 */
-  min-width: 100%;
-  // padding: 12px 20px;
-  // width: 100%;
-  margin-left: 0;
-}
-@media screen and (max-width: 768px) {
-  .login_container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    // padding: 20px;
-    box-sizing: border-box;
 
-    .login_form {
-      width: 100%;
-      max-width: 400px;
-      padding: 40px;
-      background-color: aqua;
-      // background: rgba(255, 255, 255, 0.8);
-      border-radius: 10px;
-      position: static;
-      top: auto;
-      left: auto;
-
-      h1 {
-        font-size: 32px;
-        margin-bottom: 30px;
-        margin-top: 0;
-      }
-      // .button-container {
-      //   flex-direction: column; /* 移动端垂直排列 */
-      //   gap: 10px;
-      // }
-    }
-  }
+.login-btn{
+  flex: 1;
+  border-radius: 8px;
 }
 </style>

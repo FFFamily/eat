@@ -96,7 +96,6 @@ const goToPage = (path: string) => {
 const logout = async () => {
   const store = useUserStore();
   store.userLogout().then(res => {
-    debugger
     ElMessage({ message: '退出登录成功', type: 'success', })
     router.push('/login');
   });

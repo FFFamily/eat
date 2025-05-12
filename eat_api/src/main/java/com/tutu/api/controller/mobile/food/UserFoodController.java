@@ -6,6 +6,7 @@ import com.tutu.food.schema.FoodSchema;
 import com.tutu.food.schema.RandomFoodGetParamSchema;
 import com.tutu.food.service.FoodService;
 import jakarta.annotation.Resource;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,9 +52,10 @@ public class UserFoodController {
     }
     // 随机获取
     @PostMapping("/recommendFood")
-    public BaseResponse<List<Food>> getRandomFood(@RequestBody(required = false) RandomFoodGetParamSchema param){
+    public BaseResponse<List<Food>> getRandomFood(@RequestBody @Validated RandomFoodGetParamSchema param){
         return  BaseResponse.success(foodService.getRandomFood(param));
     }
+
     // 吃食物ß
     @PostMapping("/eat")
     public BaseResponse<Void> eatFood(@RequestBody FoodSchema food) {
