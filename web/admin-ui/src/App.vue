@@ -4,7 +4,7 @@
     <el-menu v-if="activeMenuShow" :default-active="activeMenu" class="el-menu-demo" mode="horizontal" @select="handleMenuSelect">
       <el-menu-item index="MobileHome"><el-icon><location /></el-icon></el-menu-item>
       <el-menu-item index="History"><el-icon><setting /></el-icon></el-menu-item>
-      <el-menu-item index="Stats"><el-icon><Avatar /></el-icon></el-menu-item>
+      <!-- <el-menu-item index="Stats"><el-icon><Avatar /></el-icon></el-menu-item> -->
       <el-menu-item index="UserHome"><el-icon><Avatar /></el-icon></el-menu-item>
     </el-menu>
   </el-config-provider>

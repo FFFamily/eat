@@ -15,7 +15,7 @@ public class Food extends BaseEntity {
     // 食物名称
     private String name;
     // 食物类型ID: （如：水果、主食、蔬菜等）的ID
-    private Integer foodTypeId;
+    private String foodTypeId;
     // 状态
     private Integer status;
     // 描述

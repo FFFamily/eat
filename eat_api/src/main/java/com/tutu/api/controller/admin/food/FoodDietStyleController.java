@@ -47,7 +47,7 @@ public class FoodDietStyleController {
 
     // 查询所有食物饮食方式
     @GetMapping("/all")
-    @PermissionRequired("admin.dietStyle.all")
+//    @PermissionRequired("admin.dietStyle.all")
     public BaseResponse<List<DietStyle>> list() {
         return BaseResponse.success(dietStyleService.list());
     }

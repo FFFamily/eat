@@ -1,5 +1,6 @@
 package com.tutu.api.controller.mobile.food;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.food.entity.food.Food;
 import com.tutu.food.schema.FoodSchema;
@@ -21,7 +22,7 @@ public class UserFoodController {
         return BaseResponse.success();
     }
     // 创建食物
-    @PostMapping
+    @PostMapping("/create")
     public BaseResponse<String> createFood(@RequestBody FoodSchema food) {
         foodService.createFood(food);
         return BaseResponse.success();
@@ -29,7 +30,8 @@ public class UserFoodController {
     // 获取食物列表
     @GetMapping
     public BaseResponse<List<Food>> getAllFoods() {
-        List<Food> list = foodService.list();
+        String userid = StpUtil.getLoginIdAsString();
+        List<Food> list = foodService.getFoodByUserId(userid);
         return BaseResponse.success(list);
     }
     // 根据 ID 获取食物

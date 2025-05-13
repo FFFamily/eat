@@ -35,11 +35,7 @@ request.interceptors.response.use(
         const res = response.data
         const msg = res.msg;
         if (res.code !== 200) {
-            // ElMessage({
-            //     message: msg || 'Error',
-            //     type: 'error',
-            //     duration: 5 * 1000
-            // })
+           
             if (res.code === 401) {
                 ElMessageBox.confirm('您已注销，可以取消以留在此页面，或重新登录', '确认注销', {
                     confirmButtonText: '重新登录',
@@ -53,6 +49,12 @@ request.interceptors.response.use(
                     }).catch(() => {
                         ElMessage.error('注销失败，请重新登录')
                     });
+                })
+            }else if(res.code === 500){
+                ElMessage({
+                    message: msg || 'Error',
+                    type: 'error',
+                    duration: 10 * 1000
                 })
             }
             return Promise.reject(new Error(res.message || 'Error'))

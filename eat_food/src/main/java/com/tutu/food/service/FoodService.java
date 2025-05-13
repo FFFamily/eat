@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tutu.common.exceptions.ServiceException;
 import com.tutu.food.entity.food.DietStyle;
 import com.tutu.food.entity.food.Food;
 import com.tutu.food.entity.food.FoodDietStyle;
@@ -71,7 +72,7 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
     public void createFood(FoodSchema foodSchema) {
         Food oldFood = getOne(new LambdaQueryWrapper<Food>().eq(Food::getName, foodSchema.getName()));
         if (oldFood != null) {
-            throw new RuntimeException("食物名称已存在");
+            throw new ServiceException("食物名称已存在");
         }
         Food food = new Food();
         BeanUtils.copyProperties(foodSchema, food);
@@ -108,5 +109,14 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
         EatHistory eatHistory = new EatHistory();
         eatHistory.setFoodName(food.getName());
         eatHistoryService.save(eatHistory);
+    }
+
+    /**
+     * 根据用户获取食物
+     * @param userid 用户id
+     * @return 食物
+     */
+    public List<Food> getFoodByUserId(String userid) {
+        return list(new LambdaQueryWrapper<Food>().eq(Food::getCreateBy,userid));
     }
 }

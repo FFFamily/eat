@@ -19,9 +19,9 @@
     <div class="user-info-form" @click="goToPage('/mobile/foodTypeManage')" :class="{ 'active': isClicked }">
       食物类型管理
     </div>
-    <div class="user-info-form" @click="goToPage('/admin')" :class="{ 'active': isClicked }">
+    <!-- <div class="user-info-form" @click="goToPage('/admin')" :class="{ 'active': isClicked }">
       后台管理
-    </div>
+    </div> -->
     <!-- 退出登录按钮 -->
     <el-button @click="logout">退出登录</el-button>
   </div>
