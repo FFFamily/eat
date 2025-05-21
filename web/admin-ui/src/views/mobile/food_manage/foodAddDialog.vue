@@ -17,7 +17,8 @@
     </el-form>
     <template #footer>
       <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" @click="createFood">添加</el-button>
+      <el-button v-if="newFood.id === undefined" type="primary" @click="createFood">添加</el-button>
+      <el-button v-else type="primary" @click="handlerUpdateFood">更新</el-button>
     </template>
   </el-dialog>
 </template>
@@ -56,20 +57,19 @@ watch(() => props.modelValue, (newValue) => {
 });
 // 创建食物
 const createFood = () => {
-  if (newFood.value.id !== undefined) {
-    // 编辑食物
-    updateFood(newFood.value).then(res => {
-      ElMessage({ message: '创建成功', type: 'success', })
-    })
-  } else {
     // 新增食物
     addFood(newFood.value).then(res => {
       ElMessage({ message: '创建成功', type: 'success', })
     })
     closeDialog();
-  }
-
 };
+
+const handlerUpdateFood = () => {
+  updateFood(newFood.value).then(res => {
+    ElMessage({ message: '更新成功', type:'success', })
+  })
+  closeDialog();
+}
 // 关闭对话框并通知父组件更新状态
 const closeDialog = () => {
   dialogVisible.value = false;

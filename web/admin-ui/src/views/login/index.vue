@@ -70,7 +70,7 @@ const login = async () => {
   try {
     await useStore.userLogin(loginForm)
     let redirect: string = $route.query.redirect as string
-    $router.push({ path: redirect || '/' })
+    $router.push({ path: redirect || '/mobile' })
     loading.value = false
   } catch (error) {
     loading.value = false

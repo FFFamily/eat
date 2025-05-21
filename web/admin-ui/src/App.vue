@@ -20,6 +20,7 @@ import {
   Avatar
 } from '@element-plus/icons-vue'
 import { ref,watch } from 'vue'
+import './styles/index.scss'
 const activeMenu = ref('MobileHome')
 import { useRouter,useRoute } from 'vue-router';
 const router = useRouter();
@@ -45,6 +46,8 @@ const handleMenuSelect = (key:any) => {
   width: 100%;
   display: flex; /* 使用 flexbox 布局 */
   justify-content: space-around; /* 让菜单项均匀分布 */
+  z-index: 1000; /* 保持层级最高，避免被内容遮挡 */
+  background-color: rgb(255, 255, 255); /* 可选：添加背景色避免内容穿透 */
 }
 .el-menu--horizontal {
   --el-menu-horizontal-height: 5%;
