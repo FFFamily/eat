@@ -42,7 +42,7 @@ public class UserFoodController {
     }
     // 更新食物
     @PutMapping()
-    public BaseResponse<String> updateFood( @RequestBody Food food) {
+    public BaseResponse<String> updateFood(@RequestBody Food food) {
         foodService.updateById(food);
         return BaseResponse.success();
     }

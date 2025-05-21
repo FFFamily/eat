@@ -33,6 +33,7 @@ const handleMenuSelect = (key) => {
 const handleDialogClose = () => {
   dialogVisible.value = false;
   emit('refresh')
+  console.log('Dialog closed');
 };
 // 打开添加食物对话框
 const openAddDialog = () => {
@@ -43,14 +44,18 @@ const openAddDialog = () => {
 <style scoped>
 .header {
   width: 100%;
-  height: 40px;
-  display: flex;
-  justify-content: space-between;
+  height: 60px;
+  position: fixed; /* 修正定位语法 */
+  top: 0; /* 固定在视口顶部 */
+  left: 0; /* 左对齐 */
+  right: 0; /* 右对齐，确保宽度占满 */
+  z-index: 1000; /* 保持层级最高，避免被内容遮挡 */
+  background: white; /* 可选：添加背景色避免内容穿透 */
 }
 
-.add {
+/* .add {
   width: 100%;
-}
+} */
 
 .el-menu--horizontal {
   --el-menu-horizontal-height: 20px;
@@ -58,6 +63,7 @@ const openAddDialog = () => {
 
 .button-style {
   border: 0px;
+  height: 60px;
 }
 
 .spacer {

@@ -2,15 +2,15 @@
   <el-dialog v-model="dialogVisible" width="90%">
     <el-form :model="newFood" @submit.prevent="createFood">
       <el-form-item label="食物名称">
-        <el-input v-model="newFood.name" placeholder="请输入食物名称"></el-input>
+        <el-input style="width: 270px;" v-model="newFood.name" placeholder="请输入食物名称"></el-input>
       </el-form-item>
       <el-form-item label="食物类型">
-        <el-select v-model="newFood.foodTypeId" placeholder="请输入饮食方式"  style="width: 240px">
+        <el-select v-model="newFood.foodTypeId" placeholder="请输入饮食方式" style="width: 270px">
           <el-option v-for="item in foodDietStyleList" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="饮食方式">
-        <el-select v-model="newFood.foodDietStyleList" multiple placeholder="请输入饮食方式"  style="width: 240px">
+        <el-select v-model="newFood.foodDietStyleList" multiple placeholder="请输入饮食方式" style="width: 270px">
           <el-option v-for="item in foodDietStyleList" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
       </el-form-item>
@@ -24,7 +24,7 @@
 
 <script setup>
 import { ref, defineProps, defineEmits, watch } from 'vue';
-import { addFood } from '~/api/food';
+import { addFood, updateFood } from '~/api/food';
 import { ElMessage } from 'element-plus'
 import { getAllFoodDietStyleList } from '~/api/food/foodDietStyleApi';
 // 父组件传递的 modelValue 属性
@@ -32,6 +32,10 @@ const props = defineProps({
   modelValue: {
     type: Boolean,
     default: false
+  },
+  currentFood: {
+    type: Object,
+    default: () => ({})
   }
 });
 const emits = defineEmits(['update:modelValue']);
@@ -45,16 +49,26 @@ let foodDietStyleList = ref([]);
 // 监听父组件传递的 modelValue 属性变化
 watch(() => props.modelValue, (newValue) => {
   dialogVisible.value = newValue;
+  newFood.value = { ...props.currentFood }
   getAllFoodDietStyleList().then(res => {
     foodDietStyleList.value = res.data
   })
 });
 // 创建食物
 const createFood = () => {
-  addFood(newFood.value).then(res => {
-    ElMessage({ message: '创建成功', type: 'success', })
+  if (newFood.value.id !== undefined) {
+    // 编辑食物
+    updateFood(newFood.value).then(res => {
+      ElMessage({ message: '创建成功', type: 'success', })
+    })
+  } else {
+    // 新增食物
+    addFood(newFood.value).then(res => {
+      ElMessage({ message: '创建成功', type: 'success', })
+    })
     closeDialog();
-  })
+  }
+
 };
 // 关闭对话框并通知父组件更新状态
 const closeDialog = () => {
@@ -66,4 +80,8 @@ const handleClose = () => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+::v-deep .el-input__inner {
+  font-size: 16px !important;
+}
+</style>
