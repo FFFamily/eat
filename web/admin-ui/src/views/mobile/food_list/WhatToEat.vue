@@ -76,8 +76,11 @@ const generateFood = async () => {
   foodSelectConfig.value.foodNum = 10;
   const tempFoods = ref([]);
   const foods = document.getElementsByClassName('temp-food')
+  foods[0].style.left = '100px'
+  foods[0].style.top = '200px'
   foods[0].classList.add('animate');
-  console.log(foods)
+  
+  console.log()
   // getRecommendFood(foodSelectConfig.value).then(res => {
   //   // isMatching.value = false;
   //   if (res.data.length === 0) {
@@ -178,8 +181,8 @@ body {
 
 .temp-food {
   position: absolute;
-  left: 100px;
-  top: 100px;
+  /* left: 100px;
+  top: 100px; */
   font-size: 20px;
   color: #333;
   opacity: 0;
