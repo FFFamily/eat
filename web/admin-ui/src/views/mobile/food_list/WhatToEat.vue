@@ -4,12 +4,10 @@
     <!-- 巨大圆形按钮 -->
     <el-button v-loading.fullscreen.lock="isMatching" class="big-round-button" @click="generateFood">今天吃什么</el-button>
     <el-button @click="openFoodConfig">配置</el-button>
-    <div v-for="(food, index) in foodList" :key="index" :style="getTempFoodStyle(index)" class="temp-food">
-      {{ food }}
+
+    <div v-for="(food, index) in foodList" :key="index"  class="temp-food">
+      {{ food.name }}
     </div>
-    <!-- <div :style="getTempFoodStyle(index)" class="temp-food">
-      红烧牛肉
-    </div> -->
     <el-dialog v-model="chonseFoodConfigVisible" :show-close="false" style="width: 90%;height: 20%;" title="">
       <el-form :model="foodSelectConfig" label-width="auto" style="max-width: 600px">
         <el-form-item label="食物类型">
@@ -45,6 +43,7 @@ import { ElMessage } from 'element-plus';
 import Header from './EatWahtHeader.vue'
 import { getRecommendFood, eatFood } from '~/api/user/userFoodApi'
 import { getAllFoodDietStyleList } from '~/api/food/foodDietStyleApi'
+import { de } from 'element-plus/es/locales.mjs';
 
 // 控制对话框显示状态
 const dialogVisible = ref(false);
@@ -75,13 +74,8 @@ const generateFood = async () => {
   // isMatching.value = true;
   foodSelectConfig.value.foodNum = 10;
   const tempFoods = ref([]);
-  // const foods = document.getElementsByClassName('temp-food')
-  // foods[0].style.left = '100px'
-  // foods[0].style.top = '200px'
-  // foods[0].classList.add('animate');
-  
   console.log()
-  getRecommendFood(foodSelectConfig.value).then(res => {
+  await getRecommendFood(foodSelectConfig.value).then(async res => {
     // isMatching.value = false;
     if (res.data.length === 0) {
       ElMessage({
@@ -92,34 +86,37 @@ const generateFood = async () => {
     }
     tempFoods.value = res.data;
     selectedFood.value = tempFoods.value[0];
-    console.log(selectedFood.value)
-    // foodList.value = res.data;
-    
+
     for (let i = 0; i < tempFoods.value.length; i++) {
 
+      foodList.value = []
       foodList.value.push(tempFoods.value[i])
-      setTimeout(500); // 等待1秒
+      await new Promise(resolve => setTimeout(resolve, 2000));
       const foods = document.getElementsByClassName('temp-food');
-      console.log(foods[i])
-      if (foods[i]) {
-        foods[i].style.left = '100px';
-        foods[i].style.top = '100px';
-        foods[i].classList.add('animate');
+    
+      if (foods[0]) {
+        foods[0].classList.add('animate');
+        const randomX = Math.random() * 100 + "%"; // 左右随机位置（0%~100%）
+        const randomY = Math.random() * 100 + "%"; // 上下随机位置（0%~100%）
+        foods[0].style.left = randomX
+        foods[0].style.top = randomY
+        console.log('---')
+        console.log(randomX,randomY)
       }
     }
-    // await new Promise(resolve => setTimeout(resolve, 2000));
-    // setTimeout(resolve, 2000)
-    // dialogVisible.value = true
   })
 }
 
-const getTempFoodStyle = (index) => {
-  const randomX = Math.random() * 100 - 50; // 左右随机偏移（-50px ~ 50px）
-  return {
-    left: `calc(50% + ${randomX}px)`,
-    top: `calc(50% + ${index * 40}px)` // 每个食物垂直间隔40px
-  };
-}
+// 修改后的随机定位函数
+// const getTempFoodStyle = () => {
+//   // 生成 0-100 之间的随机数（百分比），覆盖父容器的可见区域
+//   const randomX = Math.random() * 50; // 左右随机位置（0%~100%）
+//   const randomY = Math.random() * 50; // 上下随机位置（0%~100%）
+//   return {
+//     left: `${randomX}%`,
+//     top: `${randomY}%`
+//   };
+// };
 
 const start = () => {
   chonseFoodConfigVisible.value = false;
@@ -188,8 +185,6 @@ body {
 
 .temp-food {
   position: absolute;
-  /* left: 100px;
-  top: 100px; */
   font-size: 20px;
   color: #333;
   opacity: 0;
@@ -198,6 +193,13 @@ body {
   /* 控制动画速度 */
   pointer-events: none;
   /* 防止遮挡按钮点击 */
+}
+
+.temp-food-back{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color:aquamarine;
 }
 
 /* 动画类：淡入 + 移动 */
