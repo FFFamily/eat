@@ -4,12 +4,12 @@
     <!-- 巨大圆形按钮 -->
     <el-button v-loading.fullscreen.lock="isMatching" class="big-round-button" @click="generateFood">今天吃什么</el-button>
     <el-button @click="openFoodConfig">配置</el-button>
-    <!-- <div v-for="(food, index) in foodList" :key="index" :style="getTempFoodStyle(index)" class="temp-food">
+    <div v-for="(food, index) in foodList" :key="index" :style="getTempFoodStyle(index)" class="temp-food">
       {{ food }}
-    </div> -->
-    <div :style="getTempFoodStyle(index)" class="temp-food">
-      红烧牛肉
     </div>
+    <!-- <div :style="getTempFoodStyle(index)" class="temp-food">
+      红烧牛肉
+    </div> -->
     <el-dialog v-model="chonseFoodConfigVisible" :show-close="false" style="width: 90%;height: 20%;" title="">
       <el-form :model="foodSelectConfig" label-width="auto" style="max-width: 600px">
         <el-form-item label="食物类型">
@@ -75,35 +75,42 @@ const generateFood = async () => {
   // isMatching.value = true;
   foodSelectConfig.value.foodNum = 10;
   const tempFoods = ref([]);
-  const foods = document.getElementsByClassName('temp-food')
-  foods[0].style.left = '100px'
-  foods[0].style.top = '200px'
-  foods[0].classList.add('animate');
+  // const foods = document.getElementsByClassName('temp-food')
+  // foods[0].style.left = '100px'
+  // foods[0].style.top = '200px'
+  // foods[0].classList.add('animate');
   
   console.log()
-  // getRecommendFood(foodSelectConfig.value).then(res => {
-  //   // isMatching.value = false;
-  //   if (res.data.length === 0) {
-  //     ElMessage({
-  //       message: '没有匹配的食物',
-  //       type: 'error',
-  //     });
-  //     return
-  //   }
-  //   tempFoods.value = res.data;
-  // })
-  // selectedFood.value = tempFoods.value[0];
-  // // foodList.value = res.data;
-  // for (let i = 0; i < tempFoods.length; i++) {
-  //   foodList.value.push(tempFoods[i])
-  //   setTimeout(500); // 等待1秒
-  //   const foods = document.getElementsByClassName('temp-food');
-  //   if (foods[i]) {
-  //     foods[i].classList.add('animate');
-  //   }
-  // }
-  // await new Promise(resolve => setTimeout(resolve, 2000));
-  // dialogVisible.value = true
+  getRecommendFood(foodSelectConfig.value).then(res => {
+    // isMatching.value = false;
+    if (res.data.length === 0) {
+      ElMessage({
+        message: '没有匹配的食物',
+        type: 'error',
+      });
+      return
+    }
+    tempFoods.value = res.data;
+    selectedFood.value = tempFoods.value[0];
+    console.log(selectedFood.value)
+    // foodList.value = res.data;
+    
+    for (let i = 0; i < tempFoods.value.length; i++) {
+
+      foodList.value.push(tempFoods.value[i])
+      setTimeout(500); // 等待1秒
+      const foods = document.getElementsByClassName('temp-food');
+      console.log(foods[i])
+      if (foods[i]) {
+        foods[i].style.left = '100px';
+        foods[i].style.top = '100px';
+        foods[i].classList.add('animate');
+      }
+    }
+    // await new Promise(resolve => setTimeout(resolve, 2000));
+    // setTimeout(resolve, 2000)
+    // dialogVisible.value = true
+  })
 }
 
 const getTempFoodStyle = (index) => {
