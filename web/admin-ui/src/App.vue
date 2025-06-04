@@ -1,12 +1,13 @@
 <template>
   <el-config-provider>
     <router-view></router-view>
-    <el-menu v-if="activeMenuShow" :default-active="activeMenu" class="el-menu-demo" mode="horizontal" @select="handleMenuSelect">
+    <HomeMenu/>
+    <!-- <el-menu v-if="activeMenuShow" :default-active="activeMenu" class="el-menu-demo" mode="horizontal" @select="handleMenuSelect">
       <el-menu-item index="MobileHome"><el-icon><location /></el-icon></el-menu-item>
       <el-menu-item index="History"><el-icon><setting /></el-icon></el-menu-item>
-      <!-- <el-menu-item index="Stats"><el-icon><Avatar /></el-icon></el-menu-item> -->
+      <el-menu-item index="Stats"><el-icon><Avatar /></el-icon></el-menu-item>
       <el-menu-item index="UserHome"><el-icon><Avatar /></el-icon></el-menu-item>
-    </el-menu>
+    </el-menu> -->
   </el-config-provider>
 </template>
 
@@ -19,6 +20,7 @@ import {
   Setting,
   Avatar
 } from '@element-plus/icons-vue'
+import HomeMenu from './views/compoment/HomeMenu.vue'
 import { ref,watch } from 'vue'
 import './styles/index.scss'
 const activeMenu = ref('MobileHome')

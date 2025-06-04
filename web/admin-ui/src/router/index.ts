@@ -22,7 +22,6 @@ router.beforeEach((to, from, next) => {
         if (token) {
             next()
         } else {
-            ElMessage.error('登录态失效,请重新登录')
             next('/login')
         }
     }

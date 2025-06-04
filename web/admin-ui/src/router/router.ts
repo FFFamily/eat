@@ -29,8 +29,8 @@ export const constantRoutes = [
         path: '/mobile',
         children: [
             {
-                path: '',
-                component: () => import('~/views/mobile/index.vue'),
+                path: 'eat',
+                component: () => import('~/views/mobile/food_list/index.vue'),
                 name: 'MobileHome',
             },
             {
@@ -48,6 +48,16 @@ export const constantRoutes = [
                 component: () => import('~/views/mobile/history/index.vue'),
                 name: 'History',    
             },
+            {
+                path: 'manage',
+                children: [
+                    {
+                        path: 'foodHistory',
+                        component: () => import('~/views/mobile/food_manage/food_history/index.vue'),
+                        name: 'FoodHistoryManagement',
+                    },
+                ]
+            }
         ],
     },
     {

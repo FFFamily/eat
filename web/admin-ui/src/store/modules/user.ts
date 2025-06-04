@@ -40,6 +40,7 @@ export const useUserStore = defineStore('User', {
         // 清除持久化
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
+        location.reload();
       });
     },
   },

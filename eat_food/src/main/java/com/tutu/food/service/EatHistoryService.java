@@ -22,10 +22,9 @@ public class EatHistoryService extends ServiceImpl<EatHistoryMapper, EatHistory>
      * @return 饮食历史
      */
     public List<EatHistory> getHistoryByRangeTime(String userId,Date start, Date end){
-        List<EatHistory> list = list(new LambdaQueryWrapper<EatHistory>()
+        return list(new LambdaQueryWrapper<EatHistory>()
                 .eq(EatHistory::getCreateBy, userId)
                 .gt(EatHistory::getCreateTime, start)
                 .lt(EatHistory::getCreateTime, end));
-        return list;
     }
 }

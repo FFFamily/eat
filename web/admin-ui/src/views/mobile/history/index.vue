@@ -17,23 +17,16 @@
         <!-- 在日期单元格中添加图标 -->
         <div @click="handleDateClick(data.day)">
           <span class="day-number">{{ data.day.split('-')[2] }}</span>
-          <!-- 新增的饮食图标 -->
-          <svg v-if="hasDietRecord(data.day)" class="diet-icon" viewBox="0 0 24 24">
-            <!-- 碗的造型 -->
-            <path d="M5 18h14v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1z" fill="#4CAF50"/>
-            <!-- 筷子造型 -->
-            <path d="M8 5L5 18M16 5l3 13" stroke="#795548" stroke-width="1.5"/>
-            <!-- 对勾表示完成 -->
-            <path d="M10 12l2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/>
-          </svg>
+          <el-icon><DishDot /></el-icon>
           <div v-if="dietData[data.day]" class="diet-info">
-            <p 
+            <el-icon><DishDot /></el-icon>
+            <!-- <p 
               v-for="(meal, mealIndex) in dietData[data.day].slice(0, 3)" 
               :key="mealIndex"
               :data-extra="dietData[data.day].length > 5 ? dietData[data.day].length - 5 : null"
             >
               {{ meal }}
-            </p>
+            </p> -->
           </div>
         </div>
       </template>
@@ -54,8 +47,11 @@
 <script lang="ts" setup>
 import { ref, Ref, onMounted } from 'vue';
 import dayjs from 'dayjs';
-import { eatHistoryList } from '~/api/user/userFoodHistoryApi'
+import { getEatHistoryList } from '~/api/user/userFoodHistoryApi'
 import type { CalendarDateType, CalendarInstance } from 'element-plus'
+import {
+  DishDot
+} from '@element-plus/icons-vue'
 // 定义 dietData 的类型
 type DietData = Record<string, any[]>;
 // 定义 dietData 并明确类型
@@ -66,7 +62,7 @@ const calendar = ref<CalendarInstance>()
 const drawerVisible = ref(false);
 const selectedDate = ref('');
 onMounted(() => {
-  eatHistoryList().then(res => {
+  getEatHistoryList().then(res => {
     const history = res.data;
     Object.keys(history).forEach(key => {
       const date = dayjs(key).format('YYYY-MM-DD');

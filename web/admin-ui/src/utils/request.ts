@@ -43,13 +43,9 @@ request.interceptors.response.use(
                     type: 'warning'
                 }).then(() => {
                     const store = useUserStore();
-                    store.userLogout().then(() => {
-                        // location.reload()
-                        ElMessage.success('退出成功')
-                    }).catch(() => {
-                        ElMessage.error('注销失败，请重新登录')
-                    });
+                    store.userLogout();
                 })
+
             }else if(res.code === 500){
                 ElMessage({
                     message: msg || 'Error',

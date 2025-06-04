@@ -2,37 +2,47 @@
   <div class="user-home-container">
     <!-- 用户头部信息 -->
     <div class="user-header">
-      <el-avatar class="user-avatar" shape="square" :size="80"
-        src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" />
-      <!-- <img class="user-avatar" src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" alt="用户头像"> -->
+      <el-avatar class="user-avatar" :size="72" src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" />
       <div class="user-header-info">
-        <el-text type="primary" class="mx-1" size="large">{{ userInfo.username }}</el-text>
-        <el-tag type="primary">Tag 1</el-tag>
-        <el-tag type="success">Tag 2</el-tag>
-        <!-- <el-text class="mx-1" size="small">{{ userInfo.introduction }}</el-text> -->
+        <h3 class="username">{{ userInfo.username }}</h3>
+        <div class="user-tags">
+          <el-tag size="small" effect="plain">会员</el-tag>
+        </div>
       </div>
     </div>
-    <!-- 用户信息表单 -->
-    <div class="user-info-form" @click="goToPage('/mobile/foodManage')" :class="{ 'active': isClicked }">
-      食物管理
+
+    <!-- 功能入口列表 - 单列布局 -->
+    <div class="function-list">
+      <div 
+        v-for="(item, index) in menuItems" 
+        :key="index" 
+        class="function-item"
+        @click="goToPage(item.path)"
+      >
+        <el-icon :size="20" class="item-icon">
+          <component :is="item.icon" />
+        </el-icon>
+        <span class="item-label">{{ item.label }}</span>
+      </div>
     </div>
-    <div class="user-info-form" @click="goToPage('/mobile/foodTypeManage')" :class="{ 'active': isClicked }">
-      食物类型管理
-    </div>
-    <!-- <div class="user-info-form" @click="goToPage('/admin')" :class="{ 'active': isClicked }">
-      后台管理
-    </div> -->
-    <!-- 退出登录按钮 -->
-    <el-button @click="logout">退出登录</el-button>
+     <HistoryCalender/>
+    <!-- 退出按钮 -->
+    <el-button class="logout-btn" type="primary" plain @click="logout">退出登录</el-button>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '~/store/modules/user';
 import { ElMessage } from 'element-plus';
-
+import HistoryCalender from './historyCalender.vue';
+import {
+  SetUp,
+  Menu ,
+  Calendar
+} from '@element-plus/icons-vue'
 // 初始化用户信息
 const userInfo = ref({
   username: '默认用户名',
@@ -100,46 +110,69 @@ const logout = async () => {
     router.push('/login');
   });
 };
+
+// 新增菜单项配置
+const menuItems = ref([
+  { label: '食物管理', path: '/mobile/foodManage', icon: 'Menu' },
+  { label: '食物类型', path: '/mobile/foodTypeManage', icon: 'SetUp' },
+  { label: '饮食历史', path: '/mobile/manage/foodHistory', icon: 'Calendar' }
+]);
 </script>
 
 <style scoped>
 .user-home-container {
-  padding: 5px;
+  padding: 16px;
+  background-color: #f8f8f8;
+  min-height: 100vh;
 }
 
 .user-header {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 
-.user-avatar {
-  /* width: 80px;
-  height: 80px;
-  border-radius: 50%; */
-  margin-right: 20px;
-  margin-left: 10px;
+.function-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
-.user-header-info {
-  flex: 1;
-}
-
-.user-score {
-  margin-left: 20px;
-}
-
-.user-info-form {
-  box-shadow: 10px 10px 10px rgba(158, 106, 106, 0.1);
-  padding: 10px;
-  border: 0.5px solid #ccc;
-  border-radius: 10px;
-  margin-bottom: 20px;
+.function-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
-.user-info-form.active {
-  background-color: #e0e0e0;
+.function-item:hover {
+  background: #f5f5f5;
+  transform: translateX(4px);
+}
+
+.item-icon {
+  margin-right: 12px;
+  color: #409eff;
+}
+
+.item-label {
+  font-size: 16px;
+  color: #333;
+}
+
+.logout-btn {
+  width: 100%;
+  margin-top: 24px;
+  height: 48px;
+  font-size: 16px;
 }
 </style>

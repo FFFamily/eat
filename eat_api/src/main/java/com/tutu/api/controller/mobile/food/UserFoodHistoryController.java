@@ -1,7 +1,10 @@
 package com.tutu.api.controller.mobile.food;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.entity.BaseEntity;
 import com.tutu.food.entity.history.EatHistory;
@@ -35,6 +38,7 @@ public class UserFoodHistoryController {
 
     /**
      * 获取所有饮食历史记录
+     * 日历使用
      * @return 饮食历史记录列表
      */
     @GetMapping("/list")
@@ -45,6 +49,17 @@ public class UserFoodHistoryController {
             return BaseResponse.success(collect);
         }
         return BaseResponse.success(Map.of());
+    }
+
+    /**
+     * 根据日期查询
+     */
+    @GetMapping("/list/date")
+    public BaseResponse<List<EatHistory>> getAllFoodHistoriesByDate(String date) {
+        DateTime dateTime = DateUtil.parse(date);
+        DateTime start = DateUtil.beginOfMonth(dateTime);
+        DateTime end = DateUtil.endOfMonth(dateTime);
+        return BaseResponse.success( eatHistoryService.getHistoryByRangeTime(StpUtil.getLoginIdAsString(), start, end));
     }
 
     /**

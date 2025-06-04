@@ -5,7 +5,7 @@
     <el-button v-loading.fullscreen.lock="isMatching" class="big-round-button" @click="generateFood">今天吃什么</el-button>
     <el-button @click="openFoodConfig">配置</el-button>
 
-    <div v-for="(food, index) in foodList" :key="index"  class="temp-food">
+    <div v-for="(food, index) in foodList" :key="index" class="temp-food">
       {{ food.name }}
     </div>
     <el-dialog v-model="chonseFoodConfigVisible" :show-close="false" style="width: 90%;height: 20%;" title="">
@@ -74,7 +74,6 @@ const generateFood = async () => {
   // isMatching.value = true;
   foodSelectConfig.value.foodNum = 10;
   const tempFoods = ref([]);
-  console.log()
   await getRecommendFood(foodSelectConfig.value).then(async res => {
     // isMatching.value = false;
     if (res.data.length === 0) {
@@ -85,25 +84,21 @@ const generateFood = async () => {
       return
     }
     tempFoods.value = res.data;
-    selectedFood.value = tempFoods.value[0];
-
     for (let i = 0; i < tempFoods.value.length; i++) {
-
-      foodList.value = []
       foodList.value.push(tempFoods.value[i])
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       const foods = document.getElementsByClassName('temp-food');
-    
-      if (foods[0]) {
-        foods[0].classList.add('animate');
+      if (foods[i]) {
+        foods[i].classList.add('animate');
         const randomX = Math.random() * 100 + "%"; // 左右随机位置（0%~100%）
         const randomY = Math.random() * 100 + "%"; // 上下随机位置（0%~100%）
-        foods[0].style.left = randomX
-        foods[0].style.top = randomY
-        console.log('---')
-        console.log(randomX,randomY)
+        foods[i].style.left = randomX
+        foods[i].style.top = randomY
       }
     }
+    selectedFood.value = tempFoods.value[0];
+    foodList.value = []
+    dialogVisible.value = true;
   })
 }
 
@@ -128,7 +123,6 @@ const selectFood = () => {
   eatFood(selectedFood.value).then(res => {
     dialogVisible.value = false;
   })
-
 };
 </script>
 
@@ -195,11 +189,11 @@ body {
   /* 防止遮挡按钮点击 */
 }
 
-.temp-food-back{
+.temp-food-back {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-color:aquamarine;
+  background-color: aquamarine;
 }
 
 /* 动画类：淡入 + 移动 */
