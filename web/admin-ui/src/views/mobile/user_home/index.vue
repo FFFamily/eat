@@ -37,7 +37,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '~/store/modules/user';
 import { ElMessage } from 'element-plus';
-import HistoryCalender from './historyCalender.vue';
+import HistoryCalender from './HistoryCalender.vue';
 import {
   SetUp,
   Menu ,
