@@ -56,6 +56,11 @@ export const constantRoutes = [
                         component: () => import('~/views/mobile/food_manage/food_history/index.vue'),
                         name: 'FoodHistoryManagement',
                     },
+                    {
+                        path: 'foodTag',
+                        component: () => import('~/views/mobile/food_manage/food_tag/index.vue'),
+                        name: 'FoodTagManagement',
+                    },
                 ]
             }
         ],

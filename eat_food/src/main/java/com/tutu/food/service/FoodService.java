@@ -36,7 +36,7 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
     @Resource
     private EatHistoryService eatHistoryService;
     @Resource
-    private FoodMapper foodMapper;
+    private FoodTagService foodTagService;
 
     /**
      * 随机获取食物
@@ -66,42 +66,7 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
         );
         return list(new LambdaQueryWrapper<Food>().in(Food::getId, foodDietStyleList.stream().map(FoodDietStyle::getFoodId).toList()));
     }
-    /**
-     * 创建食物
-     * @param foodSchema 食物
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void createFood(FoodSchema foodSchema) {
-        Food oldFood = getOne(new LambdaQueryWrapper<Food>().eq(Food::getName, foodSchema.getName()));
-        if (oldFood != null) {
-            throw new ServiceException("食物名称已存在");
-        }
-        Food food = new Food();
-        BeanUtils.copyProperties(foodSchema, food);
-        save(food);
-        List<String> foodTypeList = foodSchema.getFoodTypeList();
-        // 保存食物类型
-        if (foodTypeList != null && !foodTypeList.isEmpty()) {
-            List<FoodTypeMapping> foodTypeMappingList = foodTypeList.stream().map(item -> {
-                FoodTypeMapping foodTypeMapping = new FoodTypeMapping();
-                foodTypeMapping.setFoodId(food.getId());
-                foodTypeMapping.setFoodTypeId(item);
-                return foodTypeMapping;
-            }).toList();
-            foodTypeMappingMapper.insert(foodTypeMappingList);
-        }
-        List<String> foodDietStyleList = foodSchema.getFoodDietStyleList();
-        if (CollUtil.isNotEmpty(foodDietStyleList)) {
-            List<FoodDietStyle> foodDietStyles = foodDietStyleList.stream().map(item -> {
-                FoodDietStyle foodDietStyle = new FoodDietStyle();
-                foodDietStyle.setFoodId(food.getId());
-                foodDietStyle.setDietStyleId(item);
-                return foodDietStyle;
-            }).toList();
-            foodDietStyleService.saveBatch(foodDietStyles);
-        }
 
-    }
 
     /**
      * 吃掉食物

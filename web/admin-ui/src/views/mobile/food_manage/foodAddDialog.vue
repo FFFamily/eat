@@ -14,6 +14,11 @@
           <el-option v-for="item in foodDietStyleList" :key="item.id" :label="item.name" :value="item.id" />
         </el-select>
       </el-form-item>
+      <el-form-item label="食物标签">
+        <el-select v-model="newFood.foodTagList" multiple placeholder="请输入饮食方式" style="width: 270px">
+          <el-option v-for="item in foodTagList" :key="item.id" :label="item.name" :value="item.id" />
+        </el-select>
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="handleClose">取消</el-button>
@@ -28,6 +33,7 @@ import { ref, defineProps, defineEmits, watch } from 'vue';
 import { addFood, updateFood } from '~/api/food';
 import { ElMessage } from 'element-plus'
 import { getAllFoodDietStyleList } from '~/api/food/foodDietStyleApi';
+import { getAllFoodTagList } from '~/api/food/foodTagApi';
 // 父组件传递的 modelValue 属性
 const props = defineProps({
   modelValue: {
@@ -47,12 +53,17 @@ const newFood = ref({
 let dialogVisible = ref(false);
 // 饮食方式列表
 let foodDietStyleList = ref([]);
+// 食物标签列表
+let foodTagList = ref([]);
 // 监听父组件传递的 modelValue 属性变化
 watch(() => props.modelValue, (newValue) => {
   dialogVisible.value = newValue;
   newFood.value = { ...props.currentFood }
   getAllFoodDietStyleList().then(res => {
     foodDietStyleList.value = res.data
+  })
+  getAllFoodTagList().then(res => {
+    foodTagList.value = res.data
   })
 });
 // 创建食物

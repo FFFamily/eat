@@ -5,6 +5,7 @@ import com.tutu.common.Response.BaseResponse;
 import com.tutu.food.entity.food.Food;
 import com.tutu.food.schema.FoodSchema;
 import com.tutu.food.schema.RandomFoodGetParamSchema;
+import com.tutu.food.service.BusinessFoodService;
 import com.tutu.food.service.FoodService;
 import jakarta.annotation.Resource;
 import org.springframework.validation.annotation.Validated;
@@ -18,13 +19,15 @@ import java.util.List;
 public class UserFoodController {
     @Resource
     private FoodService foodService;
+    @Resource
+    private BusinessFoodService businessFoodService;
     public BaseResponse<List<Food>> eatFood(){
         return BaseResponse.success();
     }
     // 创建食物
     @PostMapping("/create")
     public BaseResponse<String> createFood(@RequestBody FoodSchema food) {
-        foodService.createFood(food);
+        businessFoodService.createFood(food);
         return BaseResponse.success();
     }
     // 获取食物列表
