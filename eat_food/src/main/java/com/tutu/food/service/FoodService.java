@@ -38,34 +38,7 @@ public class FoodService extends ServiceImpl<FoodMapper, Food> {
     @Resource
     private FoodTagService foodTagService;
 
-    /**
-     * 随机获取食物
-     * @return 食物
-     */
-    public List<Food> getRandomFood(RandomFoodGetParamSchema param) {
-        assert param != null;
-        // 获取总记录数
-        long totalCount;
-        LambdaQueryWrapper<FoodDietStyle> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FoodDietStyle::getCreateBy, StpUtil.getLoginIdAsString());
-        if (param.getFoodDietStyleId() == null) {
-            totalCount = foodDietStyleService.count(wrapper);
-        }else {
-            totalCount = foodDietStyleService.count(
-                    wrapper.in(FoodDietStyle::getDietStyleId, param.getFoodDietStyleId())
-            );
-        }
-        if(totalCount == 0){
-            return new ArrayList<>();
-        }
-        // 随机数
-        long randomNum = RandomUtil.randomLong(0, totalCount);
-        List<FoodDietStyle> foodDietStyleList = foodDietStyleService.list(new LambdaQueryWrapper<FoodDietStyle>()
-                .eq(FoodDietStyle::getCreateBy, StpUtil.getLoginIdAsString())
-                .last("LIMIT " + randomNum + ", "+param.getFoodNum())
-        );
-        return list(new LambdaQueryWrapper<Food>().in(Food::getId, foodDietStyleList.stream().map(FoodDietStyle::getFoodId).toList()));
-    }
+
 
 
     /**

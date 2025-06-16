@@ -63,4 +63,5 @@ public class UserFoodTagController {
     public BaseResponse<Boolean> deleteFoodTagById(@PathVariable String id) {
         return BaseResponse.success(foodTagService.deleteFoodTagById(id));
     }
+
 }

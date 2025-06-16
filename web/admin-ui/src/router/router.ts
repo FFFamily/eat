@@ -61,6 +61,11 @@ export const constantRoutes = [
                         component: () => import('~/views/mobile/food_manage/food_tag/index.vue'),
                         name: 'FoodTagManagement',
                     },
+                    {
+                        path: 'foodHabit',
+                        component: () => import('~/views/mobile/food_manage/food_habit/index.vue'),
+                        name: 'FoodHabitManagement',
+                    },
                 ]
             }
         ],

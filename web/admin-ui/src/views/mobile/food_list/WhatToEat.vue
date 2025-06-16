@@ -10,9 +10,9 @@
     </div>
     <el-dialog v-model="chonseFoodConfigVisible" :show-close="false" style="width: 90%;height: 20%;" title="">
       <el-form :model="foodSelectConfig" label-width="auto" style="max-width: 600px">
-        <el-form-item label="食物类型">
-          <el-select v-model="foodSelectConfig.foodDietStyleId" multiple placeholder="Select" style="width: 240px">
-            <el-option v-for="item in dietStyleList" :key="item.id" :label="item.name" :value="item.id" />
+        <el-form-item label="饮食习惯">
+          <el-select v-model="foodSelectConfig.foodHabitId" multiple placeholder="Select" style="width: 240px">
+            <el-option v-for="item in foodHabitList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -44,6 +44,7 @@ import Header from './EatWahtHeader.vue'
 import { getRecommendFood, eatFood } from '~/api/user/userFoodApi'
 import { getAllFoodDietStyleList } from '~/api/food/foodDietStyleApi'
 import { de } from 'element-plus/es/locales.mjs';
+import { getAllFoodHabits } from '~/api/food/foodHabitApi'
 
 // 控制对话框显示状态
 const dialogVisible = ref(false);
@@ -55,8 +56,8 @@ const isMatching = ref(false);
 const selectedFood = ref({});
 // 食物列表
 const foodList = ref([]);
-// 饮食方式列表
-const dietStyleList = ref([]);
+// 饮食习惯列表
+const foodHabitList = ref([]);
 // 表单数据
 const foodSelectConfig = ref({
   foodNum: 1
@@ -65,8 +66,8 @@ const foodSelectConfig = ref({
 // 打开食物选择对话框
 const openFoodConfig = () => {
   chonseFoodConfigVisible.value = true;
-  getAllFoodDietStyleList().then(res => {
-    dietStyleList.value = res.data;
+  getAllFoodHabits().then(res => {
+    foodHabitList.value = res.data;
   })
 };
 // 开始匹配食物

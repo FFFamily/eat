@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 public class FoodSchema extends Food {
     // 食物类型列表
-    private List<String> foodTypeList;
+//    private List<String> foodTypeList;
     private List<String> foodTagList;
-    private List<String> foodDietStyleList;
+//    private List<String> foodDietStyleList;
 }

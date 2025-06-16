@@ -52,13 +52,13 @@ public class UserFoodController {
     // 删除食物
     @DeleteMapping("/{id}")
     public BaseResponse<String> deleteFood(@PathVariable("id") String id) {
-        foodService.removeById(id);
+        businessFoodService.deleteFood(id);
         return BaseResponse.success();
     }
     // 随机获取
     @PostMapping("/recommendFood")
     public BaseResponse<List<Food>> getRandomFood(@RequestBody @Validated RandomFoodGetParamSchema param){
-        return  BaseResponse.success(foodService.getRandomFood(param));
+        return  BaseResponse.success(businessFoodService.getRandomFood(param));
     }
 
     // 吃食物ß

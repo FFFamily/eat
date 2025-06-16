@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.food.mapper.FoodTagMappingMapper">
+
+    <select id="getOwnerFoodCountByTag" resultType="java.lang.Long">
+        select count(*) from food_tag_mapping t
+        left join food f on f.id = t.food_id
+        where t.tag_id in
+        <foreach collection="tags" item="tagId" separator="," open="(" close=")">
+            tag_id = #{tagId}
+        </foreach>
+        and f.create_by = #{userId}
+    </select>
+</mapper>

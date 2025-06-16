@@ -116,6 +116,7 @@ const menuItems = ref([
   { label: '食物管理', path: '/mobile/foodManage', icon: 'Menu' },
   { label: '食物类型', path: '/mobile/foodTypeManage', icon: 'SetUp' },
   { label: '饮食历史', path: '/mobile/manage/foodHistory', icon: 'Calendar' },
+  { label: '饮食习惯', path: '/mobile/manage/foodHabit', icon: 'FoodHabit' },
   { label: '食物标签', path: '/mobile/manage/foodTag', icon: 'FoodTag' }
 ]);
 </script>
