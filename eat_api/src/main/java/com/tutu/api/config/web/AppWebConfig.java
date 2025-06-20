@@ -14,7 +14,7 @@ public class AppWebConfig implements WebMvcConfigurer {
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns("/**")
                 // 白名单
-                .excludePathPatterns("/auth/login", "/auth/logout", "/auth/register");
+                .excludePathPatterns("/auth/login", "/auth/logout", "/auth/register","/test/test");
         WebMvcConfigurer.super.addInterceptors(registry);
     }
 }

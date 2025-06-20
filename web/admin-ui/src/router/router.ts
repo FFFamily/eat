@@ -1,6 +1,12 @@
 // 常量路由
 export const constantRoutes = [
     {
+        path: '/website',
+        name: 'Website',
+        component: () => import('~/views/website/Website.vue'),
+        meta: { title: '系统官网' }
+    },
+    {
         path: '/login',
         component: () => import('~/views/login/index.vue'),
         name: 'Login',// 路由命名
