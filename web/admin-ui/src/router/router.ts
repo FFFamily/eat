@@ -7,6 +7,18 @@ export const constantRoutes = [
         meta: { title: '系统官网' }
     },
     {
+        path: '/website1',
+        name: 'Website',
+        component: () => import('~/views/website/web1.vue'),
+        meta: { title: '系统官网' }
+    },
+    {
+        path: '/playWhat',
+        name: 'PlayWhat',
+        component: () => import('~/views/game-roulette/index.vue'),
+        meta: { title: '智能游戏选择系统' }
+    },
+    {
         path: '/login',
         component: () => import('~/views/login/index.vue'),
         name: 'Login',// 路由命名
@@ -35,9 +47,14 @@ export const constantRoutes = [
         path: '/mobile',
         children: [
             {
+                path: 'home',
+                component: () => import('~/views/mobile/index.vue'),
+                name: 'MobileHome',
+            },
+            {
                 path: 'eat',
                 component: () => import('~/views/mobile/food_list/index.vue'),
-                name: 'MobileHome',
+                name: 'EatHome',
             },
             {
                 path: 'foodManage',

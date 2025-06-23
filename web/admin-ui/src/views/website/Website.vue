@@ -11,18 +11,24 @@
             </div>
         </nav>
         <div class="website-info">
-            <el-carousel height="600px">
-                <el-carousel-item v-for="item in 4" :key="item">
-                    <h3 class="small justify-center" text="2xl">{{ item }}</h3>
+            <el-carousel height="500px">
+                <!-- 修改轮播项内容 -->
+                <el-carousel-item class="carousel-item">
+                    <video class="full-video" preload="auto" x-webkit-airplay="true" airplay="allow" webkit-playsinline="true" playsinline="true" webkit-controls="no" muted="true" loop="loop" autoplay="autoplay" src="https://ld5.v.netease.com/2025/0421/565974084ca9d42d3ffee9bd2c72efcaqt.mp4"></video>
                 </el-carousel-item>
             </el-carousel>
-            <!-- 主内容区 -->
-            <section class="hero" id="home">
+            
+            <section class="eat" id="home">
                 <h1>智能餐饮管理系统</h1>
                 <p>让餐饮管理更简单、更高效</p>
                 <button class="cta-button">立即体验</button>
             </section>
 
+            <section class="play_what_page" id="home">
+                <h1>智能游戏选择系统</h1>
+                <p>让每晚玩什么游戏不再折磨你</p>
+                <button class="cta-button">立即体验</button>
+            </section>
             <section class="about" id="about">
                 <h2>关于我们</h2>
                 <p>专注于为餐饮行业提供一站式数字化解决方案，涵盖订单管理、库存追踪、客户营销等核心场景。</p>
@@ -64,7 +70,7 @@
 
 <style scoped lang="scss">
 .logo {
-    margin-left: 20rem;
+    margin-left: 10%;
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: 700;
@@ -74,13 +80,16 @@
 
 .website-container {
     max-width: 100%;
+
+    /* 添加背景图片样式 */
 }
 
 .website-info {
     max-width: 100%;
     margin: 0 auto;
-    background-color: #e5e7eb;
-    padding: 0 20px;
+    /* 移除原有的背景色 */
+    /* background-color: #e5e7eb; */
+    /* 添加半透明背景层提高文字可读性 */
 }
 
 .navbar {
@@ -99,9 +108,12 @@
     text-decoration: none;
 }
 
-.hero {
+.eat {
     text-align: center;
     padding: 4rem 0;
+}
+.play_what_page{
+    background-image: url();
 }
 
 .cta-button {
@@ -147,5 +159,20 @@
 
 .el-carousel__item:nth-child(2n + 1) {
     background-color: #d3dce6;
+}
+
+/* 轮播项样式 */
+.carousel-item {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 隐藏超出容器的部分 */
+}
+
+/* 视频样式 */
+.full-video {
+    width: 100%;
+    height: 100%;
+    /* 如需完整显示视频（可能有黑边），使用 object-fit: contain; */
 }
 </style>
