@@ -1,11 +1,11 @@
-import {createRouter, createWebHashHistory} from 'vue-router'
+import {createRouter, createWebHashHistory, createWebHistory} from 'vue-router'
 import {constantRoutes} from './router'
 import { useUserStore } from '~/store/modules/user';
 import { ElMessage } from 'element-plus'
 import { de } from 'element-plus/es/locales.mjs';
 let router = createRouter({
     //路由模式: hash
-    history: createWebHashHistory(),
+    history: createWebHistory(),
     routes: [
         ...constantRoutes
     ],

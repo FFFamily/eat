@@ -8,7 +8,7 @@ export const constantRoutes = [
     },
     {
         path: '/website1',
-        name: 'Website',
+        name: 'Website1',
         component: () => import('~/views/website/web1.vue'),
         meta: { title: '系统官网' }
     },

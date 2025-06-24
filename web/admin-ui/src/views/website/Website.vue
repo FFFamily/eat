@@ -11,14 +11,11 @@
             </div>
         </nav>
         <div class="website-info">
-            <el-carousel height="500px">
-                <!-- 修改轮播项内容 -->
-                <el-carousel-item class="carousel-item">
-                    <video class="full-video" preload="auto" x-webkit-airplay="true" airplay="allow" webkit-playsinline="true" playsinline="true" webkit-controls="no" muted="true" loop="loop" autoplay="autoplay" src="https://ld5.v.netease.com/2025/0421/565974084ca9d42d3ffee9bd2c72efcaqt.mp4"></video>
-                </el-carousel-item>
-            </el-carousel>
-            
-            <section class="eat" id="home">
+            <div class="home_img">
+                <h1 class="home_title">你好</h1>
+            </div>
+
+            <section class="eat_waht_page" id="home">
                 <h1>智能餐饮管理系统</h1>
                 <p>让餐饮管理更简单、更高效</p>
                 <button class="cta-button">立即体验</button>
@@ -28,10 +25,6 @@
                 <h1>智能游戏选择系统</h1>
                 <p>让每晚玩什么游戏不再折磨你</p>
                 <button class="cta-button">立即体验</button>
-            </section>
-            <section class="about" id="about">
-                <h2>关于我们</h2>
-                <p>专注于为餐饮行业提供一站式数字化解决方案，涵盖订单管理、库存追踪、客户营销等核心场景。</p>
             </section>
 
             <section class="features" id="features">
@@ -78,6 +71,22 @@
     text-decoration: inherit;
 }
 
+.home_img {
+    background-image: url('../../assets/ow.png');
+    background-size: cover;
+    /* 确保图片覆盖整个元素 */
+    background-position: center;
+    /* 将图片居中显示 */
+    min-height: 100vh;
+    width: 100%;
+}
+
+.home_title{
+    font-size: 3rem;
+    font-weight: 700;
+    color: rgb(30, 64, 175);
+    text-decoration: inherit;
+}
 .website-container {
     max-width: 100%;
 
@@ -108,12 +117,16 @@
     text-decoration: none;
 }
 
-.eat {
+.eat_waht_page {
     text-align: center;
     padding: 4rem 0;
+    background-color: aliceblue;
 }
-.play_what_page{
-    background-image: url();
+
+.play_what_page {
+    text-align: center;
+    padding: 4rem 0;
+    background-color: #d3dce6;
 }
 
 .cta-button {
@@ -130,6 +143,7 @@
 .features,
 .contact {
     padding: 3rem 0;
+    text-align: center;
 }
 
 .feature-grid {
@@ -141,7 +155,7 @@
 
 .feature-card {
     padding: 1.5rem;
-    border: 1px solid #e5e7eb;
+    background-color: #e5e7eb;
     border-radius: 0.375rem;
 }
 
@@ -161,13 +175,7 @@
     background-color: #d3dce6;
 }
 
-/* 轮播项样式 */
-.carousel-item {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden; /* 隐藏超出容器的部分 */
-}
+
 
 /* 视频样式 */
 .full-video {
