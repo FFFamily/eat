@@ -1,5 +1,5 @@
 <template>
-    <div class="website-container">
+    <div>
         <!-- 导航栏 -->
         <nav class="navbar">
             <div class="logo">图图小破站</div>
@@ -16,15 +16,15 @@
             </div>
 
             <section class="eat_waht_page" id="home">
-                <h1>智能餐饮管理系统</h1>
+                <h1>智能餐饮</h1>
                 <p>让餐饮管理更简单、更高效</p>
-                <button class="cta-button">立即体验</button>
+                <el-button @click="goToEatPage" size="large" class="cta-button">立即体验</el-button>
             </section>
 
             <section class="play_what_page" id="home">
-                <h1>智能游戏选择系统</h1>
+                <h1>智能游戏</h1>
                 <p>让每晚玩什么游戏不再折磨你</p>
-                <button class="cta-button">立即体验</button>
+                <el-button @click="goToPalyPage" size="large" class="cta-button">立即体验</el-button>
             </section>
 
             <section class="features" id="features">
@@ -58,7 +58,15 @@
 </template>
 
 <script setup lang="ts">
-// 可根据需要添加逻辑（如获取项目数据）
+import { useRouter, useRoute } from 'vue-router';
+const router = useRouter();
+const route = useRoute();
+const goToPalyPage = () => {
+    router.push({ path: '/playWhat' });
+}
+const goToEatPage = () => {
+    router.push({ path: '/mobile/eat' });
+}
 </script>
 
 <style scoped lang="scss">
@@ -81,17 +89,12 @@
     width: 100%;
 }
 
-.home_title{
-    font-size: 3rem;
+.home_title {
+    font-size: 4rem;
     font-weight: 700;
-    color: rgb(30, 64, 175);
-    text-decoration: inherit;
+    color: white;
 }
-.website-container {
-    max-width: 100%;
 
-    /* 添加背景图片样式 */
-}
 
 .website-info {
     max-width: 100%;
@@ -106,7 +109,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 0;
-    border-bottom: 2px solid #e5e7eb;
+    border: 1px solid #e5e7eb;
     background-color: white;
 }
 

@@ -116,9 +116,10 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+
 .roulette-container {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   padding: 20px;
   text-align: center;
   border: 1px solid #333;
