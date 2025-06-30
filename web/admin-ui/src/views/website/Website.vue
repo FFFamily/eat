@@ -12,7 +12,11 @@
         </nav>
         <div class="website-info">
             <div class="home_img">
-                <h1 class="home_title">你好</h1>
+                <div class="home_title_div">
+                    <h1 class="home_title">探索无限可能</h1>
+                    <el-button @click="goToEatPage" size="large">立即体验</el-button>
+                </div>
+
             </div>
 
             <section class="eat_waht_page" id="home">
@@ -85,10 +89,13 @@ const goToEatPage = () => {
     /* 确保图片覆盖整个元素 */
     background-position: center;
     /* 将图片居中显示 */
-    min-height: 100vh;
+    min-height: 50vh;
     width: 100%;
 }
-
+.home_title_div{
+padding-top: 12%;
+    padding-left: 30%;
+}
 .home_title {
     font-size: 4rem;
     font-weight: 700;

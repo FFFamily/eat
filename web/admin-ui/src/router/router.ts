@@ -2,9 +2,23 @@
 export const constantRoutes = [
     {
         path: '/website',
-        name: 'Website',
-        component: () => import('~/views/website/Website.vue'),
-        meta: { title: '系统官网' }
+        children: [
+            {
+                path: '',
+                component: () => import('~/views/website/Website.vue'),
+                name: 'Website',
+            },
+            {
+                path: 'login',
+                component: () => import('~/views/website/login.vue'),
+                name: 'WebsiteLogin',
+            },
+            {
+                path: 'register',
+                component: () => import('~/views/website/register.vue'),
+                name: 'WebsiteRegister',
+            },
+        ]
     },
     {
         path: '/website1',
