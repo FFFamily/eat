@@ -1,196 +1,93 @@
 <template>
-    <div>
-        <!-- 导航栏 -->
-        <nav class="navbar">
-            <div class="logo">图图小破站</div>
-            <div class="nav-links">
-                <a href="#home">首页</a>
-                <a href="#about">关于</a>
-                <a href="#features">特点</a>
-                <a href="#contact">联系</a>
-            </div>
-        </nav>
-        <div class="website-info">
-            <div class="home_img">
-                <div class="home_title_div">
-                    <h1 class="home_title">探索无限可能</h1>
-                    <el-button @click="goToEatPage" size="large">立即体验</el-button>
-                </div>
-
-            </div>
-
-            <section class="eat_waht_page" id="home">
-                <h1>智能餐饮</h1>
-                <p>让餐饮管理更简单、更高效</p>
-                <el-button @click="goToEatPage" size="large" class="cta-button">立即体验</el-button>
-            </section>
-
-            <section class="play_what_page" id="home">
-                <h1>智能游戏</h1>
-                <p>让每晚玩什么游戏不再折磨你</p>
-                <el-button @click="goToPalyPage" size="large" class="cta-button">立即体验</el-button>
-            </section>
-
-            <section class="features" id="features">
-                <h2>核心特点</h2>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <h3>智能订单</h3>
-                        <p>自动聚合多平台订单，减少人工录入错误</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>实时库存</h3>
-                        <p>原料消耗与采购需求智能联动，降低损耗</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>客户营销</h3>
-                        <p>会员体系+精准营销模板，提升复购率</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="contact" id="contact">
-                <h2>联系我们</h2>
-                <div class="contact-info">
-                    <p>电话：010-12345678</p>
-                    <p>邮箱：contact@example.com</p>
-                    <p>地址：北京市朝阳区XX路XX号</p>
-                </div>
-            </section>
-        </div>
-    </div>
+  <div class="home-container">
+    <header class="header">
+      <div class="title">nCalendar</div>
+      <div class="subtitle">日历提醒同步系统</div>
+      <div class="desc">一个集成 Notion 模板、日历与本地提醒的自动化时间管理工具</div>
+      <div class="actions">
+        <el-button type="primary">登录/注册</el-button>
+        <el-button>快速入门</el-button>
+      </div>
+    </header>
+    <section class="features">
+      <div class="feature-card" v-for="item in features" :key="item.title">
+        <div class="icon">{{ item.icon }}</div>
+        <div class="feature-title">{{ item.title }}</div>
+        <div class="feature-desc">{{ item.desc }}</div>
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter, useRoute } from 'vue-router';
-const router = useRouter();
-const route = useRoute();
-const goToPalyPage = () => {
-    router.push({ path: '/playWhat' });
-}
-const goToEatPage = () => {
-    router.push({ path: '/mobile/eat' });
-}
+const features = [
+  { icon: '🚀', title: '配置简单', desc: '使用 Notion 公共模板集成，快速完成配置流程。' },
+  { icon: '🎯', title: '精准提醒', desc: '自动同步到期信息，提供本地提醒。' },
+  { icon: '😁', title: '数据隐私', desc: 'SaaS 架构，保障用户数据安全。' },
+  { icon: '🧠', title: '智能联动', desc: '从 Notion 到日历的自动桥接。' },
+  { icon: '❤️', title: '个性定制', desc: '模板驱动，样式自定义。' },
+  { icon: '🔄', title: '双向同步', desc: '支持本地日历修改同步回 Notion。' }
+]
 </script>
 
 <style scoped lang="scss">
-.logo {
-    margin-left: 10%;
+.home-container {
+  min-height: 100vh;
+  background: #f7f8fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.header {
+  text-align: center;
+  margin-top: 80px;
+  .title {
+    font-size: 2.8rem;
+    font-weight: bold;
+    color: #2563eb;
+  }
+  .subtitle {
     font-size: 1.5rem;
-    line-height: 2rem;
-    font-weight: 700;
-    color: rgb(30, 64, 175);
-    text-decoration: inherit;
-}
-
-.home_img {
-    background-image: url('../../assets/ow.png');
-    background-size: cover;
-    /* 确保图片覆盖整个元素 */
-    background-position: center;
-    /* 将图片居中显示 */
-    min-height: 50vh;
-    width: 100%;
-}
-.home_title_div{
-padding-top: 12%;
-    padding-left: 30%;
-}
-.home_title {
-    font-size: 4rem;
-    font-weight: 700;
-    color: white;
-}
-
-
-.website-info {
-    max-width: 100%;
-    margin: 0 auto;
-    /* 移除原有的背景色 */
-    /* background-color: #e5e7eb; */
-    /* 添加半透明背景层提高文字可读性 */
-}
-
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 0;
-    border: 1px solid #e5e7eb;
-    background-color: white;
-}
-
-.nav-links a {
-    margin-left: 2rem;
-    margin-right: 2rem;
-    color: #374151;
-    text-decoration: none;
-}
-
-.eat_waht_page {
-    text-align: center;
-    padding: 4rem 0;
-    background-color: aliceblue;
-}
-
-.play_what_page {
-    text-align: center;
-    padding: 4rem 0;
-    background-color: #d3dce6;
-}
-
-.cta-button {
-    background: #2563eb;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.375rem;
-    border: none;
+    margin-top: 1rem;
+    color: #222;
+  }
+  .desc {
+    color: #888;
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+  }
+  .actions {
     margin-top: 2rem;
-    cursor: pointer;
+    button {
+      margin: 0 0.5rem;
+    }
+  }
 }
-
-.about,
-.features,
-.contact {
-    padding: 3rem 0;
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+  margin: 60px 0 0 0;
+  width: 80%;
+  .feature-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px #0001;
+    padding: 2rem 1.5rem;
     text-align: center;
-}
-
-.feature-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-.feature-card {
-    padding: 1.5rem;
-    background-color: #e5e7eb;
-    border-radius: 0.375rem;
-}
-
-.el-carousel__item h3 {
-    color: #475669;
-    opacity: 0.75;
-    line-height: 200px;
-    margin: 0;
-    text-align: center;
-}
-
-.el-carousel__item:nth-child(2n) {
-    background-color: #99a9bf;
-}
-
-.el-carousel__item:nth-child(2n + 1) {
-    background-color: #d3dce6;
-}
-
-
-
-/* 视频样式 */
-.full-video {
-    width: 100%;
-    height: 100%;
-    /* 如需完整显示视频（可能有黑边），使用 object-fit: contain; */
+    .icon {
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+    }
+    .feature-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .feature-desc {
+      color: #666;
+      font-size: 1rem;
+    }
+  }
 }
 </style>
