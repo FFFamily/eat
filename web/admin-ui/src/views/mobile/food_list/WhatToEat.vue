@@ -1,5 +1,4 @@
 <template>
-  <!-- <Header></Header> -->
   <div class="what-to-eat-page">
     <!-- 巨大圆形按钮 -->
     <el-button v-loading.fullscreen.lock="isMatching" class="big-round-button" @click="generateFood">今天吃什么</el-button>
@@ -43,7 +42,6 @@ import { ElMessage } from 'element-plus';
 import Header from './EatWahtHeader.vue'
 import { getRecommendFood, eatFood } from '~/api/user/userFoodApi'
 import { getAllFoodDietStyleList } from '~/api/food/foodDietStyleApi'
-import { de } from 'element-plus/es/locales.mjs';
 import { getAllFoodHabits } from '~/api/food/foodHabitApi'
 
 // 控制对话框显示状态
@@ -164,7 +162,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 100dvh;
 }
 
 .big-round-button {

@@ -61,11 +61,6 @@ export const constantRoutes = [
         path: '/mobile',
         children: [
             {
-                path: 'home',
-                component: () => import('~/views/mobile/index.vue'),
-                name: 'MobileHome',
-            },
-            {
                 path: 'eat',
                 component: () => import('~/views/mobile/food_list/index.vue'),
                 name: 'EatHome',
