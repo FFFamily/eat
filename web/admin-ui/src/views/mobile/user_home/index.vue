@@ -123,58 +123,109 @@ const menuItems = ref([
 
 <style scoped>
 .user-home-container {
-  padding: 16px;
-  background-color: #f8f8f8;
+  padding: 24px 12px 32px 12px;
+  background: linear-gradient(135deg, #f7faff 0%, #f0f4ff 100%);
   min-height: 100vh;
 }
 
 .user-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 24px;
-  padding: 16px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  margin-bottom: 32px;
+  padding: 32px 0 24px 0;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+.user-avatar {
+  border: 4px solid #e0e7ff;
+  box-shadow: 0 2px 12px #2563eb22;
+  margin-bottom: 12px;
+}
+
+.user-header-info {
+  text-align: center;
+}
+
+.username {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 6px;
+}
+
+.user-tags {
+  margin-top: 4px;
+  .el-tag {
+    background: #f0f4ff;
+    color: #2563eb;
+    border: none;
+    font-size: 0.95em;
+    border-radius: 8px;
+    padding: 2px 12px;
+  }
 }
 
 .function-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
 .function-item {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  justify-content: flex-start;
+  padding: 18px 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(37,99,235,0.06);
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.function-item:hover {
-  background: #f5f5f5;
-  transform: translateX(4px);
+  transition: all 0.18s cubic-bezier(.34,1.56,.64,1);
+  border: 1.5px solid transparent;
+  &:hover {
+    background: #f0f4ff;
+    transform: scale(1.03);
+    border-color: #2563eb22;
+    box-shadow: 0 6px 24px #2563eb11;
+  }
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 .item-icon {
-  margin-right: 12px;
-  color: #409eff;
+  margin-right: 16px;
+  color: #2563eb;
+  font-size: 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .item-label {
-  font-size: 16px;
-  color: #333;
+  font-size: 1.08rem;
+  color: #222;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .logout-btn {
   width: 100%;
-  margin-top: 24px;
+  margin-top: 32px;
   height: 48px;
-  font-size: 16px;
+  font-size: 1.08rem;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 12px #2563eb22;
+  transition: background 0.2s;
+  &:hover {
+    background: #1e40af;
+  }
 }
 </style>

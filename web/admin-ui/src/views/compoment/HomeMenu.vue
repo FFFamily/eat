@@ -31,7 +31,7 @@ const route = useRoute();
 // 菜单配置项 - 使用Element Plus图标
 const menus = [
   {
-    path: '/home',
+    path: '/mobile/eat',
     label: '首页',
     icon: House
   },
@@ -46,7 +46,7 @@ const menus = [
     icon: ShoppingCart
   },
   {
-    path: '/profile',
+    path: '/mobile/user',
     label: '我的',
     icon: User
   }

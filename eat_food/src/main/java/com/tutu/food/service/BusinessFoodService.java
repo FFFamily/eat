@@ -118,7 +118,7 @@ public class BusinessFoodService {
                 .eq(FoodTagMapping::getCreateBy, StpUtil.getLoginIdAsString())
                 .last("LIMIT " + randomNum + ", "+param.getFoodNum())
         );
-        return foodService.list(new LambdaQueryWrapper<Food>().in(Food::getId, foodDietStyleList.stream().map(FoodTagMapping::getId).toList()));
+        return foodService.list(new LambdaQueryWrapper<Food>().in(Food::getId, foodDietStyleList.stream().map(FoodTagMapping::getFoodId).toList()));
     }
 
 }

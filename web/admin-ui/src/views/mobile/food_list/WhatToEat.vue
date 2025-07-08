@@ -10,7 +10,7 @@
     <el-dialog v-model="chonseFoodConfigVisible" :show-close="false" style="width: 90%;height: 20%;" title="">
       <el-form :model="foodSelectConfig" label-width="auto" style="max-width: 600px">
         <el-form-item label="饮食习惯">
-          <el-select v-model="foodSelectConfig.foodHabitId" multiple placeholder="Select" style="width: 240px">
+          <el-select v-model="foodSelectConfig.foodHabitId" placeholder="Select" style="width: 240px">
             <el-option v-for="item in foodHabitList" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>

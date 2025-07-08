@@ -81,6 +81,11 @@ export const constantRoutes = [
                 name: 'History',    
             },
             {
+                path: 'user',
+                component: () => import('~/views/mobile/user_home/index.vue'),
+                name: 'UserHome',    
+            },
+            {
                 path: 'manage',
                 children: [
                     {
@@ -107,11 +112,7 @@ export const constantRoutes = [
         component: () => import('~/views/mobile/stats/index.vue'),
         name: 'Stats',    
     },
-    {
-        path: '/user',
-        component: () => import('~/views/mobile/user_home/index.vue'),
-        name: 'UserHome',    
-    },
+    
     {
         path: '/404',
         component: () => import('~/views/404/index.vue'),

@@ -11,8 +11,8 @@ import java.util.List;
 public class FoodHabitService extends ServiceImpl<FoodHabitMapper, FoodHabit>  {
 
     
-    public boolean createFoodHabit(FoodHabit foodHabit) {
-        return save(foodHabit);
+    public void createFoodHabit(FoodHabit foodHabit) {
+        save(foodHabit);
     }
 
     

@@ -8,11 +8,6 @@
                         <span @click="handleRowClick(scope.row)">{{ scope.row.name }}</span>
                     </template>
                 </el-table-column>
-                <el-table-column label="食物标签" prop="tags">
-                    <template #default="scope">
-                        <el-tag v-for="tag in scope.row.tags" :key="tag.id" class="mx-1">{{ tag.name }}</el-tag>
-                    </template>
-                </el-table-column>
                 <el-table-column label="操作" fixed="right" min-width="120">
                     <template #default="scope">
                         <el-button @click.prevent="deleteHabit(scope.row.id)" type="danger" :icon="Delete" circle />
@@ -33,9 +28,9 @@
                     :rules="[{ required: true, message: '请输入习惯名称', trigger: 'blur' }]">
                     <el-input v-model="newHabit.name" placeholder="请输入习惯名称"></el-input>
                 </el-form-item>
-                <el-form-item label="食物标签" prop="tagIds"
+                <el-form-item label="食物标签" prop="tag.tags"
                     :rules="[{ required: true, message: '请选择至少一个食物标签', trigger: 'change' }]">
-                    <el-select v-model="newHabit.tagIds" multiple placeholder="请选择食物标签">
+                    <el-select v-model="newHabit.tag.tags" multiple placeholder="请选择食物标签">
                         <el-option v-for="tag in allTags" :key="tag.id" :label="tag.name" :value="tag.id"></el-option>
                     </el-select>
                 </el-form-item>
@@ -57,7 +52,10 @@ import { Delete } from '@element-plus/icons-vue'
 // 对话框状态
 const dialogVisible = ref(false);
 // 新饮食习惯数据
-const newHabit = ref({ name: '', tagIds: [] });
+const newHabit = ref({ 
+    name: '', 
+    tag: {}
+});
 // 表单引用
 const habitForm = ref(null);
 // 饮食习惯列表
@@ -103,7 +101,7 @@ const deleteHabit = async (id) => {
 
 // 打开添加对话框
 const openAddDialog = () => {
-    newHabit.value = { name: '', tagIds: [] };
+    newHabit.value = { name: '', tag: {tags:[]} };
     dialogVisible.value = true;
 };
 

@@ -9,7 +9,7 @@
         left join food f on f.id = t.food_id
         where t.tag_id in
         <foreach collection="tags" item="tagId" separator="," open="(" close=")">
-            tag_id = #{tagId}
+            #{tagId}
         </foreach>
         and f.create_by = #{userId}
     </select>

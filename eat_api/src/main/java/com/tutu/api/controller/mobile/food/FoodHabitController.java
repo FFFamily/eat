@@ -1,5 +1,6 @@
 package com.tutu.api.controller.mobile.food;
 
+import com.tutu.common.Response.BaseResponse;
 import com.tutu.food.entity.habit.FoodHabit;
 import com.tutu.food.service.FoodHabitService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,9 @@ public class FoodHabitController {
      * @return 创建成功返回 true，失败返回 false
      */
     @PostMapping
-    public boolean createFoodHabit(@RequestBody FoodHabit foodHabit) {
-        return foodHabitService.createFoodHabit(foodHabit);
+    public BaseResponse<Void> createFoodHabit(@RequestBody FoodHabit foodHabit) {
+        foodHabitService.createFoodHabit(foodHabit);
+        return BaseResponse.success();
     }
 
     /**
@@ -30,8 +32,8 @@ public class FoodHabitController {
      * @return 食物习惯实体
      */
     @GetMapping("/{id}")
-    public FoodHabit getFoodHabitById(@PathVariable String id) {
-        return foodHabitService.getFoodHabitById(id);
+    public BaseResponse<FoodHabit> getFoodHabitById(@PathVariable String id) {
+        return BaseResponse.success(foodHabitService.getFoodHabitById(id));
     }
 
     /**
@@ -39,8 +41,8 @@ public class FoodHabitController {
      * @return 食物习惯列表
      */
     @GetMapping("/all")
-    public List<FoodHabit> getAllFoodHabits() {
-        return foodHabitService.getAllFoodHabits();
+    public BaseResponse<List<FoodHabit>> getAllFoodHabits() {
+        return BaseResponse.success(foodHabitService.getAllFoodHabits());
     }
 
     /**
@@ -49,8 +51,9 @@ public class FoodHabitController {
      * @return 更新成功返回 true，失败返回 false
      */
     @PutMapping
-    public boolean updateFoodHabit(@RequestBody FoodHabit foodHabit) {
-        return foodHabitService.updateFoodHabit(foodHabit);
+    public BaseResponse<Void> updateFoodHabit(@RequestBody FoodHabit foodHabit) {
+        foodHabitService.updateFoodHabit(foodHabit);
+        return BaseResponse.success();
     }
 
     /**
@@ -59,7 +62,8 @@ public class FoodHabitController {
      * @return 删除成功返回 true，失败返回 false
      */
     @DeleteMapping("/{id}")
-    public boolean deleteFoodHabitById(@PathVariable String id) {
-        return foodHabitService.deleteFoodHabitById(id);
+    public BaseResponse<Void> deleteFoodHabitById(@PathVariable String id) {
+        foodHabitService.deleteFoodHabitById(id);
+        return BaseResponse.success();
     }
 }
