@@ -4,8 +4,6 @@ import com.tutu.common.enums.BaseEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.List;
-
 /**
  * 用户状态枚举
  */

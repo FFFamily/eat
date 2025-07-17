@@ -3,9 +3,7 @@ package com.tutu.api.controller;
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.StrUtil;
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.common.enums.BaseEnum;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.common.util.redis.RedisUtil;
 import com.tutu.user.entity.User;
@@ -28,8 +26,6 @@ public class LoginController {
     private UserService userService;
     @Resource
     private RoleService roleService;
-    @Resource
-    private RedisUtil redisUtil;
 
     /**
      * 登录

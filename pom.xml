@@ -15,9 +15,10 @@
     <description>eat</description>
     <modules>
         <module>eat_api</module>
-        <module>eat_user</module>
         <module>eat_common</module>
         <module>eat_food</module>
+        <module>hs_user</module>
+        <module>hs_admin_user</module>
     </modules>
     <packaging>pom</packaging>
     <properties>
