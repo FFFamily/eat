@@ -1,5 +1,5 @@
 <template>
-    <div class="role-management-container">
+    <div class="adRole-management-container">
       <!-- 搜索和操作栏 -->
       <div class="filter-container">
         <el-input
