@@ -1,11 +1,10 @@
-package com.tutu.api.controller;
+package com.tutu.api.controller.mobile;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.exceptions.ServiceException;
-import com.tutu.common.util.redis.RedisUtil;
 import com.tutu.user.entity.User;
 import com.tutu.user.enums.UserStatusEnum;
 import com.tutu.user.request.LoginRequest;
