@@ -37,7 +37,7 @@ public class AdminUserController {
     /**
      * 根据ID查询用户详情
      */
-    @GetMapping("/{id}")
+    @GetMapping("/info/{id}")
     public BaseResponse<AdUser> getById(@PathVariable String id) {
         AdUser user = adUserService.getById(id);
         if (user == null) {
@@ -49,8 +49,8 @@ public class AdminUserController {
     /**
      * 创建用户
      */
-    @PostMapping
-    public BaseResponse<String> createUser(@Valid @RequestBody AdUserDTO userDTO) {
+    @PostMapping("/add")
+    public BaseResponse<String> createUser(@Valid @RequestBody AdUser userDTO) {
         try {
             boolean result = adUserService.createUser(userDTO);
             if (result) {
@@ -66,8 +66,8 @@ public class AdminUserController {
     /**
      * 更新用户
      */
-    @PutMapping
-    public BaseResponse<String> updateUser(@Valid @RequestBody AdUserDTO userDTO) {
+    @PutMapping("/update")
+    public BaseResponse<String> updateUser(@Valid @RequestBody AdUser userDTO) {
         try {
             boolean result = adUserService.updateUser(userDTO);
             if (result) {
@@ -83,7 +83,7 @@ public class AdminUserController {
     /**
      * 删除用户
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public BaseResponse<String> deleteUser(@PathVariable String id) {
         try {
             boolean result = adUserService.deleteUser(id);

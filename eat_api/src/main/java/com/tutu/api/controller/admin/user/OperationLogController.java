@@ -145,8 +145,8 @@ public class OperationLogController {
             if (days < 7) {
                 return BaseResponse.error("清理天数不能少于7天");
             }
-            int count = adOperationLogService.cleanOldLogs(days);
-            return BaseResponse.success("清理完成，共清理 " + count + " 条记录");
+            adOperationLogService.cleanOldLogs(days);
+            return BaseResponse.success("清理完成");
         } catch (Exception e) {
             return BaseResponse.error(e.getMessage());
         }

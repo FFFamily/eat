@@ -67,7 +67,7 @@ public class DepartmentController {
      * 创建部门
      */
     @PostMapping
-    public BaseResponse<String> createDepartment(@Valid @RequestBody AdDepartmentDTO adDepartmentDTO) {
+    public BaseResponse<String> createDepartment(@Valid @RequestBody AdDepartment adDepartmentDTO) {
         try {
             boolean result = adDepartmentService.createDepartment(adDepartmentDTO);
             if (result) {
@@ -84,7 +84,7 @@ public class DepartmentController {
      * 更新部门
      */
     @PutMapping
-    public BaseResponse<String> updateDepartment(@Valid @RequestBody AdDepartmentDTO adDepartmentDTO) {
+    public BaseResponse<String> updateDepartment(@Valid @RequestBody AdDepartment adDepartmentDTO) {
         try {
             boolean result = adDepartmentService.updateDepartment(adDepartmentDTO);
             if (result) {

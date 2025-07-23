@@ -19,6 +19,7 @@
         <module>eat_food</module>
         <module>hs_user</module>
         <module>hs_admin_user</module>
+        <module>hs_system</module>
     </modules>
     <packaging>pom</packaging>
     <properties>

@@ -2,6 +2,8 @@ package com.tutu.admin_user.service;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.MD5;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,6 +12,7 @@ import com.tutu.admin_user.entity.AdUser;
 import com.tutu.admin_user.entity.AdUserRole;
 import com.tutu.admin_user.mapper.AdUserMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
+import com.tutu.common.constant.CommonConstant;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,163 +27,200 @@ import java.util.List;
  */
 @Service
 public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
-    
+
     @Autowired
     private AdUserRoleMapper adUserRoleMapper;
-    
+
     
     public AdUser findByUsername(String username) {
-        return baseMapper.findByUsername(username);
+        LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AdUser::getUsername, username)
+                .eq(AdUser::getIsDeleted, CommonConstant.NO_STR);
+        return getOne(queryWrapper);
     }
-    
+
     
     public IPage<AdUser> getPageList(int current, int size, String keyword) {
         Page<AdUser> page = new Page<>(current, size);
-        return baseMapper.selectPageWithDept(page, keyword);
+        LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
+
+        queryWrapper.eq(AdUser::getIsDeleted, CommonConstant.NO_STR);
+
+        if (StrUtil.isNotBlank(keyword)) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like(AdUser::getUsername, keyword)
+                    .or()
+                    .like(AdUser::getName, keyword)
+                    .or()
+                    .like(AdUser::getEmail, keyword)
+            );
+        }
+
+        queryWrapper.orderByDesc(AdUser::getCreateTime);
+
+        return page(page, queryWrapper);
     }
-    
+
     
     @Transactional(rollbackFor = Exception.class)
-    public boolean createUser(AdUserDTO userDTO) {
+    public boolean createUser(AdUser user) {
         // 检查用户名是否已存在
-        if (findByUsername(userDTO.getUsername()) != null) {
+        if (findByUsername(user.getUsername()) != null) {
             throw new RuntimeException("用户名已存在");
         }
-        
-        AdUser user = new AdUser();
-        BeanUtils.copyProperties(userDTO, user);
-        
+
         // 设置默认密码并加密
-        if (StrUtil.isBlank(userDTO.getPassword())) {
+        if (StrUtil.isBlank(user.getPassword())) {
             user.setPassword(MD5.create().digestHex("123456"));
         } else {
-            user.setPassword(MD5.create().digestHex(userDTO.getPassword()));
+            user.setPassword(MD5.create().digestHex(user.getPassword()));
         }
-        
+
         // 设置默认状态
         if (user.getStatus() == null) {
             user.setStatus(1);
         }
-        
-        boolean result = save(user);
-        
-        // 分配角色
-        if (result && userDTO.getRoleIds() != null && !userDTO.getRoleIds().isEmpty()) {
-            assignRoles(user.getId(), userDTO.getRoleIds());
-        }
-        
-        return result;
+
+        return save(user);
     }
-    
+
     
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateUser(AdUserDTO userDTO) {
-        AdUser user = getById(userDTO.getId());
-        if (user == null) {
+    public boolean updateUser(AdUser user) {
+        AdUser existUser = getById(user.getId());
+        if (existUser == null) {
             throw new RuntimeException("用户不存在");
         }
-        
+
         // 检查用户名是否被其他用户使用
-        AdUser existUser = findByUsername(userDTO.getUsername());
-        if (existUser != null && !existUser.getId().equals(userDTO.getId())) {
+        LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AdUser::getUsername, user.getUsername())
+                .eq(AdUser::getIsDeleted, CommonConstant.NO_STR)
+                .ne(AdUser::getId, user.getId());
+
+        if (getOne(queryWrapper) != null) {
             throw new RuntimeException("用户名已被使用");
         }
-        
-        BeanUtils.copyProperties(userDTO, user);
-        
+
         // 如果有新密码，则加密
-        if (StrUtil.isNotBlank(userDTO.getPassword())) {
-            user.setPassword(MD5.create().digestHex(userDTO.getPassword()));
+        if (StrUtil.isNotBlank(user.getPassword())) {
+            user.setPassword(MD5.create().digestHex(user.getPassword()));
+        } else {
+            user.setPassword(null); // 不更新密码
         }
-        
-        boolean result = updateById(user);
-        
-        // 重新分配角色
-        if (result && userDTO.getRoleIds() != null) {
-            assignRoles(user.getId(), userDTO.getRoleIds());
-        }
-        
-        return result;
+
+        return updateById(user);
     }
-    
-    
-    public boolean deleteUser(String id) {
-        return removeById(id);
-    }
-    
-    
-    public boolean batchDeleteUsers(List<String> ids) {
-        return removeByIds(ids);
-    }
-    
+
     
     public boolean resetPassword(String id, String newPassword) {
         AdUser user = getById(id);
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }
-        
-        user.setPassword(MD5.create().digestHex(newPassword));
-        return updateById(user);
+
+        LambdaUpdateWrapper<AdUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AdUser::getId, id)
+                .set(AdUser::getPassword, MD5.create().digestHex(newPassword))
+                .set(AdUser::getUpdateTime, new Date());
+
+        return update(updateWrapper);
     }
-    
+
     
     public boolean changePassword(String id, String oldPassword, String newPassword) {
         AdUser user = getById(id);
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }
-        
+
         // 验证旧密码
         if (!user.getPassword().equals(MD5.create().digestHex(oldPassword))) {
             throw new RuntimeException("原密码错误");
         }
-        
-        user.setPassword(MD5.create().digestHex(newPassword));
-        return updateById(user);
+
+        LambdaUpdateWrapper<AdUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AdUser::getId, id)
+                .set(AdUser::getPassword, MD5.create().digestHex(newPassword))
+                .set(AdUser::getUpdateTime, new Date());
+
+        return update(updateWrapper);
     }
-    
+
     
     public boolean changeStatus(String id, Integer status) {
-        AdUser user = getById(id);
-        if (user == null) {
-            throw new RuntimeException("用户不存在");
-        }
-        
-        user.setStatus(status);
-        return updateById(user);
+        LambdaUpdateWrapper<AdUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AdUser::getId, id)
+                .set(AdUser::getStatus, status)
+                .set(AdUser::getUpdateTime, new Date());
+
+        return update(updateWrapper);
     }
-    
+
     
     @Transactional(rollbackFor = Exception.class)
     public boolean assignRoles(String userId, List<String> roleIds) {
         // 先删除原有角色关联
-        adUserRoleMapper.deleteByUserId(userId);
-        
+        LambdaUpdateWrapper<AdUserRole> deleteWrapper = new LambdaUpdateWrapper<>();
+        deleteWrapper.eq(AdUserRole::getUserId, userId)
+                .set(AdUserRole::getIsDeleted, CommonConstant.YES_STR)
+                .set(AdUserRole::getUpdateTime, new Date());
+        adUserRoleMapper.update(null, deleteWrapper);
+
         // 添加新的角色关联
         if (roleIds != null && !roleIds.isEmpty()) {
-            List<AdUserRole> userRoles = new ArrayList<>();
             for (String roleId : roleIds) {
                 AdUserRole userRole = new AdUserRole();
                 userRole.setUserId(userId);
                 userRole.setRoleId(roleId);
                 userRole.setCreateTime(new Date());
                 userRole.setUpdateTime(new Date());
-                userRoles.add(userRole);
+                userRole.setIsDeleted(CommonConstant.NO_STR);
+                adUserRoleMapper.insert(userRole);
             }
-            adUserRoleMapper.batchInsert(userRoles);
         }
-        
+
         return true;
     }
-    
+
     
     public List<AdUser> findByDeptId(String deptId) {
-        return baseMapper.findByDeptId(deptId);
+        LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AdUser::getDeptId, deptId)
+                .eq(AdUser::getIsDeleted, CommonConstant.NO_STR);
+        return list(queryWrapper);
     }
-    
+
     
     public List<AdUser> findByRoleId(String roleId) {
-        return baseMapper.findByRoleId(roleId);
+        // 先查询用户角色关联表
+        LambdaQueryWrapper<AdUserRole> roleQueryWrapper = new LambdaQueryWrapper<>();
+        roleQueryWrapper.eq(AdUserRole::getRoleId, roleId)
+                .eq(AdUserRole::getIsDeleted, CommonConstant.NO_STR);
+        List<AdUserRole> userRoles = adUserRoleMapper.selectList(roleQueryWrapper);
+
+        if (userRoles.isEmpty()) {
+            return List.of();
+        }
+
+        // 提取用户ID列表
+        List<String> userIds = userRoles.stream()
+                .map(AdUserRole::getUserId)
+                .toList();
+
+        // 查询用户信息
+        LambdaQueryWrapper<AdUser> userQueryWrapper = new LambdaQueryWrapper<>();
+        userQueryWrapper.in(AdUser::getId, userIds)
+                .eq(AdUser::getIsDeleted, CommonConstant.NO_STR);
+
+        return list(userQueryWrapper);
+    }
+
+    public boolean deleteUser(String id) {
+        return removeById(id);
+    }
+
+    public boolean batchDeleteUsers(List<String> ids) {
+        return removeByIds(ids);
     }
 }

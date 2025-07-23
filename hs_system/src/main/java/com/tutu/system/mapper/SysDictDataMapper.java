@@ -1,14 +1,14 @@
-package com.tutu.admin_user.mapper;
+package com.tutu.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tutu.admin_user.entity.AdRole;
+import com.tutu.system.entity.SysDictData;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 角色Mapper接口
+ * 字典数据Mapper接口
  * 使用MyBatis Plus方式，复杂查询在Service层实现
  */
 @Mapper
-public interface AdRoleMapper extends BaseMapper<AdRole> {
-
+public interface SysDictDataMapper extends BaseMapper<SysDictData> {
+    
 }

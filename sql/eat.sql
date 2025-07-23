@@ -300,4 +300,69 @@ CREATE TABLE `operation_log` (
   KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='操作日志表';
 
+-- ----------------------------
+-- Table structure for sys_dict_type
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_dict_type`;
+CREATE TABLE `sys_dict_type` (
+  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '主键ID',
+  `dict_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '字典名称',
+  `dict_type` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '字典类型',
+  `status` int DEFAULT '1' COMMENT '状态：1-启用，0-禁用',
+  `remark` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '创建人',
+  `update_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '更新人',
+  `is_deleted` varchar(1) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0' COMMENT '逻辑删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `dict_type` (`dict_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='字典类型表';
+
+-- ----------------------------
+-- Records of sys_dict_type
+-- ----------------------------
+BEGIN;
+INSERT INTO `sys_dict_type` (`id`, `dict_name`, `dict_type`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('1', '用户状态', 'user_status', 1, '用户状态字典', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_type` (`id`, `dict_name`, `dict_type`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('2', '数据状态', 'data_status', 1, '数据状态字典', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_type` (`id`, `dict_name`, `dict_type`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('3', '操作类型', 'operation_type', 1, '操作类型字典', NOW(), NOW(), '1', '1', '0');
+COMMIT;
+
+-- ----------------------------
+-- Table structure for sys_dict_data
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_dict_data`;
+CREATE TABLE `sys_dict_data` (
+  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '主键ID',
+  `dict_sort` int DEFAULT '0' COMMENT '字典排序',
+  `dict_label` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '字典标签',
+  `dict_value` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '字典键值',
+  `dict_type` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '字典类型',
+  `css_class` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '样式属性（其他样式扩展）',
+  `list_class` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '表格回显样式',
+  `is_default` varchar(1) COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '是否默认（1是 0否）',
+  `status` int DEFAULT '1' COMMENT '状态：1-启用，0-禁用',
+  `remark` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '创建人',
+  `update_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '更新人',
+  `is_deleted` varchar(1) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0' COMMENT '逻辑删除',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='字典数据表';
+
+-- ----------------------------
+-- Records of sys_dict_data
+-- ----------------------------
+BEGIN;
+INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('1', 1, '启用', '1', 'user_status', '', 'success', '1', 1, '用户状态启用', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('2', 2, '禁用', '0', 'user_status', '', 'danger', '0', 1, '用户状态禁用', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('3', 1, '正常', '1', 'data_status', '', 'success', '1', 1, '数据状态正常', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('4', 2, '停用', '0', 'data_status', '', 'danger', '0', 1, '数据状态停用', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('5', 1, '查询', 'SELECT', 'operation_type', '', 'info', '0', 1, '查询操作', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('6', 2, '新增', 'INSERT', 'operation_type', '', 'success', '0', 1, '新增操作', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('7', 3, '更新', 'UPDATE', 'operation_type', '', 'warning', '0', 1, '更新操作', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('8', 4, '删除', 'DELETE', 'operation_type', '', 'danger', '0', 1, '删除操作', NOW(), NOW(), '1', '1', '0');
+COMMIT;
+
 SET FOREIGN_KEY_CHECKS = 1;

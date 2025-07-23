@@ -58,7 +58,7 @@ public class PermissionController {
      * 创建权限
      */
     @PostMapping
-    public BaseResponse<String> createPermission(@Valid @RequestBody AdPermissionDTO adPermissionDTO) {
+    public BaseResponse<String> createPermission(@Valid @RequestBody AdPermission adPermissionDTO) {
         try {
             boolean result = permissionService.createPermission(adPermissionDTO);
             if (result) {
@@ -75,7 +75,7 @@ public class PermissionController {
      * 更新权限
      */
     @PutMapping
-    public BaseResponse<String> updatePermission(@Valid @RequestBody AdPermissionDTO adPermissionDTO) {
+    public BaseResponse<String> updatePermission(@Valid @RequestBody AdPermission adPermissionDTO) {
         try {
             boolean result = permissionService.updatePermission(adPermissionDTO);
             if (result) {

@@ -58,7 +58,7 @@ public class RoleController {
      * 创建角色
      */
     @PostMapping
-    public BaseResponse<String> createRole(@Valid @RequestBody AdRoleDTO adRoleDTO) {
+    public BaseResponse<String> createRole(@Valid @RequestBody AdRole adRoleDTO) {
         try {
             boolean result = adRoleService.createRole(adRoleDTO);
             if (result) {
@@ -75,7 +75,7 @@ public class RoleController {
      * 更新角色
      */
     @PutMapping
-    public BaseResponse<String> updateRole(@Valid @RequestBody AdRoleDTO adRoleDTO) {
+    public BaseResponse<String> updateRole(@Valid @RequestBody AdRole adRoleDTO) {
         try {
             boolean result = adRoleService.updateRole(adRoleDTO);
             if (result) {
