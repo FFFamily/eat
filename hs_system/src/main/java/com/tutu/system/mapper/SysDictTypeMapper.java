@@ -1,7 +1,7 @@
 package com.tutu.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tutu.system.entity.SysDictType;
+import com.tutu.system.entity.dict.SysDictType;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

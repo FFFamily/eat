@@ -1,6 +1,7 @@
 package com.tutu.user.enums;
 
 import com.tutu.common.enums.BaseEnum;
+import com.tutu.common.enums.user.UserStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

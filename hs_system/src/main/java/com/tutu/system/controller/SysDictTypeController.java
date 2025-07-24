@@ -5,7 +5,7 @@ import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.annotation.OperationLog;
 import com.tutu.common.enums.OperationType;
 import com.tutu.system.dto.SysDictTypeDTO;
-import com.tutu.system.entity.SysDictType;
+import com.tutu.system.entity.dict.SysDictType;
 import com.tutu.system.service.SysDictTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

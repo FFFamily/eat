@@ -3,11 +3,10 @@ package com.tutu.admin_user.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.util.List;
 
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.user.BaseUserEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,33 +15,16 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class AdUser extends BaseEntity {
-
+public class AdUser extends BaseUserEntity {
     /**
      * 主键ID
      */
     @TableId(type = IdType.ASSIGN_UUID)
     private String id;
-
-    /**
-     * 登录账号
-     */
-    private String username;
-
-    /**
-     * 账号密码
-     */
-    private String password;
-
     /**
      * 真实姓名
      */
-    private String name;
-
-    /**
-     * 邮箱
-     */
-    private String email;
+    private String nickname;
 
     /**
      * 手机号
@@ -53,12 +35,6 @@ public class AdUser extends BaseEntity {
      * 头像
      */
     private String avatar;
-
-    /**
-     * 状态：1-启用，0-禁用
-     */
-    private Integer status;
-
     /**
      * 部门ID
      */

@@ -1,7 +1,7 @@
 package com.tutu.system.utils;
 
 import cn.hutool.extra.spring.SpringUtil;
-import com.tutu.system.entity.SysDictData;
+import com.tutu.system.entity.dict.SysDictData;
 import com.tutu.system.service.SysDictDataService;
 
 import java.util.List;

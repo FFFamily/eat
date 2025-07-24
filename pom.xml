@@ -14,8 +14,8 @@
     <name>eat</name>
     <description>eat</description>
     <modules>
-        <module>eat_api</module>
-        <module>eat_common</module>
+        <module>hs_api</module>
+        <module>hs_common</module>
         <module>eat_food</module>
         <module>hs_user</module>
         <module>hs_admin_user</module>

@@ -1,13 +1,12 @@
-package com.tutu.user.enums;
+package com.tutu.admin_user.enums;
 
 import com.tutu.common.enums.BaseEnum;
-import com.tutu.common.enums.user.UserStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum BaseUserRoleEnum implements BaseEnum<UserStatusEnum,String> {
+public enum AdUserRoleEnum implements BaseEnum<AdUserRoleEnum,String> {
     ADMIN("admin", "管理员"),
     USER("user", "普通用户")
     ;

@@ -10,10 +10,12 @@ import com.tutu.admin_user.dto.AdRoleDTO;
 import com.tutu.admin_user.entity.AdRole;
 import com.tutu.admin_user.entity.AdRolePermission;
 import com.tutu.admin_user.entity.AdUserRole;
+import com.tutu.admin_user.enums.AdUserRoleEnum;
 import com.tutu.admin_user.mapper.AdRoleMapper;
 import com.tutu.admin_user.mapper.AdRolePermissionMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
 import com.tutu.common.constant.CommonConstant;
+import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,10 +31,10 @@ import java.util.List;
 @Service
 public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
 
-    @Autowired
+    @Resource
     private AdRolePermissionMapper adRolePermissionMapper;
 
-    @Autowired
+    @Resource
     private AdUserRoleMapper adUserRoleMapper;
 
     
@@ -188,5 +190,17 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
     @Transactional(rollbackFor = Exception.class)
     public boolean batchDeleteRoles(List<String> ids) {
         return removeByIds(ids);
+    }
+
+    /**
+     * 第一次创建用户绑定角色
+     * @param userId 用户id
+     */
+    public void firstCreateUserBindRole(String userId) {
+        AdUserRole userRole = new AdUserRole();
+        userRole.setUserId(userId);
+        AdRole role = getOne(new LambdaQueryWrapper<AdRole>().eq(AdRole::getCode, AdUserRoleEnum.USER.getCode()));
+        userRole.setRoleId(role.getId());
+        adUserRoleMapper.insert(userRole);
     }
 }

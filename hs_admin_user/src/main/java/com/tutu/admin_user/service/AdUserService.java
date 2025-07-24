@@ -7,18 +7,17 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.tutu.admin_user.dto.AdUserDTO;
 import com.tutu.admin_user.entity.AdUser;
 import com.tutu.admin_user.entity.AdUserRole;
+import com.tutu.admin_user.enums.AdUserStatusEnum;
 import com.tutu.admin_user.mapper.AdUserMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
 import com.tutu.common.constant.CommonConstant;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.tutu.common.enums.user.UserStatusEnum;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -28,14 +27,13 @@ import java.util.List;
 @Service
 public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
 
-    @Autowired
+    @Resource
     private AdUserRoleMapper adUserRoleMapper;
 
     
     public AdUser findByUsername(String username) {
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(AdUser::getUsername, username)
-                .eq(AdUser::getIsDeleted, CommonConstant.NO_STR);
+        queryWrapper.eq(AdUser::getUsername, username);
         return getOne(queryWrapper);
     }
 
@@ -50,9 +48,7 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
             queryWrapper.and(wrapper -> wrapper
                     .like(AdUser::getUsername, keyword)
                     .or()
-                    .like(AdUser::getName, keyword)
-                    .or()
-                    .like(AdUser::getEmail, keyword)
+                    .like(AdUser::getNickname, keyword)
             );
         }
 
@@ -78,7 +74,7 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
 
         // 设置默认状态
         if (user.getStatus() == null) {
-            user.setStatus(1);
+            user.setStatus(UserStatusEnum.USE.getCode());
         }
 
         return save(user);

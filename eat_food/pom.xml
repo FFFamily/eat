@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>com.tutu</groupId>
-            <artifactId>eat_common</artifactId>
+            <artifactId>hs_common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.constant.CommonConstant;
 import com.tutu.system.dto.SysDictDataDTO;
-import com.tutu.system.entity.SysDictData;
+import com.tutu.system.entity.dict.SysDictData;
 import com.tutu.system.mapper.SysDictDataMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
