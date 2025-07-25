@@ -365,4 +365,58 @@ INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dic
 INSERT INTO `sys_dict_data` (`id`, `dict_sort`, `dict_label`, `dict_value`, `dict_type`, `css_class`, `list_class`, `is_default`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('8', 4, '删除', 'DELETE', 'operation_type', '', 'danger', '0', 1, '删除操作', NOW(), NOW(), '1', '1', '0');
 COMMIT;
 
+-- ----------------------------
+-- Table structure for sys_file
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_file`;
+CREATE TABLE `sys_file` (
+  `id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '主键ID',
+  `original_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT '文件原名',
+  `file_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT '文件名',
+  `file_path` varchar(500) COLLATE utf8mb4_general_ci NOT NULL COMMENT '文件路径',
+  `file_size` bigint NOT NULL COMMENT '文件大小（字节）',
+  `file_type` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件类型',
+  `file_ext` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件扩展名',
+  `file_md5` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件MD5值',
+  `file_url` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件访问URL',
+  `upload_user_id` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '上传用户ID',
+  `upload_user_name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '上传用户名',
+  `status` int DEFAULT '1' COMMENT '文件状态：1-正常，0-删除',
+  `remark` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '创建人',
+  `update_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '更新人',
+  `is_deleted` varchar(1) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0' COMMENT '逻辑删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_file_md5` (`file_md5`),
+  KEY `idx_upload_user` (`upload_user_id`),
+  KEY `idx_file_type` (`file_type`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='系统文件表';
+
+-- ----------------------------
+-- Table structure for home_config
+-- ----------------------------
+DROP TABLE IF EXISTS `home_config`;
+CREATE TABLE `home_config` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `home_img` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '首页图片URL',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '创建人',
+  `update_by` varchar(32) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '更新人',
+  `is_deleted` varchar(1) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0' COMMENT '逻辑删除：0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_create_time` (`create_time`),
+  KEY `idx_is_deleted` (`is_deleted`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='首页配置表';
+
+-- ----------------------------
+-- Records of home_config
+-- ----------------------------
+BEGIN;
+INSERT INTO `home_config` (`id`, `home_img`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES (1, '/files/default/home-banner.jpg', NOW(), NOW(), 'system', 'system', '0');
+COMMIT;
+
 SET FOREIGN_KEY_CHECKS = 1;

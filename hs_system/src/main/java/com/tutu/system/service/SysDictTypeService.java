@@ -158,6 +158,6 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
     public void refreshCache() {
         // 这里可以实现字典缓存刷新逻辑
         // 比如清除Redis缓存等
-        log.info("字典类型缓存已刷新");
+//        log.info("字典类型缓存已刷新");
     }
 }

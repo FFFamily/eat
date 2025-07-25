@@ -1,8 +1,8 @@
 package com.tutu.system.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
 
 /**
  * 字典数据DTO

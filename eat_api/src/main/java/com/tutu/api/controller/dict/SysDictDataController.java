@@ -1,4 +1,4 @@
-package com.tutu.system.controller;
+package com.tutu.api.controller.dict;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tutu.common.Response.BaseResponse;
@@ -7,6 +7,7 @@ import com.tutu.common.enums.OperationType;
 import com.tutu.system.dto.SysDictDataDTO;
 import com.tutu.system.entity.dict.SysDictData;
 import com.tutu.system.service.SysDictDataService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

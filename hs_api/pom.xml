@@ -56,6 +56,11 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.tutu</groupId>
+            <artifactId>hs_system</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
