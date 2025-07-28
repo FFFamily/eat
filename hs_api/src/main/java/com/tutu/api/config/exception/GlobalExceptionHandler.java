@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value=Exception.class)
     public BaseResponse<Void> handleException(Exception ex){
         ex.printStackTrace();
-        return BaseResponse.error("出错啦，请联系管理员");
+        return BaseResponse.error("服务器异常");
     }
 
     // 服务手动抛出异常
