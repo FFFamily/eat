@@ -1,0 +1,28 @@
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE `user` (
+  `id` varchar(64) NOT NULL COMMENT '用户ID',
+  `username` varchar(20) DEFAULT NULL COMMENT '用户名',
+  `password` varchar(20) DEFAULT NULL COMMENT '密码',
+  `status` tinyint DEFAULT 0 COMMENT '用户状态',
+  `nickname` varchar(20) DEFAULT NULL COMMENT '昵称',
+  `type` varchar(20) DEFAULT NULL COMMENT '用户类型',
+  `phone` varchar(20) DEFAULT NULL COMMENT '手机号',
+  `id_card` varchar(20) DEFAULT NULL COMMENT '身份证号',
+  `score` decimal(10,2) DEFAULT NULL COMMENT '用户评分系数',
+  `tax_number` varchar(50) DEFAULT NULL COMMENT '纳税人识别号',
+  `bank_name` varchar(100) DEFAULT NULL COMMENT '开户行',
+  `bank_account` varchar(50) DEFAULT NULL COMMENT '银行账号',
+  `credit_code` varchar(20) DEFAULT NULL COMMENT '信用代码',
+  `address` varchar(255) DEFAULT NULL COMMENT '地址',
+  `contact_phone` varchar(20) DEFAULT NULL COMMENT '联系电话',
+  `bank_account1` varchar(50) DEFAULT NULL COMMENT '走款账户1',
+  `bank_account2` varchar(50) DEFAULT NULL COMMENT '走款账户2',
+  `bank_account3` varchar(50) DEFAULT NULL COMMENT '走款账户3',
+  `register_time` datetime DEFAULT NULL COMMENT '注册时间',
+  `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
+  `update_by` varchar(64) DEFAULT NULL COMMENT '更新人',
+  `create_time` datetime  COMMENT '创建时间',
+  `update_time` datetime  COMMENT '更新时间',
+  `is_deleted` tinyint DEFAULT 0 COMMENT '是否删除(0-未删除,1-已删除)',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';

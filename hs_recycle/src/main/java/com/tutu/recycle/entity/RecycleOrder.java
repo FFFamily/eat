@@ -18,6 +18,8 @@ public class RecycleOrder extends BaseEntity {
     private String orderNo;
     // 合同编号
     private String contractId;
+    // 状态
+    private String status;
     // 货物照片
     private String cargoImg;
     // 运输方式

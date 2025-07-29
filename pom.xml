@@ -22,6 +22,7 @@
         <module>hs_system</module>
         <module>hs_invoice</module>
         <module>hs_recycle</module>
+        <module>hs_lease</module>
     </modules>
     <packaging>pom</packaging>
     <properties>
@@ -49,6 +50,11 @@
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+                <version>3.5.9</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-jsqlparser-4.9</artifactId>
                 <version>3.5.9</version>
             </dependency>
             <dependency>

@@ -1,22 +1,45 @@
 package com.tutu.user.entity;
 
-import com.alibaba.fastjson2.annotation.JSONField;
+import java.math.BigDecimal;
+import java.sql.Date;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.tutu.common.entity.BaseEntity;
 import com.tutu.common.entity.user.BaseUserEntity;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@TableName("user")
 public class User extends BaseUserEntity {
     // id
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
-    // 角色id
-    private String roleId;
-
+    // 类型
+    private String type;
+    // 手机号
+    private String phone;
+    // 身份证
+    private String idCard;
+    // 用户评分系数
+    private BigDecimal score;
+    // 纳税人识别号
+    private String taxNumber;
+    // 开户行
+    private String bankName;
+    // 账号
+    private String bankAccount;
+    // 信用代码
+    private String creditCode;
+    // 地址
+    private String address;
+    // 联系电话
+    private String contactPhone;
+    // 走款账户1
+    private String bankAccount1;
+    // 走款账户2
+    private String bankAccount2;
+    // 走款账户3
+    private String bankAccount3;
+    // 注册时间
+    private Date registerTime;
 }

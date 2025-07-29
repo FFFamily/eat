@@ -1,5 +1,9 @@
 package com.tutu.api.controller.mobile.user;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.tutu.admin_user.entity.AdRole;
+import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.User;
 import com.tutu.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +22,24 @@ public class UserController {
      * @param user 用户实体
      * @return 创建成功返回用户实体，失败返回 null
      */
-    @PostMapping
+    @PostMapping("/create")
     public User createUser(@RequestBody User user) {
         if (userService.save(user)) {
             return user;
         }
         return null;
+    }
+
+    /**
+     * 分页查询用户列表
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 分页查询结果
+     */
+    @GetMapping("/page")
+    public BaseResponse<Page<User>> page(@RequestParam int pageNum, @RequestParam int pageSize) {
+        Page<User> page = new Page<>(pageNum, pageSize);
+        return BaseResponse.success(userService.page(page));
     }
 
     /**

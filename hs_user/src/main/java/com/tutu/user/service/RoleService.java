@@ -14,15 +14,4 @@ import org.springframework.stereotype.Service;
 public class RoleService extends ServiceImpl<RoleMapper, Role> {
     @Resource
     private UserRoleMapper userRoleMapper;
-    /**
-     * 第一次创建用户绑定角色
-     * @param userId 用户id
-     */
-    public void firstCreateUserBindRole(String userId) {
-        UserRole userRole = new UserRole();
-        userRole.setUserId(userId);
-        Role role = getOne(new LambdaQueryWrapper<Role>().eq(Role::getCode, BaseUserRoleEnum.USER.getCode()));
-        userRole.setRoleId(role.getId());
-        userRoleMapper.insert(userRole);
-    }
 }

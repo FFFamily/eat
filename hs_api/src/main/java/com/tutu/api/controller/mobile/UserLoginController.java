@@ -3,6 +3,8 @@ package com.tutu.api.controller.mobile;
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.tutu.api.service.LoginService;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.User;
@@ -75,18 +77,33 @@ public class UserLoginController {
      */
     @PostMapping("/register")
     @Transactional(rollbackFor = Exception.class)
-    public BaseResponse<Void> register(@RequestBody @Valid LoginRequest loginRequest) {
+    public BaseResponse<Void> register(@RequestBody @Valid User loginRequest) {
         // 检查用户名是否已存在
-        User existingUser = userService.getUserByUsername(loginRequest.getUsername());
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getUsername, loginRequest.getUsername());
+        User existingUser = userService.getOne(queryWrapper);
         if (existingUser != null) {
             return BaseResponse.error("用户名已存在");
+        }
+        // 校验手机号
+        queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getPhone, loginRequest.getPhone());
+        existingUser = userService.getOne(queryWrapper);
+        if (existingUser != null) {
+            return BaseResponse.error("手机号已存在");
+        }
+        // 校验身份证
+        queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(User::getIdCard, loginRequest.getIdCard());
+        existingUser = userService.getOne(queryWrapper);
+        if (existingUser != null) {
+            return BaseResponse.error("身份证已绑定其他用户");
         }
         User user = new User();
         BeanUtil.copyProperties(loginRequest, user);
         user.setStatus(UserStatusEnum.USE.getCode());
         user.setPassword(SaSecureUtil.md5(loginRequest.getPassword()));
         userService.save(user);
-        roleService.firstCreateUserBindRole(user.getId());
         return BaseResponse.success();
     }
 

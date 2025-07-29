@@ -13,7 +13,7 @@ public class BaseUserEntity extends BaseEntity {
     // 登录密码
     @JSONField(serialize = false)
     private String password;
-    // 用户状态
+    // 用户状态(使用中/已关闭)
     private String status;
     // 用户昵称
     private String nickname;
