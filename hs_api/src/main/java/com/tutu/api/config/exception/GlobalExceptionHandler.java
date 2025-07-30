@@ -20,6 +20,7 @@ public class GlobalExceptionHandler {
     // 服务手动抛出异常
     @ExceptionHandler(value= ServiceException.class)
     public BaseResponse<Void> handleException(ServiceException ex){
+        ex.printStackTrace();
         return BaseResponse.error("服务器内部错误: "+ex.getMessage());
     }
 

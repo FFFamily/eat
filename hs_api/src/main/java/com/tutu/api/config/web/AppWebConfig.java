@@ -18,6 +18,7 @@ public class AppWebConfig implements WebMvcConfigurer {
                         "/wx/auth/login",
                         "/wx/auth/register",
                         "/ad/auth/register",
+                        "/system/file/noAuth/upload", // 免登录上传
                         "/files/**");
         WebMvcConfigurer.super.addInterceptors(registry);
     }
