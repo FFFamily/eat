@@ -20,13 +20,15 @@ public class User extends BaseUserEntity {
     private String phone;
     // 身份证
     private String idCard;
+    // 身份证姓名
+    private String idCardName;
     // 用户评分系数
     private BigDecimal score;
     // 纳税人识别号
     private String taxNumber;
     // 开户行
     private String bankName;
-    // 账号
+    // 账号(银联号)
     private String bankAccount;
     // 信用代码
     private String creditCode;
@@ -35,11 +37,11 @@ public class User extends BaseUserEntity {
     // 联系电话
     private String contactPhone;
     // 走款账户1
-    private String bankAccount1;
+    private String payAccount1;
     // 走款账户2
-    private String bankAccount2;
+    private String payAccount2;
     // 走款账户3
-    private String bankAccount3;
+    private String payAccount3;
     // 注册时间
     private Date registerTime;
 }

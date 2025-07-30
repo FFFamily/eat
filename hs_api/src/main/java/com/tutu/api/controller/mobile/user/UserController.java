@@ -23,11 +23,9 @@ public class UserController {
      * @return 创建成功返回用户实体，失败返回 null
      */
     @PostMapping("/create")
-    public User createUser(@RequestBody User user) {
-        if (userService.save(user)) {
-            return user;
-        }
-        return null;
+    public BaseResponse<Void> createUser(@RequestBody User user) {
+        userService.create(user);
+        return BaseResponse.success();
     }
 
     /**
@@ -66,9 +64,21 @@ public class UserController {
      * @param user 用户实体
      * @return 更新成功返回 true，失败返回 false
      */
-    @PutMapping
-    public boolean updateUser(@RequestBody User user) {
-        return userService.updateById(user);
+    @PutMapping("/update")
+    public BaseResponse<Void> updateUser(@RequestBody User user) {
+        userService.updateById(user);
+        return BaseResponse.success();
+    }
+
+    /**
+     * 修改用户状态
+     * @param id 用户 ID
+     * @return 修改成功返回 true，失败返回 false
+     */
+    @PutMapping("/changeStatus")
+    public BaseResponse<Void> changeStatus(@RequestParam String id) {
+        userService.changeStatus(id);
+        return BaseResponse.success();
     }
 
     /**
@@ -76,8 +86,9 @@ public class UserController {
      * @param id 用户 ID
      * @return 删除成功返回 true，失败返回 false
      */
-    @DeleteMapping("/{id}")
-    public boolean deleteUser(@PathVariable String id) {
-        return userService.removeById(id);
+    @DeleteMapping("/delete/{id}")
+    public BaseResponse<Void> deleteUser(@PathVariable String id) {
+        userService.removeById(id);
+        return BaseResponse.success();
     }
 }
