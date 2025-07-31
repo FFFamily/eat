@@ -22,6 +22,8 @@ public class User extends BaseUserEntity {
     private String idCard;
     // 身份证姓名
     private String idCardName;
+    // 身份证图片
+    private String idCardImg;
     // 用户评分系数
     private BigDecimal score;
     // 纳税人识别号
