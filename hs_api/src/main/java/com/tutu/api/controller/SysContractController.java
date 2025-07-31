@@ -62,10 +62,10 @@ public class SysContractController {
     }
 
     /**
-     * 查询所有系统合同
+     * 小程序查询所有系统合同
      * @return 系统合同列表
      */
-    @GetMapping
+    @GetMapping("/wx/all")
     public BaseResponse<List<SysContract>>  getAllSysContracts() {
         return BaseResponse.success(sysContractService.list());
     }
