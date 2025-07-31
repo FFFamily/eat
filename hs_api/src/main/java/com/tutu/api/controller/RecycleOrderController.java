@@ -24,9 +24,9 @@ public class RecycleOrderController {
      * @param recycleOrder 回收订单信息
      * @return 添加结果
      */
-    @PostMapping
+    @PostMapping("/create")
     public BaseResponse<Void> addRecycleOrder(@RequestBody RecycleOrder recycleOrder) {
-        recycleOrderService.save(recycleOrder);
+        recycleOrderService.createOrder(recycleOrder);
         return BaseResponse.success();
     }
 
