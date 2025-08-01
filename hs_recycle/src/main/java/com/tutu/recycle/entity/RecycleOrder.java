@@ -26,4 +26,6 @@ public class RecycleOrder extends BaseEntity {
     private String transportType;
     // 经办人签字照片
     private String signImg;
+    // 处理人(司机)
+    private String processor;
 }

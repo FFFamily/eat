@@ -16,6 +16,8 @@ public class User extends BaseUserEntity {
     private String id;
     // 类型
     private String type;
+    // 用户操作使用类型： 普通用户、运输专人
+    private String useType;
     // 手机号
     private String phone;
     // 身份证

@@ -23,11 +23,22 @@ public class UserService extends ServiceImpl<UserMapper, User> {
     }
 
     /**
-     * 修改用户状态
-     * @param id 用户 ID
+     * 修改用户使用类型
+     * @param userId 用户 ID
+     * @param useType 使用类型
      */
-    public void changeStatus(String id) {
-        User user = getById(id);
+    public void changeUseType(String userId,String useType){
+        User user = getById(userId);
+        user.setUseType(useType);
+        updateById(user);
+    }
+
+    /**
+     * 修改用户状态
+     * @param userId 用户 ID
+     */
+    public void changeStatus(String userId) {
+        User user = getById(userId);
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }

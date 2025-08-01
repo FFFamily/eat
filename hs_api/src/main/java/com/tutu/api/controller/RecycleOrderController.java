@@ -1,6 +1,8 @@
 package com.tutu.api.controller;
 
 import cn.hutool.core.util.PageUtil;
+import jakarta.servlet.http.HttpServletResponse;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -25,9 +27,39 @@ public class RecycleOrderController {
      * @return 添加结果
      */
     @PostMapping("/create")
-    public BaseResponse<Void> addRecycleOrder(@RequestBody RecycleOrder recycleOrder) {
-        recycleOrderService.createOrder(recycleOrder);
+    public BaseResponse<RecycleOrder> addRecycleOrder(@RequestBody RecycleOrder recycleOrder) {
+        return BaseResponse.success(recycleOrderService.createOrder(recycleOrder));
+    }
+
+    /**
+     * 获取订单二维码
+     * @param orderId 订单ID
+     */
+    @GetMapping("/qrcode/{orderId}")
+    public BaseResponse<String> getOrderQrcode(@PathVariable String orderId) {
+        return BaseResponse.success(recycleOrderService.createOrderQrcode(orderId));
+    }
+
+    /**
+     * 给订单分配专人
+     * @param orderId 订单 ID
+     * @param processor 处理人 ID
+     * @return 分配结果
+     */
+    @GetMapping("/assign")
+    public BaseResponse<Void> assignProcessor(@RequestParam String orderId, @RequestParam String processor) {
+        recycleOrderService.assignProcessor(orderId, processor);
         return BaseResponse.success();
+    }
+
+    /**
+     * 获取专人负责的订单
+     * @param recycleOrder 订单实体
+     * @return 订单列表
+     */
+    @PostMapping("/processor/list")
+    public BaseResponse<List<RecycleOrder>> getOrdersByProcessor(@RequestBody RecycleOrder recycleOrder) {
+        return BaseResponse.success(recycleOrderService.getOrdersByProcessor(recycleOrder));
     }
 
     /**

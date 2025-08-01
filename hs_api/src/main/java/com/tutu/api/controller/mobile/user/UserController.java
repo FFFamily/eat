@@ -29,6 +29,18 @@ public class UserController {
     }
 
     /**
+     * 修改用户使用类型
+     * @param userId 用户 ID
+     * @param useType 使用类型
+     * @return 修改成功返回 true，失败返回 false
+     */
+    @PutMapping("/changeUseType")
+    public BaseResponse<Void> changeUseType(@RequestParam String userId, @RequestParam String useType) {
+        userService.changeUseType(userId, useType);
+        return BaseResponse.success();
+    }
+
+    /**
      * 分页查询用户列表
      * @param pageNum 页码
      * @param pageSize 每页数量
