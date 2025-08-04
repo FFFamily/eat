@@ -32,11 +32,16 @@ public class HomeConfig extends BaseEntity {
      * 首页图片URL
      */
     private String homeImg;
+    /**
+     * 商城类型
+     */
+    private String mallType;
 
     public HomeConfigDto covertToDto() {
         HomeConfigDto dto = new HomeConfigDto();
         BeanUtil.copyProperties(this, dto);
         Optional.ofNullable(homeImg).ifPresent(img -> dto.setHomeImg(List.of(img.split("、"))));
+        Optional.ofNullable(mallType).ifPresent(type -> dto.setMallType(List.of(type.split(","))));
         return dto;
     }
 }

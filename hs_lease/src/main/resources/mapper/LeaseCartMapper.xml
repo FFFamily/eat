@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.lease.mapper.LeaseCartMapper">
+
+    <!-- 查询用户购物车详情列表 -->
+    <select id="selectCartDetailsByUserId" resultType="com.tutu.lease.dto.LeaseCartDto">
+        SELECT 
+            lc.id,
+            lc.user_id,
+            lc.good_id,
+            lc.good_name,
+            lc.good_price,
+            lc.quantity,
+            lc.lease_start_time,
+            lc.lease_end_time,
+            lc.lease_days,
+            lc.subtotal,
+            lc.status,
+            lc.remark,
+            lc.create_time,
+            lc.update_time,
+            lg.name as leaseGood_name,
+            lg.type as leaseGood_type,
+            lg.status as leaseGood_status,
+            lg.base_info as leaseGood_baseInfo,
+            lg.use_limit_year as leaseGood_useLimitYear,
+            lg.parameter as leaseGood_parameter,
+            lg.service_content as leaseGood_serviceContent,
+            lg.precaution as leaseGood_precaution,
+            lg.price as leaseGood_price
+        FROM lease_cart lc
+        LEFT JOIN lease_good lg ON lc.good_id = lg.id
+        WHERE lc.user_id = #{userId}
+          AND lc.status = #{status}
+          AND lc.is_deleted = '0'
+          AND (lg.is_deleted = '0' OR lg.is_deleted IS NULL)
+        ORDER BY lc.create_time DESC
+    </select>
+
+    <!-- 查询用户购物车商品总数量 -->
+    <select id="selectCartItemCountByUserId" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(quantity), 0)
+        FROM lease_cart
+        WHERE user_id = #{userId}
+          AND status = #{status}
+          AND is_deleted = '0'
+    </select>
+
+</mapper>

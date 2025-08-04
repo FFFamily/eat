@@ -1,13 +1,17 @@
 package com.tutu.api.controller;
 
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.lease.entity.LeaseGoodCategory;
+import com.tutu.lease.service.LeaseGoodCategoryService;
 import com.tutu.system.dto.HomeConfigDto;
 import com.tutu.system.entity.config.HomeConfig;
 import com.tutu.system.service.HomeConfigService;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/system/home/config")
@@ -15,6 +19,8 @@ public class HomeConfigController {
 
     @Autowired
     private HomeConfigService homeConfigService;
+    @Resource
+    private LeaseGoodCategoryService leaseGoodCategoryService;
 
     /**
      * 获取所有首页配置信息
@@ -31,7 +37,15 @@ public class HomeConfigController {
      */
     @GetMapping("/wx")
     public BaseResponse<HomeConfigDto> getWxConfig() {
-        return BaseResponse.success(homeConfigService.getAllHomeConfigs().getFirst().covertToDto());
+        HomeConfigDto homeConfigDto = homeConfigService.getAllHomeConfigs().getFirst().covertToDto();
+        List<LeaseGoodCategory> leaseGoodCategories = leaseGoodCategoryService.findByIdList(homeConfigDto.getMallType());
+        homeConfigDto.setMallTypeList(leaseGoodCategories.stream().map(i -> {
+            HomeConfigDto.MallType mallType = new HomeConfigDto.MallType();
+            mallType.setId(i.getId());
+            mallType.setName(i.getName());
+            return mallType;
+        }).collect(Collectors.toList()));
+        return BaseResponse.success(homeConfigDto);
     }
 
     /**

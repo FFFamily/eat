@@ -1,5 +1,6 @@
 package com.tutu.admin_user.service;
 
+import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.MD5;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -41,9 +42,6 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
     public IPage<AdUser> getPageList(int current, int size, String keyword) {
         Page<AdUser> page = new Page<>(current, size);
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
-
-        queryWrapper.eq(AdUser::getIsDeleted, CommonConstant.NO_STR);
-
         if (StrUtil.isNotBlank(keyword)) {
             queryWrapper.and(wrapper -> wrapper
                     .like(AdUser::getUsername, keyword)
@@ -64,14 +62,12 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         if (findByUsername(user.getUsername()) != null) {
             throw new RuntimeException("用户名已存在");
         }
-
         // 设置默认密码并加密
         if (StrUtil.isBlank(user.getPassword())) {
-            user.setPassword(MD5.create().digestHex("123456"));
+            user.setPassword(SaSecureUtil.md5("123456"));
         } else {
-            user.setPassword(MD5.create().digestHex(user.getPassword()));
+            user.setPassword(SaSecureUtil.md5(user.getPassword()));
         }
-
         // 设置默认状态
         if (user.getStatus() == null) {
             user.setStatus(UserStatusEnum.USE.getCode());
@@ -143,14 +139,18 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         return update(updateWrapper);
     }
 
-    
-    public boolean changeStatus(String id, Integer status) {
+
+    /**
+     * 修改用户状态
+     * @param userId 用户ID
+     * @param status 状态
+     */
+    public void changeStatus(String userId, String status) {
         LambdaUpdateWrapper<AdUser> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(AdUser::getId, id)
+        updateWrapper.eq(AdUser::getId, userId)
                 .set(AdUser::getStatus, status)
                 .set(AdUser::getUpdateTime, new Date());
-
-        return update(updateWrapper);
+        update(updateWrapper);
     }
 
     

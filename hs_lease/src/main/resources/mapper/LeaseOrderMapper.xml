@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.lease.mapper.LeaseOrderMapper">
+
+    <!-- 查询用户订单详情列表 -->
+    <select id="selectOrderDetailsByUserId" resultType="com.tutu.lease.dto.LeaseOrderDto">
+        SELECT 
+            lo.id,
+            lo.order_no,
+            lo.user_id,
+            lo.user_name,
+            lo.user_phone,
+            lo.status,
+            lo.total_amount,
+            lo.paid_amount,
+            lo.deposit_amount,
+            lo.lease_start_time,
+            lo.lease_end_time,
+            lo.total_lease_days,
+            lo.receiver_name,
+            lo.receiver_phone,
+            lo.receiver_address,
+            lo.return_address,
+            lo.pay_time,
+            lo.ship_time,
+            lo.receive_time,
+            lo.return_time,
+            lo.complete_time,
+            lo.cancel_time,
+            lo.cancel_reason,
+            lo.remark,
+            lo.logistics_company,
+            lo.tracking_number,
+            lo.create_time,
+            lo.update_time
+        FROM lease_order lo
+        WHERE lo.user_id = #{userId}
+          AND lo.is_deleted = '0'
+          <if test="status != null and status != ''">
+              AND lo.status = #{status}
+          </if>
+        ORDER BY lo.create_time DESC
+    </select>
+
+    <!-- 分页查询用户订单详情 -->
+    <select id="selectOrderDetailsPage" resultType="com.tutu.lease.dto.LeaseOrderDto">
+        SELECT 
+            lo.id,
+            lo.order_no,
+            lo.user_id,
+            lo.user_name,
+            lo.user_phone,
+            lo.status,
+            lo.total_amount,
+            lo.paid_amount,
+            lo.deposit_amount,
+            lo.lease_start_time,
+            lo.lease_end_time,
+            lo.total_lease_days,
+            lo.receiver_name,
+            lo.receiver_phone,
+            lo.receiver_address,
+            lo.return_address,
+            lo.pay_time,
+            lo.ship_time,
+            lo.receive_time,
+            lo.return_time,
+            lo.complete_time,
+            lo.cancel_time,
+            lo.cancel_reason,
+            lo.remark,
+            lo.logistics_company,
+            lo.tracking_number,
+            lo.create_time,
+            lo.update_time
+        FROM lease_order lo
+        WHERE lo.user_id = #{userId}
+          AND lo.is_deleted = '0'
+          <if test="status != null and status != ''">
+              AND lo.status = #{status}
+          </if>
+        ORDER BY lo.create_time DESC
+    </select>
+
+    <!-- 根据订单ID查询订单详情 -->
+    <select id="selectOrderDetailById" resultType="com.tutu.lease.dto.LeaseOrderDto">
+        SELECT 
+            lo.id,
+            lo.order_no,
+            lo.user_id,
+            lo.user_name,
+            lo.user_phone,
+            lo.status,
+            lo.total_amount,
+            lo.paid_amount,
+            lo.deposit_amount,
+            lo.lease_start_time,
+            lo.lease_end_time,
+            lo.total_lease_days,
+            lo.receiver_name,
+            lo.receiver_phone,
+            lo.receiver_address,
+            lo.return_address,
+            lo.pay_time,
+            lo.ship_time,
+            lo.receive_time,
+            lo.return_time,
+            lo.complete_time,
+            lo.cancel_time,
+            lo.cancel_reason,
+            lo.remark,
+            lo.logistics_company,
+            lo.tracking_number,
+            lo.create_time,
+            lo.update_time
+        FROM lease_order lo
+        WHERE lo.id = #{orderId}
+          AND lo.is_deleted = '0'
+    </select>
+
+    <!-- 统计用户各状态订单数量 -->
+    <select id="selectOrderStatusCount" resultType="java.util.Map">
+        SELECT 
+            status,
+            COUNT(*) as count
+        FROM lease_order
+        WHERE user_id = #{userId}
+          AND is_deleted = '0'
+        GROUP BY status
+    </select>
+
+</mapper>

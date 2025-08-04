@@ -50,7 +50,7 @@ public class AdminUserController {
     /**
      * 创建用户
      */
-    @PostMapping("/add")
+    @PostMapping("/create")
     public BaseResponse<String> createUser(@Valid @RequestBody AdUser userDTO) {
         try {
             boolean result = adUserService.createUser(userDTO);
@@ -158,19 +158,12 @@ public class AdminUserController {
     /**
      * 启用/禁用用户
      */
-    @PutMapping("/{id}/status")
-    public BaseResponse<String> changeStatus(@PathVariable String id, @RequestBody Map<String, Integer> params) {
-        try {
-            Integer status = params.get("status");
-            boolean result = adUserService.changeStatus(id, status);
-            if (result) {
-                return BaseResponse.success("状态修改成功");
-            } else {
-                return BaseResponse.error("状态修改失败");
-            }
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
+    @PutMapping("/changeStatus")
+    public BaseResponse<String> changeStatus(@RequestBody Map<String, String> params) {
+        String status = params.get("status");
+        String userId = params.get("userId");
+        adUserService.changeStatus(userId, status);
+        return BaseResponse.success();
     }
     
     /**

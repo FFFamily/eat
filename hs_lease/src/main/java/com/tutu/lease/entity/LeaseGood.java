@@ -23,7 +23,7 @@ public class LeaseGood extends BaseEntity {
     // 使用年限
     private BigDecimal useLimitYear;
     // 设备参数
-    private String eqptParameter;
+    private String parameter;
     // 服务内容
     private String serviceContent;
     // 注意事项

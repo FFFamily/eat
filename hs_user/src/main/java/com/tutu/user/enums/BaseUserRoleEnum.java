@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum BaseUserRoleEnum implements BaseEnum<UserStatusEnum,String> {
+public enum BaseUserRoleEnum implements BaseEnum<BaseUserRoleEnum,String> {
     ADMIN("admin", "管理员"),
     USER("user", "普通用户")
     ;
