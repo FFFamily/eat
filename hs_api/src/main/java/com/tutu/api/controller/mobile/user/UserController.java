@@ -66,9 +66,9 @@ public class UserController {
      * 获取所有用户信息
      * @return 用户列表
      */
-    @GetMapping
-    public List<User> getAllUsers() {
-        return userService.list();
+    @GetMapping("/list")
+    public BaseResponse<List<User>> getAllUsers() {
+        return BaseResponse.success(userService.list());
     }
 
     /**

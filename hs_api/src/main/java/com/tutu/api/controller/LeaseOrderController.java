@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.lease.dto.CreateOrderRequest;
+import com.tutu.lease.dto.CreateOrderFromGoodsRequest;
 import com.tutu.lease.dto.LeaseOrderDto;
+import com.tutu.lease.entity.LeaseOrder;
 import com.tutu.lease.service.LeaseOrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +30,18 @@ public class LeaseOrderController {
      * 从购物车创建订单
      */
     @PostMapping("/create")
-    public BaseResponse<LeaseOrderDto> createOrder(@RequestBody @Valid CreateOrderRequest request) {
-        return BaseResponse.success(leaseOrderService.createOrderFromCart(request));
+    public BaseResponse<Void> createOrder(@RequestBody @Valid CreateOrderRequest request) {
+        leaseOrderService.createOrderFromCart(request);
+        return BaseResponse.success();
+    }
+
+    /**
+     * 通过商品信息直接创建订单
+     */
+    @PostMapping("/create/fromGood")
+    public BaseResponse<Void> createOrderFromGoods(@RequestBody @Valid CreateOrderFromGoodsRequest request) {
+        leaseOrderService.createOrderFromGoods(request);
+        return BaseResponse.success();
     }
 
     /**
@@ -41,16 +53,26 @@ public class LeaseOrderController {
         return BaseResponse.success(leaseOrderService.getUserOrderList(userId, status));
     }
 
+
     /**
      * 分页查询当前用户订单
      */
-    @GetMapping("/page")
-    public BaseResponse<IPage<LeaseOrderDto>> getOrderPage(@RequestParam int current,
-                                                           @RequestParam int size,
+    @GetMapping("/my/page")
+    public BaseResponse<IPage<LeaseOrderDto>> getMyOrderPage(@RequestParam int pageNum,
+                                                           @RequestParam int pageSize,
                                                            @RequestParam(required = false) String status) {
         String userId = StpUtil.getLoginIdAsString();
-        Page<LeaseOrderDto> page = new Page<>(current, size);
+        Page<LeaseOrderDto> page = new Page<>(pageNum, pageSize);
         return BaseResponse.success(leaseOrderService.getUserOrderPage(page, userId, status));
+    }
+
+    // 分页查询订单
+    @GetMapping("/page")
+    public BaseResponse<IPage<LeaseOrder>> getOrderPage(@RequestParam int pageNum,
+                                                           @RequestParam int pageSize,
+                                                           @RequestParam(required = false) String status) {
+        Page<LeaseOrder> page = new Page<>(pageNum, pageSize);
+        return BaseResponse.success(leaseOrderService.page(page));
     }
 
     /**

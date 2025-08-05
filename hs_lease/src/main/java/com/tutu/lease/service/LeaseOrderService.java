@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.constant.CommonConstant;
 import com.tutu.lease.dto.CreateOrderRequest;
+import com.tutu.lease.dto.CreateOrderFromGoodsRequest;
 import com.tutu.lease.dto.LeaseOrderDto;
 import com.tutu.lease.entity.LeaseCart;
 import com.tutu.lease.entity.LeaseOrder;
@@ -45,7 +46,7 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
 
     
     @Transactional(rollbackFor = Exception.class)
-    public LeaseOrderDto createOrderFromCart(CreateOrderRequest request) {
+    public void createOrderFromCart(CreateOrderRequest request) {
         String userId = StpUtil.getLoginIdAsString();
         
         // 获取用户信息
@@ -131,9 +132,98 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         // 更新购物车状态为已下单
         cartItems.forEach(cart -> cart.setStatus(1));
         leaseCartService.updateBatchById(cartItems);
+    }
+
+    /**
+     * 通过商品信息直接创建订单
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void createOrderFromGoods(CreateOrderFromGoodsRequest request) {
+        String userId = request.getUserId();
+        // 获取用户信息
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
         
-        // 返回订单详情
-        return getOrderDetail(order.getId());
+        // 验证商品信息
+        if (request.getOrderItems().isEmpty()) {
+            throw new RuntimeException("商品信息不能为空");
+        }
+        
+        // 验证每个商品信息
+        for (CreateOrderFromGoodsRequest.OrderGoodsInfo goodsInfo : request.getOrderItems()) {
+            if (goodsInfo.getLeaseEndTime().before(goodsInfo.getLeaseStartTime())) {
+                throw new RuntimeException("租赁结束时间不能早于开始时间");
+            }
+            
+            // 验证小计金额是否正确
+            BigDecimal expectedSubtotal = goodsInfo.getGoodPrice()
+                    .multiply(new BigDecimal(goodsInfo.getQuantity()))
+                    .multiply(new BigDecimal(goodsInfo.getLeaseDays()));
+            
+            if (expectedSubtotal.compareTo(goodsInfo.getSubtotal()) != 0) {
+                throw new RuntimeException("商品小计金额计算错误");
+            }
+        }
+        
+        // 计算订单总金额和租赁时间范围
+        BigDecimal totalAmount = request.getOrderItems().stream()
+                .map(CreateOrderFromGoodsRequest.OrderGoodsInfo::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        Date minStartTime = request.getOrderItems().stream()
+                .map(CreateOrderFromGoodsRequest.OrderGoodsInfo::getLeaseStartTime)
+                .min(Date::compareTo)
+                .orElse(new Date());
+        
+        Date maxEndTime = request.getOrderItems().stream()
+                .map(CreateOrderFromGoodsRequest.OrderGoodsInfo::getLeaseEndTime)
+                .max(Date::compareTo)
+                .orElse(new Date());
+        
+        Integer totalLeaseDays = calculateLeaseDays(minStartTime, maxEndTime);
+        
+        // 创建订单主表
+        LeaseOrder order = new LeaseOrder();
+        order.setOrderNo(generateOrderNo());
+        order.setUserId(userId);
+        order.setUserName(user.getNickname());
+        order.setUserPhone(user.getPhone());
+        order.setStatus(LeaseOrderStatusEnum.PENDING_PAYMENT.getCode());
+        order.setTotalAmount(totalAmount);
+        order.setPaidAmount(BigDecimal.ZERO);
+        order.setDepositAmount(totalAmount.multiply(new BigDecimal("0.2"))); // 押金为总金额的20%
+        order.setLeaseStartTime(minStartTime);
+        order.setLeaseEndTime(maxEndTime);
+        order.setTotalLeaseDays(totalLeaseDays);
+        order.setReceiverName(request.getReceiverName());
+        order.setReceiverPhone(request.getReceiverPhone());
+        order.setReceiverAddress(request.getReceiverAddress());
+        order.setReturnAddress(request.getReturnAddress());
+        order.setRemark(request.getRemark());
+        
+        save(order);
+        
+        // 创建订单明细
+        List<LeaseOrderItem> orderItems = request.getOrderItems().stream().map(goodsInfo -> {
+            LeaseOrderItem item = new LeaseOrderItem();
+            item.setOrderId(order.getId());
+            item.setGoodId(goodsInfo.getGoodId());
+            item.setGoodName(goodsInfo.getGoodName());
+            item.setGoodPrice(goodsInfo.getGoodPrice());
+            item.setQuantity(goodsInfo.getQuantity());
+            item.setLeaseStartTime(goodsInfo.getLeaseStartTime());
+            item.setLeaseEndTime(goodsInfo.getLeaseEndTime());
+            item.setLeaseDays(goodsInfo.getLeaseDays());
+            item.setSubtotal(goodsInfo.getSubtotal());
+            item.setDepositAmount(goodsInfo.getSubtotal().multiply(new BigDecimal("0.2")));
+            item.setStatus(0);
+            item.setRemark(goodsInfo.getRemark());
+            return item;
+        }).collect(Collectors.toList());
+        
+        leaseOrderItemService.batchSave(orderItems);
     }
 
     

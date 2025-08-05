@@ -36,8 +36,9 @@ public class LeaseGoodController {
     }
 
     @PutMapping("/update")
-    public BaseResponse<Boolean> update(@RequestBody LeaseGood leaseGood) {
-        return BaseResponse.success(leaseGoodService.updateById(leaseGood));
+    public BaseResponse<Void> update(@RequestBody LeaseGood leaseGood) {
+        leaseGoodService.updateById(leaseGood);
+        return BaseResponse.success();
     }
 
     @DeleteMapping("/delete/{id}")

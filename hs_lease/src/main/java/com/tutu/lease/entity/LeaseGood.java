@@ -12,8 +12,12 @@ import java.math.BigDecimal;
 public class LeaseGood extends BaseEntity {
     // id
     private String id;
+    // 编码
+    private String code;
     // 商品名称
     private String name;
+    // 商品图片
+    private String image;
     // 商品分类
     private String type;
     // 状态(上架、下架)
