@@ -32,6 +32,6 @@ public class LeaseGood extends BaseEntity {
     private String serviceContent;
     // 注意事项
     private String precaution;
-    // 价格
+    // 价格(元/天)
     private BigDecimal price;
 }

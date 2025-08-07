@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.lease.dto.AddToCartRequest;
 import com.tutu.lease.dto.LeaseCartDto;
+import com.tutu.lease.dto.UpdateCartTimeDto;
 import com.tutu.lease.service.LeaseCartService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,9 +55,10 @@ public class LeaseCartController {
      * 更新购物车租赁时间
      */
     @PutMapping("/lease-time/{cartId}")
-    public BaseResponse<Boolean> updateLeaseTime(@PathVariable String cartId, 
-                                               @RequestBody @Valid AddToCartRequest request) {
-        return BaseResponse.success(leaseCartService.updateCartLeaseTime(cartId, request));
+    public BaseResponse<Void> updateLeaseTime(@PathVariable String cartId, 
+                                               @RequestBody @Valid UpdateCartTimeDto request) {
+        leaseCartService.updateCartLeaseTime(cartId, request);
+        return BaseResponse.success();
     }
 
     /**

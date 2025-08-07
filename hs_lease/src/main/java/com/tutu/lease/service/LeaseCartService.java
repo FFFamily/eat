@@ -9,6 +9,7 @@ import com.tutu.common.constant.CommonConstant;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.lease.dto.AddToCartRequest;
 import com.tutu.lease.dto.LeaseCartDto;
+import com.tutu.lease.dto.UpdateCartTimeDto;
 import com.tutu.lease.entity.LeaseCart;
 import com.tutu.lease.entity.LeaseGood;
 import com.tutu.lease.mapper.LeaseCartMapper;
@@ -84,21 +85,34 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
     }
 
     
+    
+    /**
+     * 更新购物车租赁时间
+     * @param cartId 
+     * @param request
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateCartLeaseTime(String cartId, AddToCartRequest request) {
+    public boolean updateCartLeaseTime(String cartId, UpdateCartTimeDto request) {
         String userId = StpUtil.getLoginIdAsString();
         
         LeaseCart cart = getById(cartId);
         if (cart == null || !cart.getUserId().equals(userId)) {
-            throw new RuntimeException("购物车项目不存在");
+            throw new ServiceException("购物车项目不存在");
         }
-        
+        // 查询购物车中的商品
+        LeaseGood leaseGood = leaseGoodService.getById(cart.getGoodId());
+        if (leaseGood == null) {
+            throw new ServiceException("商品不存在");
+        }
+        // 拿到商品价格，计算小计金额
+        BigDecimal price = leaseGood.getPrice();
+        Integer quantity = cart.getQuantity();
+        Integer days = calculateLeaseDays(request.getLeaseStartTime(), request.getLeaseEndTime());
         cart.setLeaseStartTime(request.getLeaseStartTime());
         cart.setLeaseEndTime(request.getLeaseEndTime());
-        cart.setLeaseDays(calculateLeaseDays(request.getLeaseStartTime(), request.getLeaseEndTime()));
-        cart.setSubtotal(calculateSubtotal(cart.getGoodPrice(), cart.getQuantity(), cart.getLeaseDays()));
-        cart.setRemark(request.getRemark());
-        
+        cart.setLeaseDays(days);
+        cart.setSubtotal(calculateSubtotal(price, quantity, days));        
         return updateById(cart);
     }
 
@@ -185,6 +199,10 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
 
     /**
      * 计算小计金额
+     * @param price 商品单价
+     * @param quantity 租赁数量
+     * @param days 租赁天数
+     * @return
      */
     private BigDecimal calculateSubtotal(BigDecimal price, Integer quantity, Integer days) {
         return price.multiply(BigDecimal.valueOf(quantity)).multiply(BigDecimal.valueOf(days));

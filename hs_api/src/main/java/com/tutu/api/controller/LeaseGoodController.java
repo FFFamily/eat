@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.lease.dto.LeaseGoodDto;
 import com.tutu.lease.entity.LeaseGood;
 import com.tutu.lease.enums.LeaseGoodStatusEnum;
 import com.tutu.lease.service.LeaseGoodService;
@@ -41,15 +42,20 @@ public class LeaseGoodController {
         return BaseResponse.success();
     }
 
+    /**
+     * 删除商品
+     * @param id 商品id
+     * @return 结果
+     */
     @DeleteMapping("/delete/{id}")
-    public BaseResponse<Boolean> remove(@PathVariable String id) {
-        return BaseResponse.success(leaseGoodService.removeById(id));
+    public BaseResponse<Void> remove(@PathVariable String id) {
+        leaseGoodService.removeById(id);
+        return BaseResponse.success();
     }
 
     @GetMapping("/page")
-    public BaseResponse<Page<LeaseGood>> page(@RequestParam int pageNum, @RequestParam int pageSize) {
-        Page<LeaseGood> page = new Page<>(pageNum, pageSize);
-        return BaseResponse.success(leaseGoodService.page(page));
+    public BaseResponse<Page<LeaseGoodDto>> page(@RequestParam Long pageNum, @RequestParam Long pageSize) {
+        return BaseResponse.success(leaseGoodService.getByPage(pageNum, pageSize));
     }
 
     /**
