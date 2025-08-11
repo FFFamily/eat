@@ -1,5 +1,6 @@
 package com.tutu.system.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -25,6 +26,14 @@ public class SysContract extends BaseEntity {
     private Date startDate;
     // 结束日期
     private Date endDate;
+    // 货物类型
+    private String goodsType;
+    // 货物名称
+    private String goodsName;
+    // 规格型号
+    private String specificationModel;
+    // 货物价格
+    private BigDecimal goodsPrice;
     // 运输模式
     private String transportMode;
     // 运费承担方式
@@ -33,8 +42,9 @@ public class SysContract extends BaseEntity {
     private String paymentMethod;
     // 开票方式
     private String invoiceMethod;
-    // 甲方信息
-    private String partyA;
-    // 乙方信息
-    private String partyB;
+    // 签署用户ID
+    private String userId;
+    /** 以下是租赁合同信息 */
+    // 租赁商品ID
+    // private String leaseGoodId;
 }

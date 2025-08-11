@@ -23,28 +23,28 @@ public class CreateOrderRequest {
     /**
      * 收货人姓名
      */
-    @NotBlank(message = "收货人姓名不能为空")
-    private String receiverName;
+    // @NotBlank(message = "收货人姓名不能为空")
+    // private String receiverName; 
     
     /**
      * 收货人手机号
      */
-    @NotBlank(message = "收货人手机号不能为空")
-    private String receiverPhone;
+    // @NotBlank(message = "收货人手机号不能为空")
+    // private String receiverPhone;
     
     /**
      * 收货地址
      */
-    @NotBlank(message = "收货地址不能为空")
-    private String receiverAddress;
+    // @NotBlank(message = "收货地址不能为空")
+    // private String receiverAddress;
     
     /**
      * 归还地址
      */
-    private String returnAddress;
+    // private String returnAddress;
     
     /**
      * 订单备注
      */
-    private String remark;
+    // private String remark;
 }

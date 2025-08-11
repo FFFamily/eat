@@ -13,6 +13,7 @@ import com.tutu.lease.dto.UpdateCartTimeDto;
 import com.tutu.lease.entity.LeaseCart;
 import com.tutu.lease.entity.LeaseGood;
 import com.tutu.lease.mapper.LeaseCartMapper;
+import com.tutu.lease.enums.LeaseCartStatusEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +44,6 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
         if (leaseGood == null) {
             throw new RuntimeException("商品不存在");
         }
-        
         // 检查商品是否已在购物车中
         LeaseCart existCart = checkGoodInCart(userId, request.getGoodId());
         if (existCart != null) {
@@ -56,16 +56,14 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
         cart.setUserId(userId);
         cart.setGoodName(leaseGood.getName());
         cart.setGoodPrice(leaseGood.getPrice());
-//        cart.setLeaseDays(calculateLeaseDays(request.getLeaseStartTime(), request.getLeaseEndTime()));
-//        cart.setSubtotal(calculateSubtotal(leaseGood.getPrice(), request.getQuantity(), cart.getLeaseDays()));
-        cart.setStatus(0); // 正常状态
+        cart.setStatus(LeaseCartStatusEnum.NORMAL.getCode());
         
         return save(cart);
     }
 
     
     public List<LeaseCartDto> getUserCartList(String userId) {
-        return baseMapper.selectCartDetailsByUserId(userId, 0);
+        return baseMapper.selectCartDetailsByUserId(userId, LeaseCartStatusEnum.NORMAL.getCode());
     }
 
     
@@ -93,7 +91,7 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
      * @return
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateCartLeaseTime(String cartId, UpdateCartTimeDto request) {
+    public void updateCartLeaseTime(String cartId, UpdateCartTimeDto request) {
         String userId = StpUtil.getLoginIdAsString();
         
         LeaseCart cart = getById(cartId);
@@ -113,7 +111,7 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
         cart.setLeaseEndTime(request.getLeaseEndTime());
         cart.setLeaseDays(days);
         cart.setSubtotal(calculateSubtotal(price, quantity, days));        
-        return updateById(cart);
+        updateById(cart);
     }
 
     
@@ -153,7 +151,7 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
     public boolean clearUserCart(String userId) {
         LambdaUpdateWrapper<LeaseCart> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(LeaseCart::getUserId, userId)
-                .eq(LeaseCart::getStatus, 0)
+                .eq(LeaseCart::getStatus, LeaseCartStatusEnum.NORMAL.getCode())
                 .set(LeaseCart::getIsDeleted, CommonConstant.YES_STR);
         
         return update(updateWrapper);
@@ -161,14 +159,14 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
 
     
     public Integer getUserCartItemCount(String userId) {
-        return baseMapper.selectCartItemCountByUserId(userId, 0);
+        return baseMapper.selectCartItemCountByUserId(userId, LeaseCartStatusEnum.NORMAL.getCode());
     }
 
     
     public BigDecimal getUserCartTotalAmount(String userId) {
         LambdaQueryWrapper<LeaseCart> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(LeaseCart::getUserId, userId)
-                .eq(LeaseCart::getStatus, 0)
+                .eq(LeaseCart::getStatus, LeaseCartStatusEnum.NORMAL.getCode())
                 .eq(LeaseCart::getIsDeleted, CommonConstant.NO_STR);
         
         List<LeaseCart> carts = list(queryWrapper);
@@ -182,7 +180,7 @@ public class LeaseCartService extends ServiceImpl<LeaseCartMapper, LeaseCart> {
         LambdaQueryWrapper<LeaseCart> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(LeaseCart::getUserId, userId)
                 .eq(LeaseCart::getGoodId, goodId)
-                .eq(LeaseCart::getStatus, 0)
+                .eq(LeaseCart::getStatus, LeaseCartStatusEnum.NORMAL.getCode())
                 .eq(LeaseCart::getIsDeleted, CommonConstant.NO_STR);
         
         return getOne(queryWrapper);

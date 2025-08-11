@@ -64,7 +64,7 @@ public class LeaseCartController {
     /**
      * 删除购物车商品
      */
-    @DeleteMapping("/{cartId}")
+    @DeleteMapping("/remove/{cartId}")
     public BaseResponse<Boolean> removeFromCart(@PathVariable String cartId) {
         return BaseResponse.success(leaseCartService.removeFromCart(cartId));
     }

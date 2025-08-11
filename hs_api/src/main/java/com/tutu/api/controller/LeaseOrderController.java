@@ -1,6 +1,8 @@
 package com.tutu.api.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.json.JSONUtil;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
@@ -8,11 +10,14 @@ import com.tutu.lease.dto.CreateOrderRequest;
 import com.tutu.lease.dto.CreateOrderFromGoodsRequest;
 import com.tutu.lease.dto.LeaseOrderDto;
 import com.tutu.lease.entity.LeaseOrder;
+import com.tutu.lease.enums.LeaseOrderStatusEnum;
 import com.tutu.lease.service.LeaseOrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,15 +31,19 @@ public class LeaseOrderController {
     @Autowired
     private LeaseOrderService leaseOrderService;
 
-    /**
-     * 从购物车创建订单
-     */
-    @PostMapping("/create")
-    public BaseResponse<Void> createOrder(@RequestBody @Valid CreateOrderRequest request) {
-        leaseOrderService.createOrderFromCart(request);
-        return BaseResponse.success();
+    // 获取订单所有的状态枚举
+    @GetMapping("/status/all")
+    public BaseResponse<List<Map<String, String>>> getAllStatus() {
+        LeaseOrderStatusEnum[] values = LeaseOrderStatusEnum.values();
+        List<Map<String, String>> list = new ArrayList<>();
+        for (LeaseOrderStatusEnum value : values) {
+            Map<String, String> map = new HashMap<>();
+            map.put("value", value.getCode());
+            map.put("label", value.getDescription());
+            list.add(map);
+        }
+        return BaseResponse.success(list);
     }
-
     /**
      * 通过商品信息直接创建订单
      */
@@ -43,17 +52,6 @@ public class LeaseOrderController {
         leaseOrderService.createOrderFromGoods(request);
         return BaseResponse.success();
     }
-
-    /**
-     * 获取当前用户订单列表
-     */
-    @GetMapping("/list")
-    public BaseResponse<List<LeaseOrderDto>> getOrderList(@RequestParam(required = false) String status) {
-        String userId = StpUtil.getLoginIdAsString();
-        return BaseResponse.success(leaseOrderService.getUserOrderList(userId, status));
-    }
-
-
     /**
      * 分页查询当前用户订单
      */
@@ -65,30 +63,54 @@ public class LeaseOrderController {
         Page<LeaseOrderDto> page = new Page<>(pageNum, pageSize);
         return BaseResponse.success(leaseOrderService.getUserOrderPage(page, userId, status));
     }
-
-    // 分页查询订单
+    /**
+     * 分页查询订单
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @param order 订单对象
+     * @return 订单分页对象
+     */
     @GetMapping("/page")
-    public BaseResponse<IPage<LeaseOrder>> getOrderPage(@RequestParam int pageNum,
-                                                           @RequestParam int pageSize,
-                                                           @RequestParam(required = false) String status) {
+    public BaseResponse<IPage<LeaseOrder>> getOrderPage(@RequestParam int pageNum,@RequestParam int pageSize,LeaseOrder order) {
         Page<LeaseOrder> page = new Page<>(pageNum, pageSize);
-        return BaseResponse.success(leaseOrderService.page(page));
+        IPage<LeaseOrder> result = leaseOrderService.getOrderPage(page,order);;
+        return BaseResponse.success(result);
+    }
+    /**
+     * 编辑订单
+     * @param orderId 订单ID
+     * @param order 订单对象
+     * @return 是否成功
+     */
+    @PostMapping("/update/{orderId}")
+    public BaseResponse<Boolean> editOrder(@PathVariable String orderId,@RequestBody HashMap<String, Object> orderMap) {
+        LeaseOrder order = JSONUtil.parseObj(orderMap).toBean(LeaseOrder.class);;
+        leaseOrderService.editOrder(orderId, order);
+        return BaseResponse.success();
     }
 
     /**
-     * 获取订单详情
+     * 审核订单
      */
-    @GetMapping("/{orderId}")
-    public BaseResponse<LeaseOrderDto> getOrderDetail(@PathVariable String orderId) {
-        return BaseResponse.success(leaseOrderService.getOrderDetail(orderId));
+    @PostMapping("/approve/{orderId}")
+    public BaseResponse<Boolean> reviewOrder(@PathVariable String orderId) {
+        return BaseResponse.success(leaseOrderService.reviewOrder(orderId, true));
     }
 
     /**
-     * 支付订单
+     * 完成租赁
      */
-    @PostMapping("/pay/{orderId}")
-    public BaseResponse<Boolean> payOrder(@PathVariable String orderId) {
-        return BaseResponse.success(leaseOrderService.payOrder(orderId));
+    @PostMapping("/finish-leasing/{orderId}")
+    public BaseResponse<Boolean> finishLeasing(@PathVariable String orderId) {
+        return BaseResponse.success(leaseOrderService.finishLeasing(orderId));
+    }
+
+    /**
+     * 完成开票
+     */
+    @PostMapping("/complete-invoice/{orderId}")
+    public BaseResponse<Boolean> completeInvoice(@PathVariable String orderId) {
+        return BaseResponse.success(leaseOrderService.completeInvoice(orderId));
     }
 
     /**
@@ -101,37 +123,11 @@ public class LeaseOrderController {
     }
 
     /**
-     * 发货（管理员操作）
+     * 获取订单详情
      */
-    @PostMapping("/ship/{orderId}")
-    public BaseResponse<Boolean> shipOrder(@PathVariable String orderId,
-                                         @RequestParam String logisticsCompany,
-                                         @RequestParam String trackingNumber) {
-        return BaseResponse.success(leaseOrderService.shipOrder(orderId, logisticsCompany, trackingNumber));
-    }
-
-    /**
-     * 确认收货
-     */
-    @PostMapping("/receive/{orderId}")
-    public BaseResponse<Boolean> confirmReceive(@PathVariable String orderId) {
-        return BaseResponse.success(leaseOrderService.confirmReceive(orderId));
-    }
-
-    /**
-     * 确认归还
-     */
-    @PostMapping("/return/{orderId}")
-    public BaseResponse<Boolean> confirmReturn(@PathVariable String orderId) {
-        return BaseResponse.success(leaseOrderService.confirmReturn(orderId));
-    }
-
-    /**
-     * 完成订单（管理员操作）
-     */
-    @PostMapping("/complete/{orderId}")
-    public BaseResponse<Boolean> completeOrder(@PathVariable String orderId) {
-        return BaseResponse.success(leaseOrderService.completeOrder(orderId));
+    @GetMapping("/detail/{orderId}")
+    public BaseResponse<LeaseOrderDto> getOrderDetail(@PathVariable String orderId) {
+        return BaseResponse.success(leaseOrderService.getOrderDetail(orderId));
     }
 
     /**

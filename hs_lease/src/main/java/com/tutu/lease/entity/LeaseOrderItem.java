@@ -3,6 +3,7 @@ package com.tutu.lease.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tutu.common.entity.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,11 +53,13 @@ public class LeaseOrderItem extends BaseEntity {
     /**
      * 租赁开始时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date leaseStartTime;
     
     /**
      * 租赁结束时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date leaseEndTime;
     
     /**
@@ -68,17 +71,7 @@ public class LeaseOrderItem extends BaseEntity {
      * 小计金额（数量 * 单价 * 天数）
      */
     private BigDecimal subtotal;
-    
-    /**
-     * 押金金额
-     */
-    private BigDecimal depositAmount;
-    
-    /**
-     * 商品状态：0-正常，1-已发货，2-已收货，3-已归还
-     */
-    private Integer status;
-    
+
     /**
      * 备注
      */

@@ -53,9 +53,15 @@ public class LeaseGoodController {
         return BaseResponse.success();
     }
 
+    /**
+     * 分页查询商品
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @return 结果
+     */
     @GetMapping("/page")
-    public BaseResponse<Page<LeaseGoodDto>> page(@RequestParam Long pageNum, @RequestParam Long pageSize) {
-        return BaseResponse.success(leaseGoodService.getByPage(pageNum, pageSize));
+    public BaseResponse<Page<LeaseGoodDto>> page(@RequestParam Long pageNum, @RequestParam Long pageSize, LeaseGood leaseGood) {
+        return BaseResponse.success(leaseGoodService.getByPage(pageNum, pageSize, leaseGood));
     }
 
     /**

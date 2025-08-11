@@ -1,5 +1,6 @@
 package com.tutu.lease.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tutu.lease.entity.LeaseCart;
 import com.tutu.lease.entity.LeaseGood;
 import lombok.Getter;
@@ -34,6 +35,11 @@ public class LeaseCartDto {
      * 商品名称
      */
     private String goodName;
+
+    /**
+     * 商品图片
+     */
+    private String goodImg;
     
     /**
      * 商品单价
@@ -48,11 +54,13 @@ public class LeaseCartDto {
     /**
      * 租赁开始时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date leaseStartTime;
     
     /**
      * 租赁结束时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date leaseEndTime;
     
     /**

@@ -11,6 +11,7 @@
             lc.user_id,
             lc.good_id,
             lc.good_name,
+            lg.image as good_img,
             lc.good_price,
             lc.quantity,
             lc.lease_start_time,

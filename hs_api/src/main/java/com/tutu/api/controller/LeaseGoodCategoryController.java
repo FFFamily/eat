@@ -68,19 +68,14 @@ public class LeaseGoodCategoryController {
      */
     @GetMapping("/page")
     public BaseResponse<Page<LeaseGoodCategory>> page(@RequestParam int pageNum, @RequestParam int pageSize,
-                                                      @RequestParam(required = false) String keyword) {
+                                                      @RequestParam(required = false) String name) {
         Page<LeaseGoodCategory> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<LeaseGoodCategory> queryWrapper = new LambdaQueryWrapper<>();
-        
-        queryWrapper.eq(LeaseGoodCategory::getIsDeleted, CommonConstant.NO_STR);
-        
         // 如果有关键字，按名称模糊查询
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            queryWrapper.like(LeaseGoodCategory::getName, keyword);
+        if (name != null && !name.trim().isEmpty()) {
+            queryWrapper.like(LeaseGoodCategory::getName, name);
         }
-        
         queryWrapper.orderByDesc(LeaseGoodCategory::getCreateTime);
-        
         return BaseResponse.success(leaseGoodCategoryService.page(page, queryWrapper));
     }
 }

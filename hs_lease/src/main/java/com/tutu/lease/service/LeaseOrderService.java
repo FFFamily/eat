@@ -2,11 +2,15 @@ package com.tutu.lease.service;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.constant.CommonConstant;
+import com.tutu.common.exceptions.ServiceException;
 import com.tutu.lease.dto.CreateOrderRequest;
 import com.tutu.lease.dto.CreateOrderFromGoodsRequest;
 import com.tutu.lease.dto.LeaseOrderDto;
@@ -14,9 +18,12 @@ import com.tutu.lease.entity.LeaseCart;
 import com.tutu.lease.entity.LeaseOrder;
 import com.tutu.lease.entity.LeaseOrderItem;
 import com.tutu.lease.enums.LeaseOrderStatusEnum;
+import com.tutu.lease.enums.LeaseCartStatusEnum;
 import com.tutu.lease.mapper.LeaseOrderMapper;
 import com.tutu.user.entity.User;
 import com.tutu.user.service.UserService;
+
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +51,35 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
     @Autowired
     private UserService userService;
 
-    
+    /**
+     * 分页查询订单
+     * @param page 分页对象
+     * @param order 订单对象
+     * @return 订单分页对象
+     */
+    public IPage<LeaseOrder> getOrderPage(Page<LeaseOrder> page,LeaseOrder order) {
+        LambdaQueryWrapper<LeaseOrder> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(StrUtil.isNotBlank(order.getOrderNo()), LeaseOrder::getOrderNo, order.getOrderNo());
+        queryWrapper.eq(StrUtil.isNotBlank(order.getStatus()), LeaseOrder::getStatus, order.getStatus());
+        queryWrapper.eq(StrUtil.isNotBlank(order.getUserName()), LeaseOrder::getUserName, order.getUserName());
+        return page(page,queryWrapper);
+    }
+
+    /**
+     * 编辑订单
+     * @param orderId 订单ID
+     * @param order 订单对象
+     * @return 是否成功
+     */
+    public void editOrder(String orderId,LeaseOrder order) {
+        LeaseOrder oldOrder = getById(orderId);
+        if (oldOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        BeanUtils.copyProperties(order, oldOrder);
+        updateById(oldOrder);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void createOrderFromCart(CreateOrderRequest request) {
         String userId = StpUtil.getLoginIdAsString();
@@ -59,7 +94,7 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         LambdaQueryWrapper<LeaseCart> cartQueryWrapper = new LambdaQueryWrapper<>();
         cartQueryWrapper.in(LeaseCart::getId, request.getCartIds())
                 .eq(LeaseCart::getUserId, userId)
-                .eq(LeaseCart::getStatus, 0)
+                .eq(LeaseCart::getStatus, LeaseCartStatusEnum.NORMAL.getCode())
                 .eq(LeaseCart::getIsDeleted, CommonConstant.NO_STR);
         
         List<LeaseCart> cartItems = leaseCartService.list(cartQueryWrapper);
@@ -75,38 +110,26 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         BigDecimal totalAmount = cartItems.stream()
                 .map(LeaseCart::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        Date minStartTime = cartItems.stream()
-                .map(LeaseCart::getLeaseStartTime)
-                .min(Date::compareTo)
-                .orElse(new Date());
-        
-        Date maxEndTime = cartItems.stream()
-                .map(LeaseCart::getLeaseEndTime)
-                .max(Date::compareTo)
-                .orElse(new Date());
-        
-        Integer totalLeaseDays = calculateLeaseDays(minStartTime, maxEndTime);
-        
+     
         // 创建订单主表
         LeaseOrder order = new LeaseOrder();
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
-        order.setUserName(user.getNickname());
-        order.setUserPhone(user.getPhone());
-        order.setStatus(LeaseOrderStatusEnum.PENDING_PAYMENT.getCode());
+        order.setUserName(user.getUsername());
+        order.setStatus(LeaseOrderStatusEnum.PENDING_REVIEW.getCode());
         order.setTotalAmount(totalAmount);
         order.setPaidAmount(BigDecimal.ZERO);
-        order.setDepositAmount(totalAmount.multiply(new BigDecimal("0.2"))); // 押金为总金额的20%
+        // 计算订单明细中租赁时间的最大值和最小值
+        Date minStartTime = cartItems.stream()
+                .map(LeaseCart::getLeaseStartTime)
+                .min(Date::compareTo)
+                .orElse(new Date());
+        Date maxEndTime = cartItems.stream()
+                .map(LeaseCart::getLeaseEndTime)
+                .max(Date::compareTo)
+                .orElse(new Date());
         order.setLeaseStartTime(minStartTime);
         order.setLeaseEndTime(maxEndTime);
-        order.setTotalLeaseDays(totalLeaseDays);
-        order.setReceiverName(request.getReceiverName());
-        order.setReceiverPhone(request.getReceiverPhone());
-        order.setReceiverAddress(request.getReceiverAddress());
-        order.setReturnAddress(request.getReturnAddress());
-        order.setRemark(request.getRemark());
-        
         save(order);
         
         // 创建订单明细
@@ -121,8 +144,6 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
             item.setLeaseEndTime(cart.getLeaseEndTime());
             item.setLeaseDays(cart.getLeaseDays());
             item.setSubtotal(cart.getSubtotal());
-            item.setDepositAmount(cart.getSubtotal().multiply(new BigDecimal("0.2")));
-            item.setStatus(0);
             item.setRemark(cart.getRemark());
             return item;
         }).collect(Collectors.toList());
@@ -130,7 +151,7 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         leaseOrderItemService.batchSave(orderItems);
         
         // 更新购物车状态为已下单
-        cartItems.forEach(cart -> cart.setStatus(1));
+        cartItems.forEach(cart -> cart.setStatus(LeaseCartStatusEnum.ORDERED.getCode()));
         leaseCartService.updateBatchById(cartItems);
     }
 
@@ -189,18 +210,10 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
         order.setUserName(user.getNickname());
-        order.setUserPhone(user.getPhone());
-        order.setStatus(LeaseOrderStatusEnum.PENDING_PAYMENT.getCode());
+        order.setStatus(LeaseOrderStatusEnum.PENDING_REVIEW.getCode());
         order.setTotalAmount(totalAmount);
         order.setPaidAmount(BigDecimal.ZERO);
         order.setDepositAmount(totalAmount.multiply(new BigDecimal("0.2"))); // 押金为总金额的20%
-        order.setLeaseStartTime(minStartTime);
-        order.setLeaseEndTime(maxEndTime);
-        order.setTotalLeaseDays(totalLeaseDays);
-        order.setReceiverName(request.getReceiverName());
-        order.setReceiverPhone(request.getReceiverPhone());
-        order.setReceiverAddress(request.getReceiverAddress());
-        order.setReturnAddress(request.getReturnAddress());
         order.setRemark(request.getRemark());
         
         save(order);
@@ -217,8 +230,6 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
             item.setLeaseEndTime(goodsInfo.getLeaseEndTime());
             item.setLeaseDays(goodsInfo.getLeaseDays());
             item.setSubtotal(goodsInfo.getSubtotal());
-            item.setDepositAmount(goodsInfo.getSubtotal().multiply(new BigDecimal("0.2")));
-            item.setStatus(0);
             item.setRemark(goodsInfo.getRemark());
             return item;
         }).collect(Collectors.toList());
@@ -228,7 +239,14 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
 
     
     public List<LeaseOrderDto> getUserOrderList(String userId, String status) {
-        return baseMapper.selectOrderDetailsByUserId(userId, status);
+        List<LeaseOrderDto> list = baseMapper.selectOrderDetailsByUserId(userId, status);
+        list.forEach(item -> {
+            LeaseOrderStatusEnum statusEnum = LeaseOrderStatusEnum.getByCode(item.getStatus());
+            if (statusEnum != null) {
+                item.setStatusDesc(statusEnum.getDescription());
+            }
+        });
+        return list;
     }
 
     
@@ -254,25 +272,77 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
     }
 
     
+
+
+    /**
+     * 审核订单
+     */
     @Transactional(rollbackFor = Exception.class)
-    public boolean payOrder(String orderId) {
+    public boolean reviewOrder(String orderId, boolean approved) {
         LeaseOrder order = getById(orderId);
         if (order == null) {
             throw new RuntimeException("订单不存在");
         }
         
-        if (!LeaseOrderStatusEnum.PENDING_PAYMENT.getCode().equals(order.getStatus())) {
-            throw new RuntimeException("订单状态不正确，无法支付");
+        if (!LeaseOrderStatusEnum.PENDING_REVIEW.getCode().equals(order.getStatus())) {
+            throw new RuntimeException("订单状态不正确，无法审核");
         }
         
-        order.setStatus(LeaseOrderStatusEnum.PAID.getCode());
-        order.setPaidAmount(order.getTotalAmount());
-        order.setPayTime(new Date());
+        if (approved) {
+            order.setStatus(LeaseOrderStatusEnum.LEASING.getCode());
+            // order.setReviewTime(new Date()); // 需要实体类添加此字段
+        } else {
+            // 审核不通过，可以设置为已完成状态或者添加一个审核不通过状态
+            order.setStatus(LeaseOrderStatusEnum.COMPLETED.getCode());
+            // order.setReviewTime(new Date()); // 需要实体类添加此字段
+        }
         
         return updateById(order);
     }
 
-    
+    /**
+     * 完成租赁，准备开票
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean finishLeasing(String orderId) {
+        LeaseOrder order = getById(orderId);
+        if (order == null) {
+            throw new RuntimeException("订单不存在");
+        }
+        
+        if (!LeaseOrderStatusEnum.LEASING.getCode().equals(order.getStatus())) {
+            throw new RuntimeException("订单状态不正确，无法完成租赁");
+        }
+        
+        order.setStatus(LeaseOrderStatusEnum.PENDING_INVOICE.getCode());
+        // order.setFinishLeaseTime(new Date()); // 需要实体类添加此字段
+        
+        return updateById(order);
+    }
+
+    /**
+     * 开票完成
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean completeInvoice(String orderId) {
+        LeaseOrder order = getById(orderId);
+        if (order == null) {
+            throw new RuntimeException("订单不存在");
+        }
+        
+        if (!LeaseOrderStatusEnum.PENDING_INVOICE.getCode().equals(order.getStatus())) {
+            throw new RuntimeException("订单状态不正确，无法完成开票");
+        }
+        
+        order.setStatus(LeaseOrderStatusEnum.COMPLETED.getCode());
+        // order.setInvoiceTime(new Date()); // 需要实体类添加此字段
+        
+        return updateById(order);
+    }
+
+    /**
+     * 取消订单
+     */
     @Transactional(rollbackFor = Exception.class)
     public boolean cancelOrder(String orderId, String cancelReason) {
         LeaseOrder order = getById(orderId);
@@ -280,97 +350,17 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
             throw new RuntimeException("订单不存在");
         }
         
-        // 只有待支付和已支付状态可以取消
-        if (!Arrays.asList(
-                LeaseOrderStatusEnum.PENDING_PAYMENT.getCode(),
-                LeaseOrderStatusEnum.PAID.getCode()
-        ).contains(order.getStatus())) {
+        // 只有待审核状态可以取消
+        if (!LeaseOrderStatusEnum.PENDING_REVIEW.getCode().equals(order.getStatus())) {
             throw new RuntimeException("当前订单状态不允许取消");
         }
         
-        order.setStatus(LeaseOrderStatusEnum.CANCELLED.getCode());
-        order.setCancelTime(new Date());
-        order.setCancelReason(cancelReason);
-        
-        return updateById(order);
-    }
-
-    
-    @Transactional(rollbackFor = Exception.class)
-    public boolean shipOrder(String orderId, String logisticsCompany, String trackingNumber) {
-        LeaseOrder order = getById(orderId);
-        if (order == null) {
-            throw new RuntimeException("订单不存在");
-        }
-        
-        if (!LeaseOrderStatusEnum.PAID.getCode().equals(order.getStatus())) {
-            throw new RuntimeException("订单状态不正确，无法发货");
-        }
-        
-        order.setStatus(LeaseOrderStatusEnum.SHIPPED.getCode());
-        order.setLogisticsCompany(logisticsCompany);
-        order.setTrackingNumber(trackingNumber);
-        order.setShipTime(new Date());
-        
-        return updateById(order);
-    }
-
-    
-    @Transactional(rollbackFor = Exception.class)
-    public boolean confirmReceive(String orderId) {
-        LeaseOrder order = getById(orderId);
-        if (order == null) {
-            throw new RuntimeException("订单不存在");
-        }
-        
-        if (!LeaseOrderStatusEnum.SHIPPED.getCode().equals(order.getStatus())) {
-            throw new RuntimeException("订单状态不正确，无法确认收货");
-        }
-        
-        order.setStatus(LeaseOrderStatusEnum.LEASING.getCode());
-        order.setReceiveTime(new Date());
-        
-        return updateById(order);
-    }
-
-    
-    @Transactional(rollbackFor = Exception.class)
-    public boolean confirmReturn(String orderId) {
-        LeaseOrder order = getById(orderId);
-        if (order == null) {
-            throw new RuntimeException("订单不存在");
-        }
-        
-        if (!Arrays.asList(
-                LeaseOrderStatusEnum.LEASING.getCode(),
-                LeaseOrderStatusEnum.LEASE_EXPIRED.getCode()
-        ).contains(order.getStatus())) {
-            throw new RuntimeException("订单状态不正确，无法确认归还");
-        }
-        
-        order.setStatus(LeaseOrderStatusEnum.RETURNED.getCode());
-        order.setReturnTime(new Date());
-        
-        return updateById(order);
-    }
-
-    
-    @Transactional(rollbackFor = Exception.class)
-    public boolean completeOrder(String orderId) {
-        LeaseOrder order = getById(orderId);
-        if (order == null) {
-            throw new RuntimeException("订单不存在");
-        }
-        
-        if (!LeaseOrderStatusEnum.RETURNED.getCode().equals(order.getStatus())) {
-            throw new RuntimeException("订单状态不正确，无法完成订单");
-        }
-        
         order.setStatus(LeaseOrderStatusEnum.COMPLETED.getCode());
-        order.setCompleteTime(new Date());
-        
         return updateById(order);
     }
+
+    
+
 
     
     public Map<String, Integer> getUserOrderStatusCount(String userId) {

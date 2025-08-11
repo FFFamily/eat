@@ -1,5 +1,6 @@
 package com.tutu.lease.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -9,6 +10,8 @@ import com.tutu.lease.entity.LeaseGood;
 import com.tutu.lease.entity.LeaseGoodCategory;
 import com.tutu.lease.mapper.LeaseGoodCategoryMapper;
 import com.tutu.lease.mapper.LeaseGoodMapper;
+
+import cn.hutool.core.util.StrUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -24,10 +27,15 @@ public class LeaseGoodService extends ServiceImpl<LeaseGoodMapper, LeaseGood> {
     @Autowired
     private LeaseGoodCategoryMapper leaseGoodCategoryMapper;
 
-    public Page<LeaseGoodDto> getByPage(Long pageNum, Long pageSize) {
+    public Page<LeaseGoodDto> getByPage(Long pageNum, Long pageSize,LeaseGood leaseGoodParam) {
         Page<LeaseGood> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<LeaseGood> queryWrapper = new LambdaQueryWrapper<>();
+        // 状态
+        queryWrapper.eq(StrUtil.isNotBlank(leaseGoodParam.getStatus()), LeaseGood::getStatus, leaseGoodParam.getStatus());
+        // 名称
+        queryWrapper.like(StrUtil.isNotBlank(leaseGoodParam.getName()), LeaseGood::getName, "%"+leaseGoodParam.getName()+"%");
         // 查询商品列表
-        IPage<LeaseGood> leaseGoodPage = baseMapper.selectPage(page, null);
+        IPage<LeaseGood> leaseGoodPage = baseMapper.selectPage(page, queryWrapper);
         // 查询商品分类列表
         List<LeaseGoodCategory> leaseGoodCategoryList = leaseGoodCategoryMapper.selectList(null);
         // 将商品分类列表转换为Map

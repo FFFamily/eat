@@ -38,24 +38,21 @@ public class LeaseOrder extends BaseEntity {
      * 用户名称
      */
     private String userName;
-
-    /**
-     * 用户手机号
-     */
-    private String userPhone;
-
     /**
      * 订单状态
      */
     private String status;
-
+    // 租赁开始时间
+    private Date leaseStartTime;
+    // 租赁结束时间
+    private Date leaseEndTime;
     /**
      * 订单总金额
      */
     private BigDecimal totalAmount;
 
     /**
-     * 实付金额
+     * 最后成交价
      */
     private BigDecimal paidAmount;
 
@@ -63,89 +60,14 @@ public class LeaseOrder extends BaseEntity {
      * 押金金额
      */
     private BigDecimal depositAmount;
-
-    /**
-     * 租赁开始时间
-     */
-    private Date leaseStartTime;
-
-    /**
-     * 租赁结束时间
-     */
-    private Date leaseEndTime;
-
-    /**
-     * 租赁总天数
-     */
-    private Integer totalLeaseDays;
-
-    /**
-     * 收货人姓名
-     */
-    private String receiverName;
-
-    /**
-     * 收货人手机号
-     */
-    private String receiverPhone;
-
-    /**
-     * 收货地址
-     */
-    private String receiverAddress;
-
-    /**
-     * 归还地址
-     */
-    private String returnAddress;
-
-    /**
-     * 支付时间
-     */
-    private Date payTime;
-
-    /**
-     * 发货时间
-     */
-    private Date shipTime;
-
-    /**
-     * 收货时间
-     */
-    private Date receiveTime;
-
-    /**
-     * 归还时间
-     */
-    private Date returnTime;
-
+   
     /**
      * 完成时间
      */
     private Date completeTime;
 
     /**
-     * 取消时间
-     */
-    private Date cancelTime;
-
-    /**
-     * 取消原因
-     */
-    private String cancelReason;
-
-    /**
      * 订单备注
      */
     private String remark;
-
-    /**
-     * 物流公司
-     */
-    private String logisticsCompany;
-
-    /**
-     * 物流单号
-     */
-    private String trackingNumber;
 }
