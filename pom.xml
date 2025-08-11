@@ -77,30 +77,6 @@
             <artifactId>sa-token-spring-boot3-starter</artifactId>
             <version>1.41.0</version>
         </dependency>
-        <!-- Sa-Token 整合 RedisTemplate -->
-<!--        <dependency>-->
-<!--            <groupId>cn.dev33</groupId>-->
-<!--            <artifactId>sa-token-redis-template</artifactId>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>io.lettuce</groupId>-->
-<!--                    <artifactId>lettuce-core</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--            <version>1.41.0</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>redis.clients</groupId>-->
-<!--            <artifactId>jedis</artifactId>-->
-<!--            <version>4.4.3</version>-->
-<!--        </dependency>-->
-
-        <!-- 提供 Redis 连接池 -->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.commons</groupId>-->
-<!--            <artifactId>commons-pool2</artifactId>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
