@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.system.entity.SysContract;
+import com.tutu.system.schema.SysContractSchema;
 import com.tutu.system.service.SysContractService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -46,9 +47,9 @@ public class SysContractController {
      * @param sysContract 系统合同信息
      * @return 更新结果
      */
-    @PutMapping
-    public  BaseResponse<Void> updateSysContract(@RequestBody SysContract sysContract) {
-        sysContractService.updateById(sysContract);
+    @PutMapping("/update")
+    public  BaseResponse<Void> updateSysContract(@RequestBody SysContractSchema sysContract) {
+        sysContractService.updateContract(sysContract);
         return BaseResponse.success();
     }
 

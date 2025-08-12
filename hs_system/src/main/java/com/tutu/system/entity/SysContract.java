@@ -29,10 +29,10 @@ public class SysContract extends BaseEntity {
     // 结束日期
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date endDate;
-    // 付款方式
-    private String paymentMethod;
-    // 开票方式
-    private String invoiceMethod;
+    // // 付款方式
+    // private String paymentMethod;
+    // // 开票方式
+    // private String invoiceMethod;
     // 签署用户ID
     private String userId;
 }

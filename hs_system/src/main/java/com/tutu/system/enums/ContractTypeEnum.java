@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ContractTypeEnum implements BaseEnum<ContractTypeEnum,String> {
-    RECYCLE("recycle", "回收合同"),
+    RECYCLE("recycle", "采购合同"),
     LEASE("lease", "租赁合同")
     ;
     private final String code;

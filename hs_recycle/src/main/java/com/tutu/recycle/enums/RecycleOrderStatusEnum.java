@@ -1,37 +1,85 @@
 package com.tutu.recycle.enums;
 
-import com.tutu.common.enums.BaseEnum;
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 回收订单状态枚举
+ */
 @Getter
-@AllArgsConstructor
-public enum RecycleOrderStatusEnum implements BaseEnum<RecycleOrderStatusEnum,String> {
+public enum RecycleOrderStatusEnum {
+
     /**
-     * 待回收
+     * 待审核
      */
-    PENDING_RECYCLE("pending_recycle", "待回收"),
+    PENDING("PENDING", "待审核"),
+
     /**
-     * 待取件
+     * 已审核
      */
-    PENDING_PICKUP("pending_pickup", "待取件"),
+    APPROVED("APPROVED", "已审核"),
+
     /**
-     * 已取件
+     * 运输中
      */
-    PICKED_UP("picked_up", "已取件"),
+    TRANSPORTING("TRANSPORTING", "运输中"),
+
+    /**
+     * 已取货
+     */
+    PICKED_UP("PICKED_UP", "已取货"),
+
+    /**
+     * 分拣中
+     */
+    SORTING("SORTING", "分拣中"),
+
+    /**
+     * 分拣完成
+     */
+    SORTED("SORTED", "分拣完成"),
+
+    /**
+     * 待打款
+     */
+    PENDING_PAYMENT("PENDING_PAYMENT", "待打款"),
+
+    /**
+     * 已打款
+     */
+    PAID("PAID", "已打款"),
+
+    /**
+     * 待开票
+     */
+    PENDING_INVOICE("PENDING_INVOICE", "待开票"),
+
     /**
      * 已完成
      */
-    COMPLETED("completed", "已完成"),
+    COMPLETED("COMPLETED", "已完成"),
+
     /**
      * 已取消
      */
-    CANCELLED("cancelled", "已取消"),
-    /**
-     * 已退款
-     */
-    REFUNDED("refunded", "已退款");
+    CANCELLED("CANCELLED", "已取消");
+
     private final String code;
-    private final String title;
+    private final String description;
+
+    RecycleOrderStatusEnum(String code, String description) {
+        this.code = code;
+        this.description = description;
+    }
+
+    /**
+     * 根据code获取枚举
+     */
+    public static RecycleOrderStatusEnum getByCode(String code) {
+        for (RecycleOrderStatusEnum status : values()) {
+            if (status.getCode().equals(code)) {
+                return status;
+            }
+        }
+        return null;
+    }
 }

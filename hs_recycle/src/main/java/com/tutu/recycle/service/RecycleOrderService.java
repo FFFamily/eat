@@ -48,7 +48,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         // 生成订单编号
         recycleOrder.setOrderNo(IdUtil.simpleUUID());
         // 状态
-        recycleOrder.setStatus(RecycleOrderStatusEnum.PENDING_PICKUP.getCode());
+        recycleOrder.setStatus(RecycleOrderStatusEnum.PENDING.getCode());
         // 保存订单
         save(recycleOrder);
         return recycleOrder;
@@ -167,7 +167,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (!user.getUseType().equals(UserUseTypeEnum.TRANSPORT.getCode())) {
            throw new RuntimeException("处理人不是司机");
         } 
-        recycleOrder.setProcessor(processor);
+        recycleOrder.setPickupProcessor(processor);
         updateById(recycleOrder);
     }
 
@@ -178,7 +178,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      */
     public List<RecycleOrder> getOrdersByProcessor(RecycleOrder recycleOrder) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
-                .eq(RecycleOrder::getProcessor, recycleOrder.getProcessor());
+                .eq(RecycleOrder::getPickupProcessor, recycleOrder.getPickupProcessor());
         if (StrUtil.isNotBlank(recycleOrder.getStatus()) && !recycleOrder.getStatus().equals("all")) {
             wrapper.eq(RecycleOrder::getStatus, recycleOrder.getStatus());
         }
