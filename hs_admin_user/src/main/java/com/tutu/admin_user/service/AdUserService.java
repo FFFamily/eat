@@ -20,12 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * 管理员用户服务实现类
  */
-@Service
+@Service("adUserService")
 public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
 
     @Resource
@@ -36,6 +37,20 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AdUser::getUsername, username);
         return getOne(queryWrapper);
+    }
+
+    /**
+     * 根据用户ID列表获取用户Map
+     * @param userIds 用户ID列表
+     * @return 用户Map
+     */
+    public HashMap<String,AdUser> getUserMapById(List<String> userIds){
+        LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(AdUser::getId, userIds);
+        List<AdUser> users = list(queryWrapper);
+        HashMap<String,AdUser> userMap = new HashMap<>();
+        users.forEach(user -> userMap.put(user.getId(), user));
+        return userMap;
     }
 
     

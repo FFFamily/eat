@@ -5,7 +5,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 import jakarta.validation.Valid;
+
+import java.util.Date;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 /**
  * 通过商品信息创建订单请求DTO
@@ -24,19 +28,30 @@ public class CreateOrderFromGoodsRequest {
     /**
      * 收货人姓名
      */
-    @NotBlank(message = "收货人姓名不能为空")
+    
     private String receiverName;
     
     /**
      * 收货人手机号
      */
-    @NotBlank(message = "收货人手机号不能为空")
+
     private String receiverPhone;
+    
+    /**
+     * 租赁开始时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date leaseStartTime;
+    /**
+     * 租赁结束时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date leaseEndTime;
     
     /**
      * 收货地址
      */
-    @NotBlank(message = "收货地址不能为空")
+
     private String receiverAddress;
     
     /**
@@ -91,12 +106,14 @@ public class CreateOrderFromGoodsRequest {
          * 租赁开始时间
          */
         @NotNull(message = "租赁开始时间不能为空")
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
         private java.util.Date leaseStartTime;
         
         /**
          * 租赁结束时间
          */
         @NotNull(message = "租赁结束时间不能为空")
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
         private java.util.Date leaseEndTime;
         
         /**

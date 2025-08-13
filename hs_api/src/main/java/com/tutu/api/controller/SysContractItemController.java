@@ -1,4 +1,4 @@
-package com.tutu.system.controller;
+package com.tutu.api.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

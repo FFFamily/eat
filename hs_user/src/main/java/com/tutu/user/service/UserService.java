@@ -7,6 +7,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.user.entity.User;
 import com.tutu.user.mapper.UserMapper;
+
+import java.util.HashMap;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,6 +25,8 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         queryWrapper.eq("username", username);
         return getOne(queryWrapper);
     }
+
+
 
     /**
      * 修改用户使用类型

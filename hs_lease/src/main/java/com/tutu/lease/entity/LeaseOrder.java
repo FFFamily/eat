@@ -42,9 +42,14 @@ public class LeaseOrder extends BaseEntity {
      * 订单状态
      */
     private String status;
-    // 租赁开始时间
+    /**
+     * 租赁开始时间
+     */
+
     private Date leaseStartTime;
-    // 租赁结束时间
+    /**
+     * 租赁结束时间
+     */
     private Date leaseEndTime;
     /**
      * 订单总金额

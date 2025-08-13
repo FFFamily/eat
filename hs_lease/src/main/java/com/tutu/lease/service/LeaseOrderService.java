@@ -25,6 +25,7 @@ import com.tutu.user.service.UserService;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -171,66 +172,34 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         if (request.getOrderItems().isEmpty()) {
             throw new RuntimeException("商品信息不能为空");
         }
-        
         // 验证每个商品信息
         for (CreateOrderFromGoodsRequest.OrderGoodsInfo goodsInfo : request.getOrderItems()) {
             if (goodsInfo.getLeaseEndTime().before(goodsInfo.getLeaseStartTime())) {
                 throw new RuntimeException("租赁结束时间不能早于开始时间");
             }
-            
             // 验证小计金额是否正确
             BigDecimal expectedSubtotal = goodsInfo.getGoodPrice()
                     .multiply(new BigDecimal(goodsInfo.getQuantity()))
                     .multiply(new BigDecimal(goodsInfo.getLeaseDays()));
-            
             if (expectedSubtotal.compareTo(goodsInfo.getSubtotal()) != 0) {
                 throw new RuntimeException("商品小计金额计算错误");
             }
-        }
-        
-        // 计算订单总金额和租赁时间范围
-        BigDecimal totalAmount = request.getOrderItems().stream()
-                .map(CreateOrderFromGoodsRequest.OrderGoodsInfo::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        Date minStartTime = request.getOrderItems().stream()
-                .map(CreateOrderFromGoodsRequest.OrderGoodsInfo::getLeaseStartTime)
-                .min(Date::compareTo)
-                .orElse(new Date());
-        
-        Date maxEndTime = request.getOrderItems().stream()
-                .map(CreateOrderFromGoodsRequest.OrderGoodsInfo::getLeaseEndTime)
-                .max(Date::compareTo)
-                .orElse(new Date());
-        
-        Integer totalLeaseDays = calculateLeaseDays(minStartTime, maxEndTime);
-        
+        }        
         // 创建订单主表
         LeaseOrder order = new LeaseOrder();
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
-        order.setUserName(user.getNickname());
+        order.setUserName(user.getUsername());
         order.setStatus(LeaseOrderStatusEnum.PENDING_REVIEW.getCode());
-        order.setTotalAmount(totalAmount);
-        order.setPaidAmount(BigDecimal.ZERO);
-        order.setDepositAmount(totalAmount.multiply(new BigDecimal("0.2"))); // 押金为总金额的20%
-        order.setRemark(request.getRemark());
+        BeanUtils.copyProperties(request, order);
         
         save(order);
         
         // 创建订单明细
         List<LeaseOrderItem> orderItems = request.getOrderItems().stream().map(goodsInfo -> {
             LeaseOrderItem item = new LeaseOrderItem();
+            BeanUtils.copyProperties(goodsInfo, item);
             item.setOrderId(order.getId());
-            item.setGoodId(goodsInfo.getGoodId());
-            item.setGoodName(goodsInfo.getGoodName());
-            item.setGoodPrice(goodsInfo.getGoodPrice());
-            item.setQuantity(goodsInfo.getQuantity());
-            item.setLeaseStartTime(goodsInfo.getLeaseStartTime());
-            item.setLeaseEndTime(goodsInfo.getLeaseEndTime());
-            item.setLeaseDays(goodsInfo.getLeaseDays());
-            item.setSubtotal(goodsInfo.getSubtotal());
-            item.setRemark(goodsInfo.getRemark());
             return item;
         }).collect(Collectors.toList());
         

@@ -48,7 +48,7 @@ public class SysContractController {
      * @return 更新结果
      */
     @PutMapping("/update")
-    public  BaseResponse<Void> updateSysContract(@RequestBody SysContractSchema sysContract) {
+    public  BaseResponse<Void> updateSysContract(@RequestBody SysContract sysContract) {
         sysContractService.updateContract(sysContract);
         return BaseResponse.success();
     }
