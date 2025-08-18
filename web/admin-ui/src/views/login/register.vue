@@ -68,7 +68,7 @@
   import { ref, reactive } from 'vue'
   import { useRouter } from 'vue-router'
   import type { FormInstance } from 'element-plus'
-  import {register} from '~/api/user/index'
+  import {register} from '~/api/account/index'
 
   const router = useRouter()
   const registerFormRef = ref<FormInstance>()

@@ -1,11 +1,11 @@
 <template>
-  <div class="user-home-container">
+  <div class="account-home-container">
     <!-- 用户头部信息 -->
-    <div class="user-header">
-      <el-avatar class="user-avatar" :size="72" src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" />
-      <div class="user-header-info">
+    <div class="account-header">
+      <el-avatar class="account-avatar" :size="72" src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" />
+      <div class="account-header-info">
         <h3 class="username">{{ userInfo.username }}</h3>
-        <div class="user-tags">
+        <div class="account-tags">
           <el-tag size="small" effect="plain">会员</el-tag>
         </div>
       </div>
@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useUserStore } from '~/store/modules/user';
+import { useUserStore } from '~/store/modules/account';
 import { ElMessage } from 'element-plus';
 import HistoryCalender from './HistoryCalender.vue';
 import {
@@ -122,13 +122,13 @@ const menuItems = ref([
 </script>
 
 <style scoped>
-.user-home-container {
+.account-home-container {
   padding: 24px 12px 32px 12px;
   background: linear-gradient(135deg, #f7faff 0%, #f0f4ff 100%);
   min-height: 100vh;
 }
 
-.user-header {
+.account-header {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -139,13 +139,13 @@ const menuItems = ref([
   box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
-.user-avatar {
+.account-avatar {
   border: 4px solid #e0e7ff;
   box-shadow: 0 2px 12px #2563eb22;
   margin-bottom: 12px;
 }
 
-.user-header-info {
+.account-header-info {
   text-align: center;
 }
 
@@ -156,7 +156,7 @@ const menuItems = ref([
   margin-bottom: 6px;
 }
 
-.user-tags {
+.account-tags {
   margin-top: 4px;
   .el-tag {
     background: #f0f4ff;

@@ -3,7 +3,6 @@ package com.tutu.lease.service;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -20,12 +19,11 @@ import com.tutu.lease.entity.LeaseOrderItem;
 import com.tutu.lease.enums.LeaseOrderStatusEnum;
 import com.tutu.lease.enums.LeaseCartStatusEnum;
 import com.tutu.lease.mapper.LeaseOrderMapper;
-import com.tutu.user.entity.User;
-import com.tutu.user.service.UserService;
+import com.tutu.user.entity.Account;
+import com.tutu.user.service.AccountService;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +48,7 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
     private LeaseOrderItemService leaseOrderItemService;
     
     @Autowired
-    private UserService userService;
+    private AccountService accountService;
 
     /**
      * 分页查询订单
@@ -86,8 +84,8 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         String userId = StpUtil.getLoginIdAsString();
         
         // 获取用户信息
-        User user = userService.getById(userId);
-        if (user == null) {
+        Account account = accountService.getById(userId);
+        if (account == null) {
             throw new RuntimeException("用户不存在");
         }
         
@@ -116,7 +114,7 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         LeaseOrder order = new LeaseOrder();
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
-        order.setUserName(user.getUsername());
+        order.setUserName(account.getUsername());
         order.setStatus(LeaseOrderStatusEnum.PENDING_REVIEW.getCode());
         order.setTotalAmount(totalAmount);
         order.setPaidAmount(BigDecimal.ZERO);
@@ -163,8 +161,8 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
     public void createOrderFromGoods(CreateOrderFromGoodsRequest request) {
         String userId = request.getUserId();
         // 获取用户信息
-        User user = userService.getById(userId);
-        if (user == null) {
+        Account account = accountService.getById(userId);
+        if (account == null) {
             throw new RuntimeException("用户不存在");
         }
         
@@ -189,7 +187,7 @@ public class LeaseOrderService extends ServiceImpl<LeaseOrderMapper, LeaseOrder>
         LeaseOrder order = new LeaseOrder();
         order.setOrderNo(generateOrderNo());
         order.setUserId(userId);
-        order.setUserName(user.getUsername());
+        order.setUserName(account.getUsername());
         order.setStatus(LeaseOrderStatusEnum.PENDING_REVIEW.getCode());
         BeanUtils.copyProperties(request, order);
         

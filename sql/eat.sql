@@ -94,10 +94,10 @@ INSERT INTO `adRole` (`id`, `name`, `code`, `remark`, `create_time`, `update_tim
 COMMIT;
 
 -- ----------------------------
--- Table structure for user
+-- Table structure for account
 -- ----------------------------
-DROP TABLE IF EXISTS `user`;
-CREATE TABLE `user` (
+DROP TABLE IF EXISTS `account`;
+CREATE TABLE `account` (
   `id` varchar(32) COLLATE utf8mb4_general_ci NOT NULL COMMENT '主键ID',
   `username` varchar(50) COLLATE utf8mb4_general_ci NOT NULL COMMENT '登录账号',
   `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT '账号密码',
@@ -113,10 +113,10 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户表';
 
 -- ----------------------------
--- Records of user
+-- Records of account
 -- ----------------------------
 BEGIN;
-INSERT INTO `user` (`id`, `username`, `password`, `status`, `nickname`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('1', 'admin', '96e79218965eb72c92a549dd5a330112', 'use', '管理员', NULL, NULL, NULL, NULL, '0');
+INSERT INTO `account` (`id`, `username`, `password`, `status`, `nickname`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('1', 'admin', '96e79218965eb72c92a549dd5a330112', 'use', '管理员', NULL, NULL, NULL, NULL, '0');
 COMMIT;
 
 -- ----------------------------
@@ -231,7 +231,7 @@ CREATE TABLE `adPermission` (
 -- ----------------------------
 BEGIN;
 INSERT INTO `adPermission` (`id`, `name`, `code`, `type`, `parent_id`, `path`, `component`, `icon`, `sort_order`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('1', '系统管理', 'system', 1, '0', '/system', NULL, 'system', 1, 1, '系统管理菜单', NOW(), NOW(), '1', '1', '0');
-INSERT INTO `adPermission` (`id`, `name`, `code`, `type`, `parent_id`, `path`, `component`, `icon`, `sort_order`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('2', '用户管理', 'system:user', 1, '1', '/system/user', 'system/user/index', 'user', 1, 1, '用户管理菜单', NOW(), NOW(), '1', '1', '0');
+INSERT INTO `adPermission` (`id`, `name`, `code`, `type`, `parent_id`, `path`, `component`, `icon`, `sort_order`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('2', '用户管理', 'system:account', 1, '1', '/system/account', 'system/account/index', 'account', 1, 1, '用户管理菜单', NOW(), NOW(), '1', '1', '0');
 INSERT INTO `adPermission` (`id`, `name`, `code`, `type`, `parent_id`, `path`, `component`, `icon`, `sort_order`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('3', '角色管理', 'system:adRole', 1, '1', '/system/adRole', 'system/adRole/index', 'adRole', 2, 1, '角色管理菜单', NOW(), NOW(), '1', '1', '0');
 INSERT INTO `adPermission` (`id`, `name`, `code`, `type`, `parent_id`, `path`, `component`, `icon`, `sort_order`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('4', '权限管理', 'system:adPermission', 1, '1', '/system/adPermission', 'system/adPermission/index', 'adPermission', 3, 1, '权限管理菜单', NOW(), NOW(), '1', '1', '0');
 INSERT INTO `adPermission` (`id`, `name`, `code`, `type`, `parent_id`, `path`, `component`, `icon`, `sort_order`, `status`, `remark`, `create_time`, `update_time`, `create_by`, `update_by`, `is_deleted`) VALUES ('5', '部门管理', 'system:dept', 1, '1', '/system/dept', 'system/dept/index', 'dept', 4, 1, '部门管理菜单', NOW(), NOW(), '1', '1', '0');

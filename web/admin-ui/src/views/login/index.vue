@@ -29,7 +29,7 @@ import { User, Lock, Warning } from '@element-plus/icons-vue'
 import { Ref, onMounted, reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElNotification, ElMessage } from 'element-plus'
-import { useUserStore } from '~/store/modules/user';
+import { useUserStore } from '~/store/modules/account';
 let $router = useRouter()
 let $route = useRoute()
 let loading = ref(false)

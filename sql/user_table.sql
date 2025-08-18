@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS `user`;
-CREATE TABLE `user` (
+DROP TABLE IF EXISTS `account`;
+CREATE TABLE `account` (
   `id` varchar(64) NOT NULL COMMENT '用户ID',
   `username` varchar(20) DEFAULT NULL COMMENT '用户名',
   `password` varchar(20) DEFAULT NULL COMMENT '密码',

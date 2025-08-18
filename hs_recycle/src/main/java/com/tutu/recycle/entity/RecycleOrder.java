@@ -2,7 +2,7 @@ package com.tutu.recycle.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tutu.common.entity.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,61 +19,39 @@ public class RecycleOrder extends BaseEntity {
     @TableId(type = IdType.ASSIGN_UUID)
     private String id;
     // 订单编号
-    private String orderNo;
-    // 合同编号
-    private String contractId;
+    private String no;
+    // 订单类型
+    private String type;
     // 状态
     private String status;
-    // 货物照片
-    private String cargoImg;
-    // 运输方式(来自合同)
-    private String transportType;
-    // 经办人签字照片
-    private String signImg;
-    // === 运输信息
-    // 取货时间
-    private Date pickupTime;
-    // 取货地址
-    private String pickupAddress;
-    // 取货照片
-    private String pickupImg;
-    // 处理人(司机)
-    private String pickupProcessor;
-    // === 分练信息
-    // 分练时间
-    private Date sortingTime;
-    // 分练人
-    private String sortingProcessor;
-    // 运输成本
-    private BigDecimal transportCost;
-    // 分练编号
-    private String sortingNo;
-    // 货物类型
-    private String cargoType;
-    // 货物名称
-    private String cargoName;
-    // 货物单价
-    private BigDecimal cargoPrice;
-    // 重量
-    private BigDecimal weight;
-    // 分练成本
-    private BigDecimal sortingCost;
-    // 分练备注
-    private String sortingRemark;
-    // === 财务
-    // 打款时间
-    private Date paymentTime;
-    // 打款状态
-    private String paymentStatus;
-    // 打款凭证号
-    private String paymentVoucher;
-    // 打款公户
-    private String paymentAccount;
-    // === 发票
-    // 开票状态
-    private String invoiceStatus;
-    // 开票时间
-    private Date invoiceTime;
-    // 开票金额
-    private BigDecimal invoiceAmount;
+    // 起始时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date startTime;
+    // 结束时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date endTime;
+    // 订单识别码
+    private String identifyCode;
+    // 经办人
+    private String processor;
+    // 经办人电话
+    private String processorPhone;
+    // 订单总金额
+    private BigDecimal totalAmount;
+    // 订单节点时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date orderNodeTime;
+    // 订单节点相关图片
+    private String orderNodeImg;
+    // 提货位置
+    private String orderNodePickupLocation;
+    // 送货位置
+    private String orderNodeDeliveryLocation;
+    // === 合同相关信息 ===
+    // 合同编号
+    private String contractNo;
+    // 合同名称
+    private String contractName;
+    // 合作方
+    private String contractPartner;
 }

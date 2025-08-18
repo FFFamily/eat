@@ -11,9 +11,9 @@ import com.tutu.recycle.mapper.RecycleOrderMapper;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 
-import com.tutu.user.entity.User;
+import com.tutu.user.entity.Account;
 import com.tutu.user.enums.UserUseTypeEnum;
-import com.tutu.user.service.UserService;
+import com.tutu.user.service.AccountService;
 import org.springframework.web.multipart.MultipartFile;
 import com.tutu.system.vo.FileUploadVO;
 import java.io.IOException;
@@ -39,14 +39,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     @Autowired
     private SysFileService sysFileService;
     @Resource
-    private UserService userService;
+    private AccountService accountService;
     /**
      * 创建回收订单
      * @param recycleOrder 回收订单信息
      */
     public RecycleOrder createOrder(RecycleOrder recycleOrder) {
         // 生成订单编号
-        recycleOrder.setOrderNo(IdUtil.simpleUUID());
+        recycleOrder.setNo(IdUtil.simpleUUID());
         // 状态
         recycleOrder.setStatus(RecycleOrderStatusEnum.PENDING.getCode());
         // 保存订单
@@ -156,18 +156,19 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param processor 处理人 ID
      */
     public void assignProcessor(String orderId, String processor) {
-        User user = userService.getById(processor);
-        if (user == null) {
+        Account account = accountService.getById(processor);
+        if (account == null) {
             throw new RuntimeException("处理人不存在");
         }
         RecycleOrder recycleOrder = getById(orderId);
         if (recycleOrder == null) {
             throw new RuntimeException("订单不存在");
         }
-        if (!user.getUseType().equals(UserUseTypeEnum.TRANSPORT.getCode())) {
+        if (!account.getUseType().equals(UserUseTypeEnum.TRANSPORT.getCode())) {
            throw new RuntimeException("处理人不是司机");
         } 
-        recycleOrder.setPickupProcessor(processor);
+        recycleOrder.setProcessor(processor);
+        recycleOrder.setProcessorPhone(account.getPhone());
         updateById(recycleOrder);
     }
 
@@ -178,7 +179,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      */
     public List<RecycleOrder> getOrdersByProcessor(RecycleOrder recycleOrder) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
-                .eq(RecycleOrder::getPickupProcessor, recycleOrder.getPickupProcessor());
+                .eq(RecycleOrder::getProcessor, recycleOrder.getProcessor());
         if (StrUtil.isNotBlank(recycleOrder.getStatus()) && !recycleOrder.getStatus().equals("all")) {
             wrapper.eq(RecycleOrder::getStatus, recycleOrder.getStatus());
         }

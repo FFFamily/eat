@@ -8,12 +8,9 @@ import com.tutu.admin_user.service.AdUserService;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.system.entity.SysContractLog;
 import com.tutu.system.service.SysContractLogService;
-import com.tutu.user.entity.User;
-import com.tutu.user.service.UserService;
 
 import jakarta.annotation.Resource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;

@@ -5,23 +5,20 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.enums.user.UserStatusEnum;
-import com.tutu.user.entity.User;
-import com.tutu.user.mapper.UserMapper;
-
-import java.util.HashMap;
-import java.util.List;
+import com.tutu.user.entity.Account;
+import com.tutu.user.mapper.AccountMapper;
 
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService extends ServiceImpl<UserMapper, User> {
+public class AccountService extends ServiceImpl<AccountMapper, Account> {
 
 
     /**
      * 获取对应账户的用户
      */
-    public User getUserByUsername(String username) {
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+    public Account getUserByUsername(String username) {
+        QueryWrapper<Account> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", username);
         return getOne(queryWrapper);
     }
@@ -34,9 +31,9 @@ public class UserService extends ServiceImpl<UserMapper, User> {
      * @param useType 使用类型
      */
     public void changeUseType(String userId,String useType){
-        User user = getById(userId);
-        user.setUseType(useType);
-        updateById(user);
+        Account account = getById(userId);
+        account.setUseType(useType);
+        updateById(account);
     }
 
     /**
@@ -44,34 +41,34 @@ public class UserService extends ServiceImpl<UserMapper, User> {
      * @param userId 用户 ID
      */
     public void changeStatus(String userId) {
-        User user = getById(userId);
-        if (user == null) {
+        Account account = getById(userId);
+        if (account == null) {
             throw new RuntimeException("用户不存在");
         }
-        user.setStatus(user.getStatus().equals(UserStatusEnum.USE.getCode()) ? UserStatusEnum.DISABLE.getCode() : UserStatusEnum.USE.getCode());
-        updateById(user);
+        account.setStatus(account.getStatus().equals(UserStatusEnum.USE.getCode()) ? UserStatusEnum.DISABLE.getCode() : UserStatusEnum.USE.getCode());
+        updateById(account);
     }
 
     /**
      * 创建用户
-     * @param user 用户实体
+     * @param account 用户实体
      */
-    public void create(User user) {
-        User oldUser = getUserByUsername(user.getUsername());
-        if (oldUser != null) {
+    public void create(Account account) {
+        Account oldAccount = getUserByUsername(account.getUsername());
+        if (oldAccount != null) {
             throw new RuntimeException("用户名已存在");
         }
-        oldUser = getUserByIdCard(user.getIdCard());
-        if (oldUser != null) {
+        oldAccount = getUserByIdCard(account.getIdCard());
+        if (oldAccount != null) {
             throw new RuntimeException("身份证已存在");
         }
-        oldUser = getUserByPhone(user.getPhone());
-        if (oldUser != null) {
+        oldAccount = getUserByPhone(account.getPhone());
+        if (oldAccount != null) {
             throw new RuntimeException("手机号已存在");
         }
-        user.setStatus(UserStatusEnum.USE.getCode());
-        user.setPassword(SaSecureUtil.md5(user.getPassword()));
-        save(user);
+        account.setStatus(UserStatusEnum.USE.getCode());
+        account.setPassword(SaSecureUtil.md5(account.getPassword()));
+        save(account);
     }
 
     /**
@@ -79,9 +76,9 @@ public class UserService extends ServiceImpl<UserMapper, User> {
      * @param idCard 身份证号
      * @return 用户实体，若不存在则返回 null
      */
-    private User getUserByIdCard(String idCard) {
-        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getIdCard, idCard);
+    private Account getUserByIdCard(String idCard) {
+        LambdaQueryWrapper<Account> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(Account::getIdCard, idCard);
         return getOne(userLambdaQueryWrapper);
     }
 
@@ -90,9 +87,9 @@ public class UserService extends ServiceImpl<UserMapper, User> {
      * @param phone 手机号
      * @return 用户实体，若不存在则返回 null
      */
-    private User getUserByPhone(String phone) {
-        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getPhone, phone);
+    private Account getUserByPhone(String phone) {
+        LambdaQueryWrapper<Account> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(Account::getPhone, phone);
         return getOne(userLambdaQueryWrapper);
     }
 }

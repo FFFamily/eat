@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class User extends BaseUserEntity {
+public class Account extends BaseUserEntity {
     // id
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

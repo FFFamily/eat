@@ -78,7 +78,7 @@ public class RecycleOrderController {
      * @param recycleOrder 回收订单信息
      * @return 更新结果
      */
-    @PutMapping
+    @PutMapping("/update")
     public BaseResponse<Void> updateRecycleOrder(@RequestBody RecycleOrder recycleOrder) {
         recycleOrderService.updateById(recycleOrder);
         return BaseResponse.success();
@@ -105,15 +105,15 @@ public class RecycleOrderController {
 
     /**
      * 分页查询回收订单
-     * @param pageNum 页码
-     * @param pageSize 每页数量
+     * @param page 页码
+     * @param size 每页数量
      * @return 分页结果
      */
     @GetMapping("/page")
-    public BaseResponse<IPage<RecycleOrder>> getRecycleOrdersByPage(@RequestParam(defaultValue = "1") int pageNum,
-                                                      @RequestParam(defaultValue = "10") int pageSize) {
-        Page<RecycleOrder> page = new Page<>(pageNum, pageSize);
-        Page<RecycleOrder> result = recycleOrderService.page(page, new QueryWrapper<>());
+    public BaseResponse<IPage<RecycleOrder>> getRecycleOrdersByPage(@RequestParam(defaultValue = "1") int page,
+                                                      @RequestParam(defaultValue = "10") int size) {
+        Page<RecycleOrder> ipage = new Page<>(page, size);
+        Page<RecycleOrder> result = recycleOrderService.page(ipage, new QueryWrapper<>());
         return BaseResponse.success(result);
     }
 }
