@@ -5,9 +5,13 @@ import cn.binarywang.wx.miniapp.api.WxMaService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.recycle.entity.RecycleOrder;
+import com.tutu.recycle.entity.RecycleOrderItem;
 import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
+import com.tutu.recycle.request.CreateRecycleOrderRequest;
+import com.tutu.recycle.schema.RecycleOrderInfo;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -29,6 +33,7 @@ import jakarta.annotation.Resource;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 
@@ -40,18 +45,47 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     private SysFileService sysFileService;
     @Resource
     private AccountService accountService;
+    @Resource
+    private RecycleOrderItemService recycleOrderItemService;
     /**
      * 创建回收订单
      * @param recycleOrder 回收订单信息
      */
-    public RecycleOrder createOrder(RecycleOrder recycleOrder) {
+    @Transactional(rollbackFor = Exception.class)
+    public RecycleOrder createOrder(CreateRecycleOrderRequest request) {
         // 生成订单编号
-        recycleOrder.setNo(IdUtil.simpleUUID());
+        // recycleOrder.setNo(IdUtil.simpleUUID());
         // 状态
-        recycleOrder.setStatus(RecycleOrderStatusEnum.PENDING.getCode());
+        // recycleOrder.setStatus(RecycleOrderStatusEnum.PENDING.getCode());
         // 保存订单
+        RecycleOrder recycleOrder = new RecycleOrder();
+        BeanUtil.copyProperties(request, recycleOrder);
         save(recycleOrder);
+        // 保存订单项
+        List<RecycleOrderItem> items = request.getItems();
+        for (RecycleOrderItem item : items) {
+            item.setRecycleOrderId(recycleOrder.getId());
+            recycleOrderItemService.save(item);
+        }
         return recycleOrder;
+    }
+
+    /**
+     * 更新回收订单
+     * @param request 更新请求
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void updateOrder(CreateRecycleOrderRequest request) {
+        RecycleOrder recycleOrder = new RecycleOrder();
+        BeanUtil.copyProperties(request, recycleOrder);
+        updateById(recycleOrder);
+        // 更新订单项
+        List<RecycleOrderItem> items = request.getItems();
+        for (RecycleOrderItem item : items) {
+            if (StrUtil.isNotBlank(item.getId())) {
+                recycleOrderItemService.updateById(item);
+            }
+        }
     }
 
     /**
@@ -184,5 +218,17 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             wrapper.eq(RecycleOrder::getStatus, recycleOrder.getStatus());
         }
         return list(wrapper);
+    }
+
+    /**
+     * 获取订单信息
+     * @param id 订单ID
+     * @return 订单信息
+     */
+    public RecycleOrderInfo getOrderInfo(String id) {
+        RecycleOrderInfo recycleOrderInfo = new RecycleOrderInfo();
+        BeanUtil.copyProperties(getById(id), recycleOrderInfo);
+        recycleOrderInfo.setItems(recycleOrderItemService.list(new LambdaQueryWrapper<RecycleOrderItem>().eq(RecycleOrderItem::getRecycleOrderId, id)));
+        return recycleOrderInfo;
     }
 }

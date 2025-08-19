@@ -11,7 +11,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class RecycleContractService extends ServiceImpl<RecycleContractMapper, RecycleContract> {
     
-    
+    /**
+     * 创建合同
+     * @param recycleContract
+     * @return
+     */
     public RecycleContract createContract(RecycleContract recycleContract) {
         // 保存合同
         save(recycleContract);

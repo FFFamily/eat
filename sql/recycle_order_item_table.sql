@@ -1,0 +1,26 @@
+DROP TABLE IF EXISTS `recycle_order_item`;
+CREATE TABLE `recycle_order_item` (
+  `id` varchar(64) NOT NULL COMMENT '主键ID',
+  `recycle_contract_id` varchar(64) DEFAULT NULL COMMENT '合同ID',
+  `recycle_order_id` varchar(64) DEFAULT NULL COMMENT '订单ID',
+  `good_no` varchar(100) DEFAULT NULL COMMENT '货物编号',
+  `good_type` varchar(100) DEFAULT NULL COMMENT '货物分类',
+  `good_name` varchar(200) DEFAULT NULL COMMENT '货物名称',
+  `good_model` varchar(100) DEFAULT NULL COMMENT '货物型号',
+  `good_count` int DEFAULT NULL COMMENT '货物数量',
+  `contract_price` decimal(15,2) DEFAULT NULL COMMENT '合同预计单价',
+  `good_price` decimal(15,2) DEFAULT NULL COMMENT '货物单价',
+  `good_total_price` decimal(15,2) DEFAULT NULL COMMENT '货物总价',
+  `good_remark` varchar(500) DEFAULT NULL COMMENT '货物备注',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
+  `update_by` varchar(64) DEFAULT NULL COMMENT '更新人',
+  `is_deleted` varchar(1) DEFAULT '0' COMMENT '是否删除(0-未删除,1-已删除)',
+  PRIMARY KEY (`id`),
+  KEY `idx_recycle_contract_id` (`recycle_contract_id`),
+  KEY `idx_recycle_order_id` (`recycle_order_id`),
+  KEY `idx_good_no` (`good_no`),
+  KEY `idx_good_type` (`good_type`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='回收订单明细表'; 

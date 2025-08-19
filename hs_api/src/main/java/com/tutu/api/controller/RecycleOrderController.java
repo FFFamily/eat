@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.entity.RecycleOrder;
+import com.tutu.recycle.request.CreateRecycleOrderRequest;
+import com.tutu.recycle.schema.RecycleOrderInfo;
 import com.tutu.recycle.service.RecycleOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +29,7 @@ public class RecycleOrderController {
      * @return 添加结果
      */
     @PostMapping("/create")
-    public BaseResponse<RecycleOrder> addRecycleOrder(@RequestBody RecycleOrder recycleOrder) {
+    public BaseResponse<RecycleOrder> addRecycleOrder(@RequestBody CreateRecycleOrderRequest recycleOrder) {
         return BaseResponse.success(recycleOrderService.createOrder(recycleOrder));
     }
 
@@ -75,12 +77,12 @@ public class RecycleOrderController {
 
     /**
      * 更新回收订单信息
-     * @param recycleOrder 回收订单信息
+     * @param request 回收订单信息
      * @return 更新结果
      */
     @PutMapping("/update")
-    public BaseResponse<Void> updateRecycleOrder(@RequestBody RecycleOrder recycleOrder) {
-        recycleOrderService.updateById(recycleOrder);
+    public BaseResponse<Void> updateRecycleOrder(@RequestBody CreateRecycleOrderRequest request) {
+        recycleOrderService.updateOrder(request);
         return BaseResponse.success();
     }
 
@@ -90,8 +92,9 @@ public class RecycleOrderController {
      * @return 回收订单信息
      */
     @GetMapping("/{id}")
-    public BaseResponse<RecycleOrder> getRecycleOrder(@PathVariable String id) {
-        return BaseResponse.success(recycleOrderService.getById(id));
+    public BaseResponse<RecycleOrderInfo> getRecycleOrder(@PathVariable String id) {
+        RecycleOrderInfo recycleOrderInfo = recycleOrderService.getOrderInfo(id);
+        return BaseResponse.success(recycleOrderInfo);
     }
 
     /**

@@ -20,6 +20,8 @@ public class RecycleContract extends BaseEntity{
     // 合同ID
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
+    // 合同编号
+    private String no;
     // 合同名称
     private String name;
     // 合同类型
