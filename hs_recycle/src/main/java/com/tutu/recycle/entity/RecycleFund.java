@@ -3,6 +3,9 @@ package com.tutu.recycle.entity;
 import java.math.BigDecimal;
 import java.sql.Date;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tutu.common.entity.BaseEntity;
 
 import lombok.Getter;
@@ -13,6 +16,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RecycleFund extends BaseEntity {
+    @TableId(type = IdType.ASSIGN_ID)
+    private String id;
     // 编号
     private String no;
     // 合同编号
@@ -40,5 +45,6 @@ public class RecycleFund extends BaseEntity {
     // 凭证
     private String voucher;
     // 支付时间
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date payFundTime;
 }

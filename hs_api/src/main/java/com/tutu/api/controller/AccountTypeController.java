@@ -14,7 +14,7 @@ import java.util.List;
  * 账号类型Controller
  */
 @RestController
-@RequestMapping("/system/account/type")
+@RequestMapping("/system/accountType")
 public class AccountTypeController {
 
     @Autowired
@@ -59,19 +59,6 @@ public class AccountTypeController {
         boolean result = accountTypeService.removeById(id);
         return BaseResponse.success(result);
     }
-
-    /**
-     * 批量删除账号类型
-     */
-    @DeleteMapping("/batch-delete")
-    public BaseResponse<Boolean> batchDelete(@RequestBody List<String> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return BaseResponse.error("请选择要删除的记录");
-        }
-        boolean result = accountTypeService.removeByIds(ids);
-        return BaseResponse.success(result);
-    }
-
     /**
      * 根据ID查询账号类型
      */
@@ -82,24 +69,15 @@ public class AccountTypeController {
     }
 
     /**
-     * 根据编号查询账号类型
-     */
-    @GetMapping("/get/code/{code}")
-    public BaseResponse<AccountType> getByCode(@PathVariable String code) {
-        AccountType accountType = accountTypeService.getByCode(code);
-        return BaseResponse.success(accountType);
-    }
-
-    /**
      * 分页查询账号类型
      */
     @GetMapping("/page")
     public BaseResponse<IPage<AccountType>> getPage(
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
             AccountType accountType) {
-        Page<AccountType> page = new Page<>(pageNum, pageSize);
-        IPage<AccountType> result = accountTypeService.getPage(page, accountType);
+        Page<AccountType> ipage = new Page<>(page, size);
+        IPage<AccountType> result = accountTypeService.getPage(ipage, accountType);
         return BaseResponse.success(result);
     }
 

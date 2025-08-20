@@ -1,7 +1,10 @@
 package com.tutu.recycle.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.recycle.entity.RecycleFund;
+import com.tutu.recycle.mapper.RecycleFundMapper;
+import org.springframework.stereotype.Service;
 
-public interface RecycleFundService extends IService<RecycleFund> {
+@Service
+public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFund> {
 } 

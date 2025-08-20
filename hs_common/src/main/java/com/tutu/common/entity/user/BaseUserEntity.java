@@ -1,6 +1,7 @@
 package com.tutu.common.entity.user;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tutu.common.entity.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +13,7 @@ public class BaseUserEntity extends BaseEntity {
     private String username;
     // 登录密码
     @JSONField(serialize = false)
+    @JsonIgnore
     private String password;
     // 用户状态(使用中/已关闭)
     private String status;

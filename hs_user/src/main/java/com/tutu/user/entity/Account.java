@@ -14,8 +14,10 @@ public class Account extends BaseUserEntity {
     // id
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
-    // 类型
+    // 账号类型
     private String type;
+    // 用户类型
+    private String accountTypeId;
     // 用户操作使用类型： 普通用户、运输专人
     private String useType;
     // 手机号

@@ -1,4 +1,4 @@
-package com.tutu.recycle.controller;
+package com.tutu.api.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -36,10 +36,10 @@ public class RecycleFundController {
     }
 
     @PostMapping("/page")
-    public BaseResponse<Page<RecycleFund>> page(@RequestParam(defaultValue = "1") Integer current,
+    public BaseResponse<Page<RecycleFund>> page(@RequestParam(defaultValue = "1") Integer page,
                                          @RequestParam(defaultValue = "10") Integer size,
                                          @RequestBody(required = false) RecycleFund query) {
-        Page<RecycleFund> page = new Page<>(current, size);
+        Page<RecycleFund> ipage = new Page<>(page, size);
         QueryWrapper<RecycleFund> queryWrapper = new QueryWrapper<>();
         if (query != null) {
             if (query.getNo() != null) {
@@ -56,6 +56,6 @@ public class RecycleFundController {
             }
         }
         queryWrapper.orderByDesc("create_time");
-        return BaseResponse.success(recycleFundService.page(page, queryWrapper));
+        return BaseResponse.success(recycleFundService.page(ipage, queryWrapper));
     }
 } 

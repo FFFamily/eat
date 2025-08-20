@@ -12,12 +12,11 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@TableName("user_type")
+@TableName("account_type")
 public class AccountType extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
-
     /**
      * 编号
      */

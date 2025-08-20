@@ -25,6 +25,16 @@ public class UserController {
         accountService.create(account);
         return BaseResponse.success();
     }
+    
+    /**
+     * 根据用户类型生成对应的用户账号
+     * @param accountType 用户类型
+     * @return 用户账号
+     */
+    @GetMapping("/generateAccountUsername/{accountType}")
+    public BaseResponse<String> generateAccountUsername(@PathVariable String accountType) {
+        return BaseResponse.success(accountService.generateAccountUsername(accountType));
+    }
 
     /**
      * 修改用户使用类型
