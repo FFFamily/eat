@@ -1,10 +1,12 @@
 package com.tutu.api.controller.admin.user;
 
+import cn.dev33.satoken.secure.SaSecureUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tutu.admin_user.dto.AdUserDTO;
 import com.tutu.admin_user.entity.AdUser;
 import com.tutu.admin_user.service.AdUserService;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.util.PasswordUtil;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,7 @@ public class AdminUserController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword) {
         IPage<AdUser> page = adUserService.getPageList(current, size, keyword);
+        page.getRecords().forEach(adUser -> adUser.setPassword(PasswordUtil.decode(adUser.getPassword())));
         return BaseResponse.success(page);
     }
     
@@ -69,16 +72,8 @@ public class AdminUserController {
      */
     @PutMapping("/update")
     public BaseResponse<String> updateUser(@Valid @RequestBody AdUser userDTO) {
-        try {
-            boolean result = adUserService.updateUser(userDTO);
-            if (result) {
-                return BaseResponse.success("更新成功");
-            } else {
-                return BaseResponse.error("更新失败");
-            }
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
+        adUserService.updateUser(userDTO);
+        return BaseResponse.success();
     }
     
     /**

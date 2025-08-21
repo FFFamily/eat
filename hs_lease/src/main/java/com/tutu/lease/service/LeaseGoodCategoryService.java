@@ -48,6 +48,16 @@ public class LeaseGoodCategoryService extends ServiceImpl<LeaseGoodCategoryMappe
         if (getOne(queryWrapper) != null) {
             throw new RuntimeException("分类名称已被使用");
         }
+        // 检查分类编码是否被其他分类使用
+        queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(LeaseGoodCategory::getCode, category.getCode())
+                .eq(LeaseGoodCategory::getIsDeleted, CommonConstant.NO_STR)
+                .ne(LeaseGoodCategory::getId, category.getId());
+
+        if (getOne(queryWrapper) != null) {
+            throw new RuntimeException("分类编码已被使用");
+        }
+
 
         return updateById(category);
     }

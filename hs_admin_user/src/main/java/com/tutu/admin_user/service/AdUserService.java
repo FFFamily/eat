@@ -1,6 +1,7 @@
 package com.tutu.admin_user.service;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.MD5;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -15,10 +16,13 @@ import com.tutu.admin_user.mapper.AdUserMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
 import com.tutu.common.constant.CommonConstant;
 import com.tutu.common.enums.user.UserStatusEnum;
+import com.tutu.common.exceptions.ServiceException;
+import com.tutu.common.util.PasswordUtil;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.sql.rowset.serial.SerialException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +57,13 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         return userMap;
     }
 
-    
+    /**
+     * 获取用户分页列表
+     * @param current 当前页
+     * @param size 每页数量
+     * @param keyword 搜索关键词
+     * @return 用户分页列表
+     */
     public IPage<AdUser> getPageList(int current, int size, String keyword) {
         Page<AdUser> page = new Page<>(current, size);
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
@@ -64,9 +74,7 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
                     .like(AdUser::getNickname, keyword)
             );
         }
-
         queryWrapper.orderByDesc(AdUser::getCreateTime);
-
         return page(page, queryWrapper);
     }
 
@@ -79,44 +87,41 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         }
         // 设置默认密码并加密
         if (StrUtil.isBlank(user.getPassword())) {
-            user.setPassword(SaSecureUtil.md5("123456"));
+            throw new ServiceException("缺失密码");
         } else {
-            user.setPassword(SaSecureUtil.md5(user.getPassword()));
+            user.setPassword(PasswordUtil.encode(user.getPassword()));
         }
         // 设置默认状态
         if (user.getStatus() == null) {
             user.setStatus(UserStatusEnum.USE.getCode());
         }
-
         return save(user);
     }
 
     
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateUser(AdUser user) {
+    public void updateUser(AdUser user) {
         AdUser existUser = getById(user.getId());
         if (existUser == null) {
             throw new RuntimeException("用户不存在");
         }
-
         // 检查用户名是否被其他用户使用
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(AdUser::getUsername, user.getUsername())
-                .eq(AdUser::getIsDeleted, CommonConstant.NO_STR)
+        queryWrapper
+                .eq(AdUser::getUsername, user.getUsername())
                 .ne(AdUser::getId, user.getId());
-
         if (getOne(queryWrapper) != null) {
             throw new RuntimeException("用户名已被使用");
         }
-
-        // 如果有新密码，则加密
-        if (StrUtil.isNotBlank(user.getPassword())) {
-            user.setPassword(MD5.create().digestHex(user.getPassword()));
-        } else {
-            user.setPassword(null); // 不更新密码
+        // 检查手机号是否被其他用户使用
+        queryWrapper
+                .eq(AdUser::getPhone, user.getPhone())
+                .ne(AdUser::getId, user.getId());
+        if (getOne(queryWrapper) != null) {
+            throw new RuntimeException("手机号已被使用");
         }
-
-        return updateById(user);
+        BeanUtil.copyProperties(user,existUser);
+        updateById(existUser);
     }
 
     

@@ -20,7 +20,10 @@ public class LeaseGoodCategory extends BaseEntity {
      */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
-    
+    /**
+     * 分类编码
+     */
+    private String code;
     /**
      * 分类名称
      */
