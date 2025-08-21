@@ -3,11 +3,13 @@ package com.tutu.api.controller.mobile.user;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.Account;
+import com.tutu.user.enums.UserUseTypeEnum;
 import com.tutu.user.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/wx/user")
@@ -34,6 +36,14 @@ public class UserController {
     @GetMapping("/generateAccountUsername/{accountType}")
     public BaseResponse<String> generateAccountUsername(@PathVariable String accountType) {
         return BaseResponse.success(accountService.generateAccountUsername(accountType));
+    }
+    /**
+     * 拿到所有的useType
+     * @return
+     */
+    @GetMapping("/useTypeList")
+    public BaseResponse<List<Map<String,String>>> getAllUseType() {
+        return BaseResponse.success(accountService.getAllUseType());
     }
 
     /**

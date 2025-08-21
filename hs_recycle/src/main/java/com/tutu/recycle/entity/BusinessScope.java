@@ -20,6 +20,8 @@ public class BusinessScope extends BaseEntity{
     private String id;
     // 编号
     private String no;
+    // 排序
+    private Integer sortNum;
     // 货物类型
     private String goodType;
     // 货物名称

@@ -18,13 +18,11 @@ public class BusinessScopeController {
     private BusinessScopeService businessScopeService;
 
     /**
-     * 获取所有经营范围
+     * 获取所有经营范围（按排序号排序）
      */
     @GetMapping("/list")
     public BaseResponse<List<BusinessScope>> list() {
-        LambdaQueryWrapper<BusinessScope> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByDesc(BusinessScope::getCreateTime);
-        return BaseResponse.success(businessScopeService.list(wrapper));
+        return BaseResponse.success(businessScopeService.getAllOrdered());
     }
 
     /**
@@ -59,7 +57,9 @@ public class BusinessScopeController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
         Page<BusinessScope> page = new Page<>(pageNum, pageSize);
-        return BaseResponse.success(businessScopeService.page(page));
+        LambdaQueryWrapper<BusinessScope> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderByAsc(BusinessScope::getSortNum);
+        return BaseResponse.success(businessScopeService.page(page, wrapper));
     }
 
     /**
@@ -87,11 +87,45 @@ public class BusinessScopeController {
     }
 
     /**
+     * 批量删除经营范围
+     */
+    @DeleteMapping("/delete/batch")
+    public BaseResponse<Boolean> deleteBatch(@RequestBody List<String> ids) {
+        return BaseResponse.success(businessScopeService.removeByIds(ids));
+    }
+
+    /**
      * 更新是否显示
      */
     @PutMapping("/update/isShow")
     public BaseResponse<Boolean> updateIsShow(@RequestBody BusinessScope businessScope) {
         businessScopeService.updateIsShow(businessScope);
         return BaseResponse.success();
+    }
+    
+    /**
+     * 上移经营范围
+     */
+    @PutMapping("/move-up/{id}")
+    public BaseResponse<Boolean> moveUp(@PathVariable String id) {
+        try {
+            businessScopeService.moveUp(id);
+            return BaseResponse.success();
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
+    }
+    
+    /**
+     * 下移经营范围
+     */
+    @PutMapping("/move-down/{id}")
+    public BaseResponse<Boolean> moveDown(@PathVariable String id) {
+        try {
+            businessScopeService.moveDown(id);
+            return BaseResponse.success();
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
     }
 } 

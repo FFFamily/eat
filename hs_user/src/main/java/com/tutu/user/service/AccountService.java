@@ -1,6 +1,7 @@
 package com.tutu.user.service;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
+import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -10,7 +11,14 @@ import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.user.entity.Account;
 import com.tutu.user.entity.AccountType;
+import com.tutu.user.enums.UserUseTypeEnum;
 import com.tutu.user.mapper.AccountMapper;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -25,27 +33,41 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
      * 获取对应账户的用户
      */
     public Account getUserByUsername(String username) {
+        if (StrUtil.isBlank(username)) {
+            throw new ServiceException("用户名不能为空");
+        }
         QueryWrapper<Account> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", username);
         return getOne(queryWrapper);
     }
 
     /**
+     * 获取所有的useType
+     * @return
+     */
+    public List<Map<String,String>> getAllUseType() {
+        return Arrays.stream(UserUseTypeEnum.values()).map(item -> {
+            Map<String,String> map = new HashMap<>();
+            map.put("key", item.getCode());
+            map.put("value", item.getTitle());
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    /**
      * 根据用户类型生成对应的用户账号
-     * @param accountType 用户类型
+     * @param accountTypeId 用户类型
      * @return 用户账号
      */
     public String generateAccountUsername(String accountTypeId) {
         // 查询当前用户类型对应的用户数量
-        LambdaQueryWrapper<Account> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(Account::getAccountTypeId, accountTypeId);
-        long count = count(userLambdaQueryWrapper);
+        long count = this.baseMapper.getUserCountByAccountTypeId(accountTypeId);
         // 转为String
-        String countStr = String.valueOf(count+1);
+        StringBuilder countStr = new StringBuilder(String.valueOf(count + 1));
         // 根据长度构建编码：00001
         int length = countStr.length();
         while (length < 5) {
-            countStr = "0" + countStr;
+            countStr.insert(0, "0");
             length++;
         }   
         // 查询accountTypeId对应的名称
@@ -54,7 +76,7 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
             throw new ServiceException("用户类型accountType不存在");
         }
         // 生成用户账号
-        return accountType.getCode() + "_" + countStr;
+        return accountType.getCode() + countStr;
     }
 
 
@@ -111,6 +133,9 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
      * @return 用户实体，若不存在则返回 null
      */
     private Account getUserByIdCard(String idCard) {
+        if (StrUtil.isBlank(idCard)) {
+            return null;
+        }
         LambdaQueryWrapper<Account> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(Account::getIdCard, idCard);
         return getOne(userLambdaQueryWrapper);
@@ -122,6 +147,9 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
      * @return 用户实体，若不存在则返回 null
      */
     private Account getUserByPhone(String phone) {
+        if (StrUtil.isBlank(phone)) {
+            return null;
+        }
         LambdaQueryWrapper<Account> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(Account::getPhone, phone);
         return getOne(userLambdaQueryWrapper);
