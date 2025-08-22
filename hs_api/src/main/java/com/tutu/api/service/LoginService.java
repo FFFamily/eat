@@ -4,6 +4,7 @@ import cn.dev33.satoken.secure.SaSecureUtil;
 import com.tutu.common.entity.user.BaseUserEntity;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.common.enums.user.UserStatusEnum;
+import com.tutu.common.util.PasswordUtil;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,8 +20,11 @@ public class LoginService {
             throw new ServiceException("用户不存在");
         }
         // 验证密码（假设密码已经加密存储）
-        String md5 = SaSecureUtil.md5(loginPassword);
-        if (!md5.equals(user.getPassword())){
+//        String md5 = SaSecureUtil.md5(loginPassword);
+//        if (!md5.equals(user.getPassword())){
+//            throw new ServiceException("密码错误");
+//        }
+        if (!PasswordUtil.match(loginPassword,user.getPassword())){
             throw new ServiceException("密码错误");
         }
         // 检查用户状态

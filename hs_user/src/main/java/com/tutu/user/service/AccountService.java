@@ -2,6 +2,7 @@ package com.tutu.user.service;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.hutool.core.util.StrUtil;
+import com.tutu.common.util.PasswordUtil;
 import jakarta.annotation.Resource;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -122,7 +123,7 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
         if (oldAccount != null) {
             throw new RuntimeException("手机号已被使用");
         }
-        account.setPassword(SaSecureUtil.md5(account.getPassword()));
+        account.setPassword(PasswordUtil.encode(account.getPassword()));
         account.setStatus(UserStatusEnum.USE.getCode());
         save(account);
     }
@@ -153,5 +154,18 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
         LambdaQueryWrapper<Account> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(Account::getPhone, phone);
         return getOne(userLambdaQueryWrapper);
+    }
+
+    /**
+     * 更新用户
+     * @param account
+     */
+    public void updateUser(Account account) {
+        if (account == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        // 加密密码
+        account.setPassword(PasswordUtil.encode(account.getPassword()));
+        updateById(account);
     }
 }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.user.mapper.AddressMapper">
+    <select id="findPage" resultType="com.tutu.user.entity.Address">
+        SELECT address.*, account.nickname as accountName FROM address
+        left join account on address.account_id = account.id
+        <where>
+            <if test="accountName != null and accountName != ''">
+                and account.nickname like '%${accountName}%'
+            </if>
+            <if test="address != null and address != ''">
+                and address.real_address like '%${address}%'
+            </if>
+        </where>
+    </select>
+    <select id="findPageCount" resultType="long">
+        SELECT count(*) FROM address
+        left join account on address.account_id = account.id
+        <where>
+            <if test="accountName != null and accountName != ''">
+                and account.nickname like '%${accountName}%'
+            </if>
+            <if test="address != null and address != ''">
+                and address.real_address like '%${address}%'
+            </if>
+        </where>
+    </select>
+</mapper>

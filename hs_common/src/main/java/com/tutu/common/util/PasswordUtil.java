@@ -34,6 +34,6 @@ public class PasswordUtil {
      * @return
      */
     public static boolean match(String oldPassword,String realPassword){
-        return SaSecureUtil.aesDecrypt(key, oldPassword).equals(realPassword);
+        return SaSecureUtil.aesEncrypt(key, oldPassword).equals(realPassword);
     }
 }

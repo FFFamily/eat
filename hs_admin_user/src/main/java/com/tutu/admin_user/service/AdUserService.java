@@ -14,6 +14,7 @@ import com.tutu.admin_user.entity.AdUserRole;
 import com.tutu.admin_user.enums.AdUserStatusEnum;
 import com.tutu.admin_user.mapper.AdUserMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
+import com.tutu.common.constant.AdminConstant;
 import com.tutu.common.constant.CommonConstant;
 import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.common.exceptions.ServiceException;
@@ -103,7 +104,11 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
     public void updateUser(AdUser user) {
         AdUser existUser = getById(user.getId());
         if (existUser == null) {
-            throw new RuntimeException("用户不存在");
+            throw new ServiceException("用户不存在");
+        }
+        String id = existUser.getId();
+        if (id.equals(AdminConstant.ADMIN_ID)) {
+            throw new ServiceException("不能修改管理员账号");
         }
         // 检查用户名是否被其他用户使用
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
@@ -111,14 +116,18 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
                 .eq(AdUser::getUsername, user.getUsername())
                 .ne(AdUser::getId, user.getId());
         if (getOne(queryWrapper) != null) {
-            throw new RuntimeException("用户名已被使用");
+            throw new ServiceException("用户名已被使用");
         }
         // 检查手机号是否被其他用户使用
         queryWrapper
                 .eq(AdUser::getPhone, user.getPhone())
                 .ne(AdUser::getId, user.getId());
         if (getOne(queryWrapper) != null) {
-            throw new RuntimeException("手机号已被使用");
+            throw new ServiceException("手机号已被使用");
+        }
+        // 加密密码
+        if (StrUtil.isNotBlank(user.getPassword())) {
+            user.setPassword(PasswordUtil.encode(user.getPassword()));
         }
         BeanUtil.copyProperties(user,existUser);
         updateById(existUser);

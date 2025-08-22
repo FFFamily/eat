@@ -2,6 +2,7 @@ package com.tutu.api.controller.mobile.user;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.entity.Account;
 import com.tutu.user.enums.UserUseTypeEnum;
 import com.tutu.user.service.AccountService;
@@ -67,7 +68,12 @@ public class UserController {
     @GetMapping("/page")
     public BaseResponse<Page<Account>> page(@RequestParam int pageNum, @RequestParam int pageSize) {
         Page<Account> page = new Page<>(pageNum, pageSize);
-        return BaseResponse.success(accountService.page(page));
+        // 转换密码
+        Page<Account> result = accountService.page(page);
+        result.getRecords().forEach(account -> {
+            account.setPassword(PasswordUtil.decode(account.getPassword()));
+        });
+        return BaseResponse.success(result);
     }
 
     /**
@@ -96,7 +102,7 @@ public class UserController {
      */
     @PutMapping("/update")
     public BaseResponse<Void> updateUser(@RequestBody Account account) {
-        accountService.updateById(account);
+        accountService.updateUser(account);
         return BaseResponse.success();
     }
 
