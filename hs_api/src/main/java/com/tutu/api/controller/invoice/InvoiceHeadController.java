@@ -24,9 +24,9 @@ public class InvoiceHeadController {
      * @return 添加结果
      */
     @PostMapping
-    public BaseResponse<Void> addInvoiceHead(@RequestBody InvoiceHead invoiceHead) {
-        invoiceHeadService.save(invoiceHead);
-        return BaseResponse.success();
+    public BaseResponse<Boolean> addInvoiceHead(@RequestBody InvoiceHead invoiceHead) {
+        boolean result = invoiceHeadService.addInvoiceHead(invoiceHead);
+        return result ? BaseResponse.success(true) : BaseResponse.error("添加发票抬头失败");
     }
 
     /**
@@ -35,8 +35,9 @@ public class InvoiceHeadController {
      * @return 删除结果
      */
     @DeleteMapping("/{id}")
-    public boolean deleteInvoiceHead(@PathVariable String id) {
-        return invoiceHeadService.removeById(id);
+    public BaseResponse<Boolean> deleteInvoiceHead(@PathVariable String id) {
+        boolean result = invoiceHeadService.deleteInvoiceHead(id);
+        return result ? BaseResponse.success(true) : BaseResponse.error("删除发票抬头失败");
     }
 
     /**
@@ -45,8 +46,9 @@ public class InvoiceHeadController {
      * @return 更新结果
      */
     @PutMapping
-    public boolean updateInvoiceHead(@RequestBody InvoiceHead invoiceHead) {
-        return invoiceHeadService.updateById(invoiceHead);
+    public BaseResponse<Boolean> updateInvoiceHead(@RequestBody InvoiceHead invoiceHead) {
+        boolean result = invoiceHeadService.updateInvoiceHead(invoiceHead);
+        return result ? BaseResponse.success(true) : BaseResponse.error("更新发票抬头失败");
     }
 
     /**
@@ -55,8 +57,44 @@ public class InvoiceHeadController {
      * @return 发票抬头信息
      */
     @GetMapping("/{id}")
-    public InvoiceHead getInvoiceHead(@PathVariable String id) {
-        return invoiceHeadService.getById(id);
+    public BaseResponse<InvoiceHead> getInvoiceHead(@PathVariable String id) {
+        InvoiceHead invoiceHead = invoiceHeadService.getById(id);
+        return invoiceHead != null ? BaseResponse.success(invoiceHead) : BaseResponse.error("发票抬头不存在");
+    }
+
+    /**
+     * 根据账号ID查询发票抬头列表
+     * @param accountId 账号ID
+     * @return 发票抬头列表
+     */
+    @GetMapping("/account/{accountId}")
+    public BaseResponse<List<InvoiceHead>> getInvoiceHeadsByAccount(@PathVariable String accountId) {
+        List<InvoiceHead> invoiceHeads = invoiceHeadService.getByAccountId(accountId);
+        return BaseResponse.success(invoiceHeads);
+    }
+
+    /**
+     * 根据账号ID查询默认发票抬头
+     * @param accountId 账号ID
+     * @return 默认发票抬头
+     */
+    @GetMapping("/account/{accountId}/default")
+    public BaseResponse<InvoiceHead> getDefaultInvoiceHead(@PathVariable String accountId) {
+        InvoiceHead defaultHead = invoiceHeadService.getDefaultByAccountId(accountId);
+        return defaultHead != null ? BaseResponse.success(defaultHead) : BaseResponse.error("未找到默认发票抬头");
+    }
+
+    /**
+     * 设置默认发票抬头
+     * @param accountId 账号ID
+     * @param invoiceHeadId 发票抬头ID
+     * @return 设置结果
+     */
+    @PutMapping("/account/{accountId}/default/{invoiceHeadId}")
+    public BaseResponse<Boolean> setDefaultInvoiceHead(@PathVariable String accountId, 
+                                                      @PathVariable String invoiceHeadId) {
+        boolean result = invoiceHeadService.setDefaultInvoiceHead(accountId, invoiceHeadId);
+        return result ? BaseResponse.success(true) : BaseResponse.error("设置默认发票抬头失败");
     }
 
     /**
@@ -64,8 +102,9 @@ public class InvoiceHeadController {
      * @return 发票抬头列表
      */
     @GetMapping
-    public List<InvoiceHead> getAllInvoiceHeads() {
-        return invoiceHeadService.list();
+    public BaseResponse<List<InvoiceHead>> getAllInvoiceHeads() {
+        List<InvoiceHead> invoiceHeads = invoiceHeadService.list();
+        return BaseResponse.success(invoiceHeads);
     }
 
     /**
@@ -75,9 +114,33 @@ public class InvoiceHeadController {
      * @return 分页结果
      */
     @GetMapping("/page")
-    public IPage<InvoiceHead> getInvoiceHeadsByPage(@RequestParam(defaultValue = "1") int pageNum,
-                                                    @RequestParam(defaultValue = "10") int pageSize) {
+    public BaseResponse<IPage<InvoiceHead>> getInvoiceHeadsByPage(@RequestParam(defaultValue = "1") int pageNum,
+                                                                  @RequestParam(defaultValue = "10") int pageSize,
+                                                                  InvoiceHead invoiceHead) {
+        List<InvoiceHead> list = invoiceHeadService.findPage(pageNum, pageSize,  invoiceHead);
+        IPage<InvoiceHead> result = new Page<>();
+        result.setRecords(list);
+        result.setTotal(invoiceHeadService.findPageCount(invoiceHead));
+        return BaseResponse.success(result);
+    }
+
+    /**
+     * 根据账号ID分页查询发票抬头
+     * @param accountId 账号ID
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 分页结果
+     */
+    @GetMapping("/account/{accountId}/page")
+    public BaseResponse<IPage<InvoiceHead>> getInvoiceHeadsByAccountAndPage(@PathVariable String accountId,
+                                                                           @RequestParam(defaultValue = "1") int pageNum,
+                                                                           @RequestParam(defaultValue = "10") int pageSize) {
         Page<InvoiceHead> page = new Page<>(pageNum, pageSize);
-        return invoiceHeadService.page(page, new QueryWrapper<>());
+        QueryWrapper<InvoiceHead> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("account_id", accountId)
+                   .orderByDesc("is_default")
+                   .orderByDesc("create_time");
+        IPage<InvoiceHead> result = invoiceHeadService.page(page, queryWrapper);
+        return BaseResponse.success(result);
     }
 }
