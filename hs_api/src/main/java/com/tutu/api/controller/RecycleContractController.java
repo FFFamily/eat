@@ -24,7 +24,7 @@ public class RecycleContractController {
 
     /**
      * 创建回收合同
-     * @param recycleContract 回收合同信息
+     * @param request 回收合同信息
      * @return 创建结果
      */
     @PostMapping("/create")

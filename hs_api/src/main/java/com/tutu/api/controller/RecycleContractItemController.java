@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.entity.RecycleContractItem;
 import com.tutu.recycle.service.RecycleContractItemService;
+import com.tutu.recycle.service.RecycleContractService;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,9 @@ import java.util.List;
 @RequestMapping("/recycle/contract-item")
 public class RecycleContractItemController {
 
+    @Resource
+    private RecycleContractService recycleContractService;
+
     @Autowired
     private RecycleContractItemService recycleContractItemService;
 
@@ -26,8 +31,9 @@ public class RecycleContractItemController {
      * @return 创建结果
      */
     @PostMapping("/create")
-    public BaseResponse<Boolean> createItem(@RequestBody RecycleContractItem item) {
-        return BaseResponse.success(recycleContractItemService.save(item));
+    public BaseResponse<Void> createItem(@RequestBody RecycleContractItem item) {
+        recycleContractService.createContractItem(item);
+        return BaseResponse.success();
     }
 
     /**
@@ -86,7 +92,7 @@ public class RecycleContractItemController {
      */
     @PutMapping("/update")
     public BaseResponse<Void> updateItem(@RequestBody RecycleContractItem item) {
-        recycleContractItemService.updateById(item);
+        recycleContractService.updateItem(item);
         return BaseResponse.success();
     }
 
@@ -97,7 +103,7 @@ public class RecycleContractItemController {
      */
     @DeleteMapping("/delete/{id}")
     public BaseResponse<Void> deleteItem(@PathVariable String id) {
-        recycleContractItemService.removeById(id);
+        recycleContractService.removeItem(id);
         return BaseResponse.success();
     }
 } 

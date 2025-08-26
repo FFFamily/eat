@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.user.mapper.ProcessorMapper">
+    <select id="findPage" resultType="com.tutu.user.entity.Processor">
+        SELECT p.*, a.nickname as accountName FROM processor p
+        left join account a on p.account_id = a.id
+        <where>
+            <if test="processor.accountName != null and processor.accountName != ''">
+                and a.nickname like '%${processor.accountName}%'
+            </if>
+            <if test="processor.no != null and processor.no != ''">
+                and p.no like '%${processor.no}%'
+            </if>
+            <if test="processor.name != null and processor.name != ''">
+                and p.name like '%${processor.name}%'
+            </if>
+            <if test="processor.phone != null and processor.phone != ''">
+                and p.phone like '%${processor.phone}%'
+            </if>
+        </where>
+    </select>
+    <select id="findPageCount" resultType="long">
+        SELECT count(*) FROM processor p
+        left join account a on p.account_id = a.id
+        <where>
+            <if test="processor.accountName != null and processor.accountName != ''">
+                and a.nickname like '%${processor.accountName}%'
+            </if>
+            <if test="processor.no != null and processor.no != ''">
+                and p.no like '%${processor.no}%'
+            </if>
+            <if test="processor.name != null and processor.name != ''">
+                and p.name like '%${processor.name}%'
+            </if>
+            <if test="processor.phone != null and processor.phone != ''">
+                and p.phone like '%${processor.phone}%'
+            </if>
+        </where>
+    </select>
+</mapper>

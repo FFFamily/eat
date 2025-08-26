@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.Processor;
 import com.tutu.user.service.ProcessorService;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,9 +58,14 @@ public class ProcessorController {
      */
     @GetMapping("/page")
     public BaseResponse<Page<Processor>> page(
-            @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size) {
-        Page<Processor> page = new Page<>(current, size);
-        return BaseResponse.success(processorService.page(page));
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            Processor processor) {
+        List<Processor> list = processorService.findPage(page, size, processor);
+        Page<Processor> result = new Page<>(page, size);
+        result.setRecords(list);
+        long count = processorService.findPageCount(processor);
+        result.setTotal(count);
+        return BaseResponse.success(result);
     }
 }
