@@ -1,11 +1,15 @@
 package com.tutu.api.controller.mobile.user;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.entity.Account;
 import com.tutu.user.enums.UserUseTypeEnum;
 import com.tutu.user.service.AccountService;
+
+import cn.hutool.core.util.StrUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,13 +70,22 @@ public class UserController {
      * @return 分页查询结果
      */
     @GetMapping("/page")
-    public BaseResponse<Page<Account>> page(@RequestParam int pageNum, @RequestParam int pageSize) {
+    public BaseResponse<Page<Account>> page(@RequestParam int pageNum, @RequestParam int pageSize,@RequestParam(required = false,defaultValue = "true") Boolean isFilterPass,Account account) {
         Page<Account> page = new Page<>(pageNum, pageSize);
         // 转换密码
-        Page<Account> result = accountService.page(page);
-        result.getRecords().forEach(account -> {
-            account.setPassword(PasswordUtil.decode(account.getPassword()));
-        });
+        Page<Account> result = accountService.page(page,new LambdaQueryWrapper<Account>()
+                .like(StrUtil.isNotBlank(account.getUsername()), Account::getUsername,"%"+account.getUsername()+"%")
+                .like(StrUtil.isNotBlank(account.getNickname()), Account::getNickname,"%"+account.getNickname()+"%")
+                );
+        if(!isFilterPass){
+            result.getRecords().forEach(item -> {
+                item.setPassword(PasswordUtil.decode(item.getPassword()));
+            });
+        }else{
+            result.getRecords().forEach(item -> {
+                item.setPassword(null);
+            });
+        }
         return BaseResponse.success(result);
     }
 
