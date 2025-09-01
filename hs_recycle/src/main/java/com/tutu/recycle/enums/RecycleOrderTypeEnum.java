@@ -1,5 +1,8 @@
 package com.tutu.recycle.enums;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.tutu.common.enums.BaseEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,4 +25,13 @@ public enum RecycleOrderTypeEnum implements BaseEnum<RecycleOrderTypeEnum,String
     ;
     private final String code;
     private final String title;
+
+    // 获取资金池方向为付款的订单类型
+    public static List<RecycleOrderTypeEnum> getPayOrderTypes() {
+        return Arrays.asList(PURCHASE, PROCESSING, STORAGE, TRANSPORT, OTHER);
+    }
+    // 判断是否为资金池方向为付款的订单类型
+    public static Boolean isPayOrderType(String type) {
+        return getPayOrderTypes().stream().anyMatch(t -> t.getCode().equals(type));
+    }
 }

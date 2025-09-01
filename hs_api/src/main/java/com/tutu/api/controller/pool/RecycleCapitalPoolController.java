@@ -17,17 +17,19 @@ public class RecycleCapitalPoolController {
 
     @PostMapping("/create")
     public BaseResponse<Boolean> add(@RequestBody RecycleCapitalPool entity) {
-        return BaseResponse.success(recycleCapitalPoolService.save(entity));
+        recycleCapitalPoolService.create(entity);
+        return BaseResponse.success();
     }
 
-    @PostMapping("/update")
+    @PutMapping("/update")
     public BaseResponse<Boolean> update(@RequestBody RecycleCapitalPool entity) {
         return BaseResponse.success(recycleCapitalPoolService.updateById(entity));
     }
 
-    @GetMapping("/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public BaseResponse<Boolean> delete(@PathVariable String id) {
-        return BaseResponse.success(recycleCapitalPoolService.removeById(id));
+        recycleCapitalPoolService.deletePool(id);
+        return BaseResponse.success();
     }
 
     @GetMapping("/get/{id}")
@@ -45,11 +47,8 @@ public class RecycleCapitalPoolController {
             if (query.getNo() != null) {
                 queryWrapper.like("no", query.getNo());
             }
-            if (query.getContractId() != null) {
-                queryWrapper.eq("contract_id", query.getContractId());
-            }
-            if (query.getInitialBalance() != null) {
-                queryWrapper.eq("initial_balance", query.getInitialBalance());
+            if (query.getContractNo() != null) {
+                queryWrapper.eq("contract_no", query.getContractNo());
             }
         }
         queryWrapper.orderByDesc("create_time");

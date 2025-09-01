@@ -20,11 +20,43 @@ public class RecycleCapitalPool extends BaseEntity {
     private String id;
     // 编号
     private String no;
-    // 合同id
-    private String contractId;
     // 资金池初始余额
-    private BigDecimal initialBalance;
+//    private BigDecimal initialBalance;
     // 资金池余额
-    @TableField(exist = false)
     private BigDecimal balance;
+    /**
+     * 合同编号
+     */
+    private String contractNo;
+
+    /**
+     * 合同名称
+     */
+    private String contractName;
+
+    /**
+     * 合作方
+     */
+    private String contractPartner;
+
+    /**
+     * 合同类型
+     */
+    // private String contractType;
+
+    /**
+     * 资金池方向（收款/付款）
+     */
+    private String fundPoolDirection;
+
+    /**
+     * 初始金额
+     */
+    private BigDecimal initialAmount;
+
+
+    /**
+     * 初始余额凭证
+     */
+    private String initialBalanceVoucher;
 }

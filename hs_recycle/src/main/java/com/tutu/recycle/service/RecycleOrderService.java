@@ -53,13 +53,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      */
     @Transactional(rollbackFor = Exception.class)
     public RecycleOrder createOrder(CreateRecycleOrderRequest request) {
-        // 生成订单编号
-        // recycleOrder.setNo(IdUtil.simpleUUID());
+        
         // 状态
         // recycleOrder.setStatus(RecycleOrderStatusEnum.PENDING.getCode());
         // 保存订单
         RecycleOrder recycleOrder = new RecycleOrder();
         BeanUtil.copyProperties(request, recycleOrder);
+        // 生成订单编号
+        recycleOrder.setNo(IdUtil.simpleUUID());
         save(recycleOrder);
         // 保存订单项
         List<RecycleOrderItem> items = request.getItems();
@@ -84,6 +85,9 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         for (RecycleOrderItem item : items) {
             if (StrUtil.isNotBlank(item.getId())) {
                 recycleOrderItemService.updateById(item);
+            }else {
+                item.setRecycleOrderId(recycleOrder.getId());
+                recycleOrderItemService.save(item);
             }
         }
     }

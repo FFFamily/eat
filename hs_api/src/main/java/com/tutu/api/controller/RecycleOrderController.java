@@ -34,6 +34,17 @@ public class RecycleOrderController {
     }
 
     /**
+     * 更新回收订单信息
+     * @param request 回收订单信息
+     * @return 更新结果
+     */
+    @PutMapping("/update")
+    public BaseResponse<Void> updateRecycleOrder(@RequestBody CreateRecycleOrderRequest request) {
+        recycleOrderService.updateOrder(request);
+        return BaseResponse.success();
+    }
+
+    /**
      * 获取订单二维码
      * @param orderId 订单ID
      */
@@ -69,29 +80,20 @@ public class RecycleOrderController {
      * @param id 回收订单 ID
      * @return 删除结果
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public BaseResponse<Void> deleteRecycleOrder(@PathVariable String id) {
         recycleOrderService.removeById(id);
         return BaseResponse.success();
     }
 
-    /**
-     * 更新回收订单信息
-     * @param request 回收订单信息
-     * @return 更新结果
-     */
-    @PutMapping("/update")
-    public BaseResponse<Void> updateRecycleOrder(@RequestBody CreateRecycleOrderRequest request) {
-        recycleOrderService.updateOrder(request);
-        return BaseResponse.success();
-    }
+
 
     /**
      * 根据 ID 查询回收订单
      * @param id 回收订单 ID
      * @return 回收订单信息
      */
-    @GetMapping("/{id}")
+    @GetMapping("/get/{id}")
     public BaseResponse<RecycleOrderInfo> getRecycleOrder(@PathVariable String id) {
         RecycleOrderInfo recycleOrderInfo = recycleOrderService.getOrderInfo(id);
         return BaseResponse.success(recycleOrderInfo);
@@ -101,7 +103,7 @@ public class RecycleOrderController {
      * 查询所有回收订单
      * @return 回收订单列表
      */
-    @GetMapping
+    @GetMapping("/all")
     public BaseResponse<List<RecycleOrder>> getAllRecycleOrders() {
         return BaseResponse.success(recycleOrderService.list());
     }

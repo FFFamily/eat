@@ -1,5 +1,6 @@
 package com.tutu.api.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -79,11 +80,9 @@ public class AccountBankCardController {
             @RequestParam(required = false) String accountId) {
         Page<AccountBankCard> ipage = new Page<>(page, size);
         LambdaQueryWrapper<AccountBankCard> queryWrapper = new LambdaQueryWrapper<>();
-        
-        if (accountId != null) {
+        if (StrUtil.isNotBlank(accountId) ) {
             queryWrapper.eq(AccountBankCard::getAccountId, accountId);
         }
-        
         queryWrapper.orderByDesc(AccountBankCard::getCreateTime);
         IPage<AccountBankCard> result = accountBankCardService.page(ipage, queryWrapper);
         return BaseResponse.success(result);

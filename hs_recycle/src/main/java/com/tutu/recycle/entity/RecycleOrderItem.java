@@ -15,8 +15,6 @@ public class RecycleOrderItem extends BaseEntity {
     // 合同ID
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
-    // 合同id
-    private String recycleContractId;
     // 订单id
     private String recycleOrderId;
     // 货物编号
