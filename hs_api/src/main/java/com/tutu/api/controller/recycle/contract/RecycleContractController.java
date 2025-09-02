@@ -1,14 +1,12 @@
-package com.tutu.api.controller;
+package com.tutu.api.controller.recycle.contract;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.entity.RecycleContract;
-import com.tutu.recycle.request.CreateRecycleOrderRequest;
 import com.tutu.recycle.service.RecycleContractService;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

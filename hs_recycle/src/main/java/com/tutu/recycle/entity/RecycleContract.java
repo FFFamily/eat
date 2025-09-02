@@ -18,74 +18,39 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RecycleContract extends BaseEntity{
-    /**
-     * 主键ID
-     */
+    // 主键ID
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
-
-    /**
-     * 合同名称
-     */
-    @TableField("name")
+    // 合同名称
     private String name;
-
-    /**
-     * 合同编号
-     */
-    @TableField("no")
+    // 合同编号
     private String no;
-
-    /**
-     * 合同类型：purchase-采购合同, sale-销售合同, transport-运输合同, process-加工合同, storage-仓储合同, other-其他合同
-     */
-    @TableField("type")
+    // 合同类别
     private String type;
     // 甲方
-    @TableField("party_a")
     private String partyA;
+    // 甲方名称
+    private String partyAName;
     // 乙方
-    @TableField("party_b")
     private String partyB;
-    /**
-     * 合作方名称
-     */
+    // 乙方名称
+    private String partyBName;
+    // 合作方
     private String partner;
-    /**
-     * 合同起始时间
-     */
-    @TableField("start_time")
+    // 合作方名称
+    private String partnerName;
+    // 合同起始时间 
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date startTime;
-
-    /**
-     * 合同结束时间
-     */
-    @TableField("end_time")
+    // 合同结束时间
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date endTime;
-
-    /**
-     * 合同总金额
-     */
-    @TableField("total_amount")
+    // 合同总金额
     private BigDecimal totalAmount;
-
-    /**
-     * 主银行卡号
-     */
-    @TableField("main_bank_card")
+    // 主银行卡号
     private String mainBankCard;
-
-    /**
-     * 主开票信息
-     */
-    @TableField("invoice_info")
-    private String invoiceInfo;
-
-    /**
-     * 合同文件路径
-     */
-    @TableField("file_path")
+    // 主开票信息
+    private String mainInvoice;
+    // 合同文件路径
     private String filePath;
 }
