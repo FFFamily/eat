@@ -31,6 +31,7 @@ public class RecycleContractService extends ServiceImpl<RecycleContractMapper, R
     }
     
     
+    
     public boolean updateContractStatus(String id, String status) {
         RecycleContract contract = getById(id);
         if (contract != null) {

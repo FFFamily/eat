@@ -40,6 +40,16 @@ public class RecycleFundController {
         return BaseResponse.success();
     }
     /**
+     * 确认走款
+     * @param recycleFund 走款记录
+     * @return
+     */
+    @PostMapping("/confirm")
+    public BaseResponse<Boolean> confirm(@RequestBody RecycleFund recycleFund) {
+        recycleFundService.confirm(recycleFund);
+        return BaseResponse.success();
+    }
+    /**
      * 批量新增走款记录
      * @param recycleFundList 走款记录列表
      * @return

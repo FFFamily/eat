@@ -31,7 +31,7 @@ public class AccountBankCardController {
         boolean result = accountBankCardService.save(accountBankCard);
         return BaseResponse.success(result);
     }
-
+    
     /**
      * 修改银行卡信息
      */

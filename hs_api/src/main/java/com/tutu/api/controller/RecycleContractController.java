@@ -1,5 +1,6 @@
 package com.tutu.api.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
@@ -30,6 +31,16 @@ public class RecycleContractController {
     @PostMapping("/create")
     public BaseResponse<RecycleContract> createContract(@RequestBody RecycleContract request) {
         return BaseResponse.success(recycleContractService.createContract(request));
+    }
+
+    /**
+     * 根据合同编号查询合同
+     * @param no
+     * @return
+     */
+    @GetMapping("/getByNo/{no}")
+    public BaseResponse<RecycleContract> getByNo(@PathVariable String no) {
+        return BaseResponse.success(recycleContractService.getOne(new LambdaQueryWrapper<RecycleContract>().eq(RecycleContract::getNo, no)));
     }
 
     /**
