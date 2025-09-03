@@ -85,43 +85,26 @@ public class RecycleOrder extends BaseEntity {
      */
     @TableField("order_node_img")
     private String orderNodeImg;
-
-    /**
-     * 合同编号
-     */
-    @TableField("contract_no")
+    // 合同id
+    private String contractId;
+    // 合同编号
     private String contractNo;
-
-    /**
-     * 合同名称
-     */
-    @TableField("contract_name")
+    // 合同名称
     private String contractName;
-
-    /**
-     * 合同合作方
-     */
-    @TableField("contract_partner")
+    // 合同合作方
     private String contractPartner;
-
-    /**
-     * 甲方
-     */
-    @TableField("party_a")
+    // 合同合作方名称
+    private String contractPartnerName;
+    // 甲方
     private String partyA;
-
-    /**
-     * 乙方
-     */
-    @TableField("party_b")
+    // 甲方名称
+    private String partyAName;
+    // 乙方
     private String partyB;
-
-    /**
-     * 合同金额
-     */
-    @TableField("contract_price")
+    // 乙方名称
+    private String partyBName;
+    // 合同金额
     private BigDecimal contractPrice;
-
     /**
      * 仓库地址
      */
