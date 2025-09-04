@@ -4,7 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.entity.RecycleCapitalPool;
+import com.tutu.recycle.entity.RecycleCapitalPoolItem;
 import com.tutu.recycle.service.RecycleCapitalPoolService;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +28,15 @@ public class RecycleCapitalPoolController {
     public BaseResponse<Boolean> add(@RequestBody RecycleCapitalPool entity) {
         recycleCapitalPoolService.create(entity);
         return BaseResponse.success();
+    }
+    /**
+     * 获取资金池明细
+     * @param id
+     * @return
+     */
+    @GetMapping("/item/get/{capitalPoolId}")
+    public BaseResponse<List<RecycleCapitalPoolItem>> getItem(@PathVariable String capitalPoolId) {
+        return BaseResponse.success(recycleCapitalPoolService.getItem(capitalPoolId));
     }
 
     /**

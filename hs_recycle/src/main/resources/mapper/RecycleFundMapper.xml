@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.recycle.mapper.RecycleFundMapper">
+
+
+
+
+    <!-- 分页查询走款记录（带合同信息） -->
+    <select id="selectPageWithContract" resultType="com.tutu.recycle.entity.RecycleFund">
+        SELECT 
+            f.*,
+            c.start_time as contractStartTime,
+            c.end_time as contractEndTime
+        FROM recycle_fund f
+        LEFT JOIN recycle_contract c ON f.contract_id = c.id
+        <where>
+            f.is_deleted = 0
+        </where>
+        ORDER BY f.create_time DESC
+    </select>
+
+    <!-- 统计总数 -->
+    <select id="selectCountWithContract" resultType="long">
+        SELECT COUNT(*)
+        FROM recycle_fund f
+        LEFT JOIN recycle_contract c ON f.contract_id = c.id
+        <where>
+            f.is_deleted = 0
+        </where>
+    </select>
+
+</mapper> 

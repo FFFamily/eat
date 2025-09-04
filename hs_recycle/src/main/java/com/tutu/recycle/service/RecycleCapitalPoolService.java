@@ -20,13 +20,24 @@ import java.util.concurrent.locks.ReentrantLock;
 @Slf4j
 @Service
 public class RecycleCapitalPoolService extends ServiceImpl<RecycleCapitalPoolMapper, RecycleCapitalPool> {
-    
+    // 资金池明细服务
     @Resource
     private RecycleCapitalPoolItemService itemService;
     
     // 使用ConcurrentHashMap存储资金池编号对应的锁
     private final ConcurrentHashMap<String, ReentrantLock> poolLocks = new ConcurrentHashMap<>();
     
+
+    /**
+     * 获取资金池明细
+     * @param capitalPoolId 资金池ID
+     * @return
+     */
+    public List<RecycleCapitalPoolItem> getItem(String capitalPoolId) {
+        return itemService.list(new LambdaQueryWrapper<RecycleCapitalPoolItem>()
+        .eq(RecycleCapitalPoolItem::getCapitalPoolId, capitalPoolId));
+    }
+
     /**
      * 获取资金池锁
      * @param poolNo 资金池编号

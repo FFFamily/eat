@@ -1,6 +1,7 @@
 package com.tutu.recycle.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.recycle.entity.RecycleCapitalPool;
 import com.tutu.recycle.entity.RecycleFund;
@@ -30,12 +31,6 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
      */
     @Transactional(rollbackFor = Exception.class)
     public void create(RecycleFund entity) {
-        // 编号唯一
-        String no = entity.getNo();
-        RecycleFund one = this.getOne(new LambdaQueryWrapper<RecycleFund>().eq(RecycleFund::getNo, no));
-        if (one != null) {
-            throw new RuntimeException("编号已存在");
-        }
         RecycleOrder order = recycleOrderService.getById(entity.getOrderId());
         if (order == null) {
             throw new RuntimeException("走款记录对应订单不存在：" + entity.getOrderId());
@@ -96,6 +91,16 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
                 entity.getOrderId().toString()
             );
         }
+    }
+
+    /**
+     * 分页查询走款记录（带合同信息）
+     * @param page 分页参数
+     * @param query 查询条件
+     * @return 分页结果
+     */
+    public Page<RecycleFund> pageWithContract(Page<RecycleFund> page, RecycleFund query) {
+        return baseMapper.selectPageWithContract(page, query);
     }
 
 } 
