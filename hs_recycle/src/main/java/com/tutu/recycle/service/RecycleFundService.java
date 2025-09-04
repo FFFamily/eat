@@ -1,14 +1,20 @@
 package com.tutu.recycle.service;
 
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.entity.RecycleCapitalPool;
+import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.entity.RecycleFund;
 import com.tutu.recycle.entity.RecycleOrder;
+import com.tutu.recycle.enums.RecycleFundStatusEnum;
 import com.tutu.recycle.enums.RecycleMoneyDirectionEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.mapper.RecycleFundMapper;
+
+import cn.hutool.core.bean.BeanUtil;
 
 import java.math.BigDecimal;
 
@@ -25,15 +31,23 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
     private RecycleOrderService recycleOrderService;
     @Resource
     private RecycleCapitalPoolService recycleCapitalPoolService;
+    @Resource
+    private RecycleContractService recycleContractService;
     /**
      * 新增走款记录
      * @param entity
      */
     @Transactional(rollbackFor = Exception.class)
     public void create(RecycleFund entity) {
+        // 查询订单
         RecycleOrder order = recycleOrderService.getById(entity.getOrderId());
         if (order == null) {
             throw new RuntimeException("走款记录对应订单不存在：" + entity.getOrderId());
+        }
+        // 查询合同
+        RecycleContract contract = recycleContractService.getById(order.getContractId());
+        if (contract == null) {
+            throw new RuntimeException("走款记录对应合同不存在：" + order.getContractId());
         }
         if (RecycleOrderTypeEnum.isPayOrderType(order.getType())) {
             entity.setFundFlowDirection(RecycleMoneyDirectionEnum.PAY.getCode());
@@ -44,6 +58,7 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
             entity.setFundPoolDirection(RecycleMoneyDirectionEnum.OUT.getCode());
             entity.setFundDirection(RecycleMoneyDirectionEnum.OUT.getCode());
         }
+        entity.setStatus(RecycleFundStatusEnum.WAIT.getCode());
         this.save(entity);
     }
 
@@ -64,31 +79,40 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
      */
     @Transactional(rollbackFor = Exception.class)
     public void confirm(RecycleFund entity) {
-        // 更新走款记录状态
-        this.updateById(entity);
-        
-        // 使用安全的金额变更方法更新资金池余额
-        BigDecimal amount = entity.getFundAmount();
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) {
-            throw new RuntimeException("走款金额不能为空或零");
+        // 查询走款
+        RecycleFund fund = this.getById(entity.getId());
+        if (fund == null) {
+            throw new ServiceException("走款记录不存在：" + entity.getId());
         }
-        
-        // 根据走款方向决定是增加还是减少资金池余额
-        if (RecycleMoneyDirectionEnum.PAY.getCode().equals(entity.getFundPoolDirection())) {
-            // 付款操作，减少资金池余额
+        // 使用安全的金额变更方法更新资金池余额
+        BigDecimal amount = fund.getFundPoolAmount();
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) {
+            throw new ServiceException("走款金额不能为空或零");
+        }
+        // 更新走款记录状态
+        BeanUtil.copyProperties(entity, fund, CopyOptions.create().ignoreNullValue());
+        entity.setStatus(RecycleFundStatusEnum.CONFIRM.getCode());
+        this.updateById(fund);
+        // 查询资金池
+        RecycleCapitalPool capitalPool = recycleCapitalPoolService.getByContractId(fund.getContractId());
+        if (capitalPool == null) {
+            throw new ServiceException("合同对应资金池不存在：" + fund.getContractId());
+        }
+        if (capitalPool.getFundPoolDirection().equals(fund.getFundPoolDirection())) {
+            // 走款方向和资金池方向一致，减少资金池余额 
             recycleCapitalPoolService.decreaseBalance(
-                entity.getContractNo(), 
+                fund.getContractId(), 
                 amount, 
-                "确认走款-付款", 
-                entity.getOrderId().toString()
+                fund.getFundPoolDirection(), 
+                fund.getOrderId().toString()
             );
         } else {
-            // 收款操作，增加资金池余额
+            // 走款方向和资金池方向不一致，增加资金池余额
             recycleCapitalPoolService.increaseBalance(
-                entity.getContractNo(), 
+                fund.getContractId(), 
                 amount, 
-                "确认走款-收款", 
-                entity.getOrderId().toString()
+                fund.getFundPoolDirection(), 
+                fund.getOrderId().toString()
             );
         }
     }

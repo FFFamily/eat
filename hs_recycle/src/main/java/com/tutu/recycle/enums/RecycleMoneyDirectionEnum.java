@@ -1,5 +1,6 @@
 package com.tutu.recycle.enums;
-
+import lombok.Getter;
+@Getter
 public enum RecycleMoneyDirectionEnum {
     OUT("0", "收款"),
     PAY("1", "付款");
@@ -11,9 +12,4 @@ public enum RecycleMoneyDirectionEnum {
         this.code = code;
         this.name = name;
     }
-
-    public String getCode() {
-        return code;
-    }
-    
 }

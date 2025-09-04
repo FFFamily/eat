@@ -56,7 +56,7 @@ public class RecycleFund extends BaseEntity {
     private String fundFlowDirection;
     // 走款金额
     private BigDecimal fundFlowAmount;
-    // 资金池方向（+进/-出）
+    // 资金池方向
     private String fundPoolDirection;
     // 资金池走款金额
     private BigDecimal fundPoolAmount;
@@ -77,5 +77,5 @@ public class RecycleFund extends BaseEntity {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date payFundTime;
     // 走款状态（0-待确认，1-已确认，2-已取消）
-    private Integer status;
+    private String status;
 }
