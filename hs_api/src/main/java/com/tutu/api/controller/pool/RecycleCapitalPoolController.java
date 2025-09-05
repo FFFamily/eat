@@ -1,6 +1,5 @@
 package com.tutu.api.controller.pool;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.entity.RecycleCapitalPool;
@@ -71,17 +70,17 @@ public class RecycleCapitalPoolController {
     }
 
     /**
-     * 根据id获取资金池
+     * 根据id获取资金池（带合同和账户信息）
      * @param id
      * @return
      */
     @GetMapping("/get/{id}")
     public BaseResponse<RecycleCapitalPool> getById(@PathVariable String id) {
-        return BaseResponse.success(recycleCapitalPoolService.getById(id));
+        return BaseResponse.success(recycleCapitalPoolService.getByIdWithDetails(id));
     }
 
     /**
-     * 分页获取资金池
+     * 分页获取资金池（带合同和账户信息）
      * @param page
      * @param size
      * @param query
@@ -92,17 +91,7 @@ public class RecycleCapitalPoolController {
                                                        @RequestParam(defaultValue = "10") Integer size,
                                                        @RequestBody(required = false) RecycleCapitalPool query) {
         Page<RecycleCapitalPool> ipage = new Page<>(page, size);
-        QueryWrapper<RecycleCapitalPool> queryWrapper = new QueryWrapper<>();
-        if (query != null) {
-            if (query.getNo() != null) {
-                queryWrapper.like("no", query.getNo());
-            }
-            if (query.getContractNo() != null) {
-                queryWrapper.eq("contract_no", query.getContractNo());
-            }
-        }
-        queryWrapper.orderByDesc("create_time");
-        return BaseResponse.success(recycleCapitalPoolService.page(ipage, queryWrapper));
+        return BaseResponse.success(recycleCapitalPoolService.pageWithDetails(ipage, query));
     }
 }
 

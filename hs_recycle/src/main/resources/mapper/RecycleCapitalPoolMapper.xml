@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.recycle.mapper.RecycleCapitalPoolMapper">
+    
+    <!-- 分页查询资金池（带合同和账户信息） -->
+    <select id="selectPageWithDetails" resultType="com.tutu.recycle.entity.RecycleCapitalPool">
+        SELECT 
+            p.*,
+            c.no as contractNo,
+            c.name as contractName,
+            a.id_card_name as contractPartnerName
+        FROM recycle_capital_pool p
+        LEFT JOIN recycle_contract c ON p.contract_id = c.id
+        LEFT JOIN account a ON p.contract_partner = a.id
+        <where>
+            p.is_deleted = 0
+            <if test="query.no != null and query.no != ''">
+                AND p.no LIKE CONCAT('%', #{query.no}, '%')
+            </if>
+            <if test="query.contractNo != null and query.contractNo != ''">
+                AND c.no = #{query.contractNo}
+            </if>
+            <if test="query.contractName != null and query.contractName != ''">
+                AND c.name LIKE CONCAT('%', #{query.contractName}, '%')
+            </if>
+            <if test="query.contractPartner != null and query.contractPartner != ''">
+                AND p.contract_partner = #{query.contractPartner}
+            </if>
+            <if test="query.contractPartnerName != null and query.contractPartnerName != ''">
+                AND a.id_card_name LIKE CONCAT('%', #{query.contractPartnerName}, '%')
+            </if>
+            <if test="query.fundPoolDirection != null and query.fundPoolDirection != ''">
+                AND p.fund_pool_direction = #{query.fundPoolDirection}
+            </if>
+        </where>
+        ORDER BY p.create_time DESC
+    </select>
+
+    <!-- 根据ID查询资金池详情（带合同和账户信息） -->
+    <select id="selectByIdWithDetails" resultType="com.tutu.recycle.entity.RecycleCapitalPool">
+        SELECT 
+            p.*,
+            c.no as contractNo,
+            c.name as contractName,
+            a.id_card_name as contractPartnerName
+        FROM recycle_capital_pool p
+        LEFT JOIN recycle_contract c ON p.contract_id = c.id
+        LEFT JOIN account a ON p.contract_partner = a.id
+        WHERE p.id = #{id} AND p.is_deleted = 0
+    </select>
+
+    <!-- 根据合同编号查询资金池详情（带合同和账户信息） -->
+    <select id="selectByContractNoWithDetails" resultType="com.tutu.recycle.entity.RecycleCapitalPool">
+        SELECT 
+            p.*,
+            c.no as contractNo,
+            c.name as contractName,
+            a.id_card_name as contractPartnerName
+        FROM recycle_capital_pool p
+        LEFT JOIN recycle_contract c ON p.contract_id = c.id
+        LEFT JOIN account a ON p.contract_partner = a.id
+        WHERE c.no = #{contractNo} AND p.is_deleted = 0
+    </select>
+
+    <!-- 根据合同ID查询资金池详情（带合同和账户信息） -->
+    <select id="selectByContractIdWithDetails" resultType="com.tutu.recycle.entity.RecycleCapitalPool">
+        SELECT 
+            p.*,
+            c.no as contractNo,
+            c.name as contractName,
+            a.id_card_name as contractPartnerName
+        FROM recycle_capital_pool p
+        LEFT JOIN recycle_contract c ON p.contract_id = c.id
+        LEFT JOIN account a ON p.contract_partner = a.id
+        WHERE p.contract_id = #{contractId} AND p.is_deleted = 0
+    </select>
+
+    <!-- 统计总数 -->
+    <select id="selectCountWithDetails" resultType="long">
+        SELECT COUNT(*)
+        FROM recycle_capital_pool p
+        LEFT JOIN recycle_contract c ON p.contract_id = c.id
+        LEFT JOIN account a ON p.contract_partner = a.id
+        <where>
+            p.is_deleted = 0
+            <if test="query.no != null and query.no != ''">
+                AND p.no LIKE CONCAT('%', #{query.no}, '%')
+            </if>
+            <if test="query.contractNo != null and query.contractNo != ''">
+                AND c.no = #{query.contractNo}
+            </if>
+            <if test="query.contractName != null and query.contractName != ''">
+                AND c.name LIKE CONCAT('%', #{query.contractName}, '%')
+            </if>
+            <if test="query.contractPartner != null and query.contractPartner != ''">
+                AND p.contract_partner = #{query.contractPartner}
+            </if>
+            <if test="query.contractPartnerName != null and query.contractPartnerName != ''">
+                AND a.id_card_name LIKE CONCAT('%', #{query.contractPartnerName}, '%')
+            </if>
+            <if test="query.fundPoolDirection != null and query.fundPoolDirection != ''">
+                AND p.fund_pool_direction = #{query.fundPoolDirection}
+            </if>
+        </where>
+    </select>
+
+</mapper>

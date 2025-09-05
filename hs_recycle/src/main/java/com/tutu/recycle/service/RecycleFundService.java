@@ -102,16 +102,16 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
             // 走款方向和资金池方向一致，减少资金池余额 
             recycleCapitalPoolService.decreaseBalance(
                 fund.getContractId(), 
-                amount, 
-                fund.getFundPoolDirection(), 
+                amount,
+                RecycleMoneyDirectionEnum.PAY.getCode(),
                 fund.getOrderId().toString()
             );
         } else {
             // 走款方向和资金池方向不一致，增加资金池余额
             recycleCapitalPoolService.increaseBalance(
                 fund.getContractId(), 
-                amount, 
-                fund.getFundPoolDirection(), 
+                amount,
+                RecycleMoneyDirectionEnum.OUT.getCode(),
                 fund.getOrderId().toString()
             );
         }

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.entity.RecycleCapitalPool;
@@ -81,17 +82,40 @@ public class RecycleCapitalPoolService extends ServiceImpl<RecycleCapitalPoolMap
     }
 
     /**
-     * 根据合同编号获取资金池
+     * 根据合同编号获取资金池（带合同和账户信息）
      * @param contractNo
      * @return
      */
     public RecycleCapitalPool getByContractNo(String contractNo) {
-        return getOne(new LambdaQueryWrapper<RecycleCapitalPool>().eq(RecycleCapitalPool::getContractNo, contractNo));
+        return baseMapper.selectByContractNoWithDetails(contractNo);
     }
 
-    // 根据合同id获取资金池
+    /**
+     * 根据合同id获取资金池（带合同和账户信息）
+     * @param contractId
+     * @return
+     */
     public RecycleCapitalPool getByContractId(String contractId) {
-        return getOne(new LambdaQueryWrapper<RecycleCapitalPool>().eq(RecycleCapitalPool::getContractId, contractId));
+        return baseMapper.selectByContractIdWithDetails(contractId);
+    }
+    
+    /**
+     * 根据ID获取资金池（带合同和账户信息）
+     * @param id
+     * @return
+     */
+    public RecycleCapitalPool getByIdWithDetails(String id) {
+        return baseMapper.selectByIdWithDetails(id);
+    }
+    
+    /**
+     * 分页查询资金池（带合同和账户信息）
+     * @param page 分页参数
+     * @param query 查询条件
+     * @return 分页结果
+     */
+    public Page<RecycleCapitalPool> pageWithDetails(Page<RecycleCapitalPool> page, RecycleCapitalPool query) {
+        return baseMapper.selectPageWithDetails(page, query);
     }
 
     /**

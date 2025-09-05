@@ -25,11 +25,16 @@ public class RecycleCapitalPool extends BaseEntity {
     // 合同id
     private String contractId;
     // 合同编号
+    @TableField(exist = false)
     private String contractNo;
     // 合同名称
+    @TableField(exist = false)
     private String contractName;
     // 合作方
     private String contractPartner;
+    // 合作方名称
+    @TableField(exist = false)
+    private String contractPartnerName;
     // 资金池方向（收款/付款）
     private String fundPoolDirection;
     // 初始金额
