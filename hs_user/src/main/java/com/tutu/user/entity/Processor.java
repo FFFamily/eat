@@ -13,13 +13,13 @@ public class Processor {
     // id
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
+    // 编号
+    private String no;
     // 账号
     private String accountId;
     // 账号名称
     @TableField(exist = false)
     private String accountName;
-    // 编号
-    private String no;
     // 经办人名称
     private String name;
     // 电话

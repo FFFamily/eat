@@ -1,4 +1,4 @@
-package com.tutu.api.controller;
+package com.tutu.api.controller.account;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -8,7 +8,6 @@ import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.AccountBankCard;
 import com.tutu.user.service.AccountBankCardService;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,40 +50,44 @@ public class AccountBankCardController {
     }
 
     /**
-     * 根据ID查询银行卡
+     * 根据ID查询银行卡（带账户名称）
      */
     @GetMapping("/get/{id}")
     public BaseResponse<AccountBankCard> getById(@PathVariable String id) {
-        AccountBankCard accountBankCard = accountBankCardService.getById(id);
+        AccountBankCard accountBankCard = accountBankCardService.getByIdWithAccount(id);
         return BaseResponse.success(accountBankCard);
+    }
+    
+    /**
+     * 设置默认银行卡
+     * @param accountId
+     * @return
+     */
+    @PutMapping("/set-default/{id}")
+    public BaseResponse<Void> setDefault(@PathVariable String id) {
+        accountBankCardService.updateDefaultCard(id);
+        return BaseResponse.success();
     }
 
     /**
-     * 根据账户ID查询银行卡列表
+     * 根据账户ID查询银行卡列表（带账户名称）
      */
     @GetMapping("/account/{accountId}")
     public BaseResponse<List<AccountBankCard>> getByAccountId(@PathVariable String accountId) {
-        LambdaQueryWrapper<AccountBankCard> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(AccountBankCard::getAccountId, accountId);
-        List<AccountBankCard> list = accountBankCardService.list(queryWrapper);
+        List<AccountBankCard> list = accountBankCardService.listByAccountIdWithAccount(accountId);
         return BaseResponse.success(list);
     }
 
     /**
-     * 分页查询银行卡信息
+     * 分页查询银行卡信息（带账户名称）
      */
     @GetMapping("/page")
     public BaseResponse<IPage<AccountBankCard>> getPage(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String accountId) {
+            AccountBankCard query) {
         Page<AccountBankCard> ipage = new Page<>(page, size);
-        LambdaQueryWrapper<AccountBankCard> queryWrapper = new LambdaQueryWrapper<>();
-        if (StrUtil.isNotBlank(accountId) ) {
-            queryWrapper.eq(AccountBankCard::getAccountId, accountId);
-        }
-        queryWrapper.orderByDesc(AccountBankCard::getCreateTime);
-        IPage<AccountBankCard> result = accountBankCardService.page(ipage, queryWrapper);
+        IPage<AccountBankCard> result = accountBankCardService.pageWithAccount(ipage, query);
         return BaseResponse.success(result);
     }
 }

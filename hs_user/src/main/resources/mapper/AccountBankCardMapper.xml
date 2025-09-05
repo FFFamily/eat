@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.user.mapper.AccountBankCardMapper">
+
+    <!-- 分页查询银行卡信息（带账户名称） -->
+    <select id="selectPageWithAccount" resultType="com.tutu.user.entity.AccountBankCard">
+        SELECT 
+            b.*,
+            a.nickname as accountName
+        FROM account_bank_card b
+        LEFT JOIN account a ON b.account_id = a.id
+        <where>
+            b.is_deleted = '0'
+            <if test="query.accountId != null and query.accountId != ''">
+                AND b.account_id = #{query.accountId}
+            </if>
+            <if test="query.bankName != null and query.bankName != ''">
+                AND b.bank_name LIKE CONCAT('%', #{query.bankName}, '%')
+            </if>
+            <if test="query.cardNumber != null and query.cardNumber != ''">
+                AND b.card_number LIKE CONCAT('%', #{query.cardNumber}, '%')
+            </if>
+        </where>
+        ORDER BY b.create_time DESC
+    </select>
+
+    <!-- 根据ID查询银行卡详情（带账户名称） -->
+    <select id="selectByIdWithAccount" resultType="com.tutu.user.entity.AccountBankCard">
+        SELECT 
+            b.*,
+            a.nickname as accountName
+        FROM account_bank_card b
+        LEFT JOIN account a ON b.account_id = a.id
+        WHERE b.id = #{id} AND b.is_deleted = '0'
+    </select>
+
+    <!-- 根据账户ID查询银行卡列表（带账户名称） -->
+    <select id="selectByAccountIdWithAccount" resultType="com.tutu.user.entity.AccountBankCard">
+        SELECT 
+            b.*,
+            a.nickname as accountName
+        FROM account_bank_card b
+        LEFT JOIN account a ON b.account_id = a.id
+        WHERE b.account_id = #{accountId} AND b.is_deleted = '0'
+        ORDER BY b.is_default DESC, b.create_time DESC
+    </select>
+
+</mapper>
