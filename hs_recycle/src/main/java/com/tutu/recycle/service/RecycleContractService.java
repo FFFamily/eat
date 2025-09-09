@@ -1,5 +1,6 @@
 package com.tutu.recycle.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.entity.RecycleContractItem;
@@ -29,7 +30,16 @@ public class RecycleContractService extends ServiceImpl<RecycleContractMapper, R
         save(recycleContract);
         return recycleContract;
     }
-    
+
+    /**
+     * 根据合作方ID查询合同列表
+     * @param partnerId 合作方ID
+     * @return
+     */
+    public List<RecycleContract> findByPartner(Long partnerId) {
+        return list(new LambdaQueryWrapper<RecycleContract>()
+        .eq(RecycleContract::getPartner, partnerId));
+    }
     
     
     public boolean updateContractStatus(String id, String status) {

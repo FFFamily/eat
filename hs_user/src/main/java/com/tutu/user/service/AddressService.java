@@ -1,5 +1,6 @@
 package com.tutu.user.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.user.entity.Address;
@@ -30,5 +31,14 @@ public class AddressService extends ServiceImpl<AddressMapper, Address> {
         long count =  this.baseMapper.findPageCount(accountName, realAddress);
         result.setTotal(count);
         return result;
+    }
+
+    /**
+     * 根据账号ID查询地址列表
+     * @param accountId 账号ID
+     * @return
+     */ 
+    public List<Address> findByAccountId(Long accountId) {
+        return list(new LambdaQueryWrapper<Address>().eq(Address::getAccountId, accountId));
     }
 } 

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.recycle.entity.RecycleOrder;
 import com.tutu.recycle.entity.RecycleOrderItem;
 import com.tutu.recycle.enums.RecycleOrderStatusEnum;
+import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
 import com.tutu.recycle.request.CreateRecycleOrderRequest;
 import com.tutu.recycle.schema.RecycleOrderInfo;
@@ -47,6 +48,22 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     private AccountService accountService;
     @Resource
     private RecycleOrderItemService recycleOrderItemService;
+
+
+    /**
+     * 创建微信订单
+     * @param order 订单信息
+     */
+    public void createWxOrder(RecycleOrder order) {
+        // 只能创建采购类型的订单
+        if (!order.getType().equals(RecycleOrderTypeEnum.PURCHASE.getCode())) {
+            throw new RuntimeException("只能创建采购类型的订单");
+        }
+        // 生成订单编号
+        order.setNo(IdUtil.simpleUUID());
+        // 保存订单
+        save(order);
+    }
     /**
      * 创建回收订单
      * @param recycleOrder 回收订单信息
