@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.recycle.entity.RecycleOrder;
 import com.tutu.recycle.entity.RecycleOrderItem;
-import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
 import com.tutu.recycle.request.CreateRecycleOrderRequest;
@@ -59,8 +58,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (!order.getType().equals(RecycleOrderTypeEnum.PURCHASE.getCode())) {
             throw new RuntimeException("只能创建采购类型的订单");
         }
-        // 生成订单编号
-        order.setNo(IdUtil.simpleUUID());
+        // // 订单状态
+        // order.setStatus(RecycleOrderStatusEnum.PENDING.getCode());
+        // // 订单类型
+        // order.setType(RecycleOrderTypeEnum.PURCHASE.getCode());
+        // // 订单起始时间
+        // order.setStartTime(new Date());
+        // // 生成订单编号
+        // order.setNo(IdUtil.simpleUUID());
         // 保存订单
         save(order);
     }
@@ -251,5 +256,24 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         BeanUtil.copyProperties(getById(id), recycleOrderInfo);
         recycleOrderInfo.setItems(recycleOrderItemService.list(new LambdaQueryWrapper<RecycleOrderItem>().eq(RecycleOrderItem::getRecycleOrderId, id)));
         return recycleOrderInfo;
+    }
+
+    /**
+     * 获取合作方的订单列表
+     * @param partnerId 合作方ID
+     * @param status 订单状态，可为空表示查询所有状态
+     * @return 订单列表
+     */
+    public List<RecycleOrder> getPartnerOrderList(String partnerId, String status) {
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
+                .eq(RecycleOrder::getContractPartner, partnerId)
+                .orderByDesc(RecycleOrder::getCreateTime);
+        
+        // 如果状态不为空且不是"all"，则添加状态过滤条件
+        if (StrUtil.isNotBlank(status) && !"all".equals(status)) {
+            wrapper.eq(RecycleOrder::getStatus, status);
+        }
+        
+        return list(wrapper);
     }
 }
