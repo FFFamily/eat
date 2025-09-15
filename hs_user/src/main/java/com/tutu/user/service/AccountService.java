@@ -115,10 +115,6 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
         if (oldAccount != null) {
             throw new RuntimeException("用户名已被使用");
         }
-        oldAccount = getUserByIdCard(account.getIdCard());
-        if (oldAccount != null) {
-            throw new RuntimeException("身份证号已被使用");
-        }
         oldAccount = getUserByPhone(account.getPhone());
         if (oldAccount != null) {
             throw new RuntimeException("手机号已被使用");
@@ -126,20 +122,6 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
         account.setPassword(PasswordUtil.encode(account.getPassword()));
         account.setStatus(UserStatusEnum.USE.getCode());
         save(account);
-    }
-
-    /**
-     * 根据身份证号获取用户
-     * @param idCard 身份证号
-     * @return 用户实体，若不存在则返回 null
-     */
-    private Account getUserByIdCard(String idCard) {
-        if (StrUtil.isBlank(idCard)) {
-            return null;
-        }
-        LambdaQueryWrapper<Account> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(Account::getIdCard, idCard);
-        return getOne(userLambdaQueryWrapper);
     }
 
     /**

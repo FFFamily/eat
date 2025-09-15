@@ -24,8 +24,18 @@ public class Address extends BaseEntity{
     private String accountName;
     // 分类
     private String category;
+    // 省
+    private String province;
+    // 市
+    private String city;
+    // 区
+    private String district;
+    // 详细地址
+    private String detailAddress;
     // 地址
     private String realAddress;
+    // 是否默认
+    private Boolean isDefault;
     // 备注
     private String remark;
 

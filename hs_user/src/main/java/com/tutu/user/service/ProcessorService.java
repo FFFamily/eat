@@ -1,5 +1,6 @@
 package com.tutu.user.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.user.entity.Processor;
 import com.tutu.user.mapper.ProcessorMapper;
@@ -31,5 +32,16 @@ public class ProcessorService extends ServiceImpl<ProcessorMapper, Processor>{
      */
     public long findPageCount(Processor processor) {
         return this.baseMapper.findPageCount(processor);
+    }
+
+    /**
+     * 根据账号ID获取经办人列表
+     * @param accountId 账号ID
+     * @return 经办人列表
+     */
+    public List<Processor> getProcessorsByAccountId(String accountId) {
+        LambdaQueryWrapper<Processor> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Processor::getAccountId, accountId);
+        return this.list(queryWrapper);
     }
 }

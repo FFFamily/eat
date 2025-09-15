@@ -44,14 +44,14 @@ public class RecycleOrder extends BaseEntity {
     /**
      * 起始时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @TableField("start_time")
     private Date startTime;
 
     /**
      * 结束时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @TableField("end_time")
     private Date endTime;
 
@@ -79,6 +79,12 @@ public class RecycleOrder extends BaseEntity {
     @TableField("total_amount")
     private BigDecimal totalAmount;
 
+    /**
+     * 上传时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @TableField("upload_time")
+    private Date uploadTime;
 
     /**
      * 订单图片

@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.entity.RecycleCapitalPool;
 import com.tutu.recycle.entity.RecycleCapitalPoolItem;
+import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.mapper.RecycleCapitalPoolMapper;
 
 import jakarta.annotation.Resource;
@@ -25,6 +26,9 @@ public class RecycleCapitalPoolService extends ServiceImpl<RecycleCapitalPoolMap
     // 资金池明细服务
     @Resource
     private RecycleCapitalPoolItemService itemService;
+
+    @Resource
+    private RecycleContractService recycleContractService;
     
     // 使用ConcurrentHashMap存储资金池编号对应的锁
     private final ConcurrentHashMap<String, ReentrantLock> poolLocks = new ConcurrentHashMap<>();
@@ -129,8 +133,14 @@ public class RecycleCapitalPoolService extends ServiceImpl<RecycleCapitalPoolMap
         if (one != null) {
             throw new RuntimeException("编号已存在");
         }
+        // 根据合同查询合同id
+        RecycleContract contract = recycleContractService.getOne(new LambdaQueryWrapper<RecycleContract>().eq(RecycleContract::getNo, entity.getContractNo()));
+        if (contract == null) {
+            throw new RuntimeException("合同不存在");
+        }
+        entity.setContractId(contract.getId());
         // 一个合同只能有一个资金池
-        one = getOne(new LambdaQueryWrapper<RecycleCapitalPool>().eq(RecycleCapitalPool::getContractNo, entity.getContractNo()));
+        one = getOne(new LambdaQueryWrapper<RecycleCapitalPool>().eq(RecycleCapitalPool::getContractId, contract.getId()));
         if (one != null) {
             throw new RuntimeException("一个合同只能有一个资金池");
         }

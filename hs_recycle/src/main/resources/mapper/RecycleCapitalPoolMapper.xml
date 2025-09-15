@@ -8,7 +8,7 @@
             p.*,
             c.no as contractNo,
             c.name as contractName,
-            a.id_card_name as contractPartnerName
+            a.nickname as contractPartnerName
         FROM recycle_capital_pool p
         LEFT JOIN recycle_contract c ON p.contract_id = c.id
         LEFT JOIN account a ON p.contract_partner = a.id
@@ -42,7 +42,7 @@
             p.*,
             c.no as contractNo,
             c.name as contractName,
-            a.id_card_name as contractPartnerName
+            a.ncikname as contractPartnerName
         FROM recycle_capital_pool p
         LEFT JOIN recycle_contract c ON p.contract_id = c.id
         LEFT JOIN account a ON p.contract_partner = a.id
@@ -55,7 +55,7 @@
             p.*,
             c.no as contractNo,
             c.name as contractName,
-            a.id_card_name as contractPartnerName
+            a.nickname as contractPartnerName
         FROM recycle_capital_pool p
         LEFT JOIN recycle_contract c ON p.contract_id = c.id
         LEFT JOIN account a ON p.contract_partner = a.id
@@ -68,7 +68,7 @@
             p.*,
             c.no as contractNo,
             c.name as contractName,
-            a.id_card_name as contractPartnerName
+            a.nickname as contractPartnerName
         FROM recycle_capital_pool p
         LEFT JOIN recycle_contract c ON p.contract_id = c.id
         LEFT JOIN account a ON p.contract_partner = a.id

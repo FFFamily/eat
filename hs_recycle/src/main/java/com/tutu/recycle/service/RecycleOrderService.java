@@ -4,11 +4,16 @@ import cn.binarywang.wx.miniapp.api.WxMaService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tutu.common.exceptions.ServiceException;
+import com.tutu.recycle.entity.RecycleContract;
+import com.tutu.recycle.entity.RecycleContractItem;
 import com.tutu.recycle.entity.RecycleOrder;
 import com.tutu.recycle.entity.RecycleOrderItem;
+import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
 import com.tutu.recycle.request.CreateRecycleOrderRequest;
+import com.tutu.recycle.request.ProcessingOrderSubmitRequest;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -24,6 +29,7 @@ import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
@@ -47,31 +53,65 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     private AccountService accountService;
     @Resource
     private RecycleOrderItemService recycleOrderItemService;
-
-
+    @Resource
+    private RecycleContractService recycleContractService;
+    @Resource
+    private RecycleContractItemService recycleContractItemService;
     /**
      * 创建微信订单
-     * @param order 订单信息
+     * @param request 订单信息
      */
-    public void createWxOrder(RecycleOrder order) {
-        // 只能创建采购类型的订单
-        if (!order.getType().equals(RecycleOrderTypeEnum.PURCHASE.getCode())) {
-            throw new RuntimeException("只能创建采购类型的订单");
+    @Transactional(rollbackFor = Exception.class)
+    public void createWxOrder(RecycleOrder request) {
+        RecycleOrder order = new RecycleOrder();
+        // 根据合同订单查询合同
+        RecycleContract contract = recycleContractService.getById(request.getContractId());
+        if (contract == null) {
+            throw new ServiceException("对应合同不存在");
         }
-        // // 订单状态
-        // order.setStatus(RecycleOrderStatusEnum.PENDING.getCode());
-        // // 订单类型
-        // order.setType(RecycleOrderTypeEnum.PURCHASE.getCode());
-        // // 订单起始时间
-        // order.setStartTime(new Date());
-        // // 生成订单编号
-        // order.setNo(IdUtil.simpleUUID());
+        // 合同甲方
+        order.setPartyA(contract.getPartyA());
+        // 合同乙方
+        order.setPartyB(contract.getPartyB());
+        // 合同甲方名称
+        order.setPartyAName(contract.getPartyAName());
+        // 合同乙方名称
+        order.setPartyBName(contract.getPartyBName());
+        // 合同合作方
+        order.setContractPartner(contract.getPartner());
+        order.setContractPartnerName(contract.getPartnerName());
+        // 合同订单
+        order.setContractId(contract.getId());
+        order.setContractNo(contract.getNo());
+        order.setContractName(contract.getName());
+        // 订单状态
+        order.setStatus(RecycleOrderStatusEnum.PROCESSING.getCode());
+        // 订单类型
+        order.setType(RecycleOrderTypeEnum.PURCHASE.getCode());
+        // 订单图片
+        order.setOrderNodeImg(request.getOrderNodeImg());
+        // 地址
+        order.setDeliveryAddress(request.getDeliveryAddress());
+        // 经办人
+        order.setProcessor(request.getProcessor());
+        // 经办人电话
+        order.setProcessorPhone(request.getProcessorPhone());
+        // 生成订单编号
+        order.setNo(IdUtil.simpleUUID());
         // 保存订单
         save(order);
+        // 查询合同明细，复制给订单明细
+        List<RecycleContractItem> contractItems = recycleContractItemService.list(new LambdaQueryWrapper<RecycleContractItem>().eq(RecycleContractItem::getRecycleContractId, contract.getId()));
+        for (RecycleContractItem item : contractItems) {
+            RecycleOrderItem orderItem = new RecycleOrderItem();
+            BeanUtil.copyProperties(item, orderItem);
+            orderItem.setRecycleOrderId(order.getId());
+            recycleOrderItemService.save(orderItem);
+        }
     }
     /**
      * 创建回收订单
-     * @param recycleOrder 回收订单信息
+     * @param request 回收订单信息
      */
     @Transactional(rollbackFor = Exception.class)
     public RecycleOrder createOrder(CreateRecycleOrderRequest request) {
@@ -275,5 +315,217 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }
         
         return list(wrapper);
+    }
+
+    /**
+     * 获取订单列表
+     * @param order 订单实体
+     * @return 订单列表
+     */
+    public List<RecycleOrder> getOrderList(RecycleOrder order) {
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>();
+        if (StrUtil.isNotBlank(order.getType())) {
+            wrapper.eq(RecycleOrder::getType, order.getType());
+        }
+        if (StrUtil.isNotBlank(order.getStatus())) {
+            wrapper.eq(RecycleOrder::getStatus, order.getStatus());
+        }
+        if (StrUtil.isNotBlank(order.getContractPartner())) {
+            wrapper.eq(RecycleOrder::getContractPartner, order.getContractPartner());
+        }
+        if (StrUtil.isNotBlank(order.getIdentifyCode())) {
+            wrapper.eq(RecycleOrder::getIdentifyCode, order.getIdentifyCode());
+        }
+        return list(wrapper);
+    }
+
+    /**
+     * 根据订单识别号查询订单（带权限控制）
+     * @param identifyCode 订单识别号
+     * @param userId 用户ID
+     * @return 订单信息
+     */
+    public RecycleOrder getOrderByIdentifyCode(String identifyCode, String userId) {
+        if (StrUtil.isBlank(identifyCode)) {
+            throw new ServiceException("订单识别号不能为空");
+        }
+        
+        // 获取用户信息
+        Account account = accountService.getById(userId);
+        if (account == null) {
+            throw new ServiceException("用户不存在");
+        }
+        
+        // 根据用户身份确定允许查询的订单类型
+        String userUseType = account.getUseType();
+        String allowedOrderType = null;
+        
+        if (UserUseTypeEnum.TRANSPORT.getCode().equals(userUseType)) {
+            allowedOrderType = RecycleOrderTypeEnum.TRANSPORT.getCode();
+        } else if (UserUseTypeEnum.SORTING.getCode().equals(userUseType)) {
+            allowedOrderType = RecycleOrderTypeEnum.PROCESSING.getCode();
+        } else {
+            // 其他身份用户不允许使用此接口
+            throw new ServiceException("您的身份无权限使用此接口，请联系管理员");
+        }
+        
+        // 根据订单识别号和订单类型查询订单
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
+                .eq(RecycleOrder::getIdentifyCode, identifyCode)
+                .eq(RecycleOrder::getType, allowedOrderType);
+        
+        List<RecycleOrder> orders = list(wrapper);
+        
+        if (orders.isEmpty()) {
+            throw new ServiceException("未找到对应的订单");
+        }
+        
+        if (orders.size() > 1) {
+            throw new ServiceException("查询到多个相同类型的订单，请联系管理员处理");
+        }
+        
+        RecycleOrder order = orders.get(0);
+        
+        return order;
+    }
+
+    /**
+     * 根据订单ID获取订单详情
+     * @param orderId 订单ID
+     * @param userId 用户ID
+     * @return 订单详情信息
+     */
+    public RecycleOrder getOrderByIdWithPermission(String orderId, String userId) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        
+        // 根据订单ID查询订单
+        RecycleOrder order = getById(orderId);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
+        }
+        
+        return order;
+    }
+
+    /**
+     * 运输订单提交
+     * @param orderId 订单ID
+     * @param orderNodeImg 订单图片
+     * @param deliveryAddress 交付地址
+     * @param userId 用户ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void submitTransportOrder(String orderId, String orderNodeImg, String deliveryAddress, String userId) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        
+        // 获取用户信息
+        Account account = accountService.getById(userId);
+        if (account == null) {
+            throw new ServiceException("用户不存在");
+        }
+        
+        // 验证用户身份
+        if (!UserUseTypeEnum.TRANSPORT.getCode().equals(account.getUseType())) {
+            throw new ServiceException("只有运输用户才能提交运输订单");
+        }
+        
+        // 根据订单ID查询订单
+        RecycleOrder order = getById(orderId);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
+        }
+        
+        // 验证订单类型
+        if (!RecycleOrderTypeEnum.TRANSPORT.getCode().equals(order.getType())) {
+            throw new ServiceException("只能提交运输订单");
+        }
+        
+        // 验证订单状态，已上传的订单不能重复提交
+        if (RecycleOrderStatusEnum.UPLOADED.getCode().equals(order.getStatus())) {
+            throw new ServiceException("订单已上传，无法重复提交");
+        }
+        
+        // 更新订单信息
+        order.setOrderNodeImg(orderNodeImg);
+        order.setDeliveryAddress(deliveryAddress);
+        order.setUploadTime(new Date());
+        order.setStatus(RecycleOrderStatusEnum.UPLOADED.getCode());
+        
+        // 保存订单
+        updateById(order);
+    }
+
+    /**
+     * 加工订单提交
+     * @param orderId 订单ID
+     * @param orderNodeImg 订单图片
+     * @param items 订单明细列表
+     * @param userId 用户ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void submitProcessingOrder(String orderId, String orderNodeImg, List<ProcessingOrderSubmitRequest.OrderItemUpdateRequest> items, String userId) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        
+        // 获取用户信息
+        Account account = accountService.getById(userId);
+        if (account == null) {
+            throw new ServiceException("用户不存在");
+        }
+        
+        // 验证用户身份
+        if (!UserUseTypeEnum.SORTING.getCode().equals(account.getUseType())) {
+            throw new ServiceException("只有分拣用户才能提交加工订单");
+        }
+        
+        // 根据订单ID查询订单
+        RecycleOrder order = getById(orderId);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
+        }
+        
+        // 验证订单类型
+        if (!RecycleOrderTypeEnum.PROCESSING.getCode().equals(order.getType())) {
+            throw new ServiceException("只能提交加工订单");
+        }
+        
+        // 验证订单状态，已上传的订单不能重复提交
+        if (RecycleOrderStatusEnum.UPLOADED.getCode().equals(order.getStatus())) {
+            throw new ServiceException("订单已上传，无法重复提交");
+        }
+        
+        // 更新订单信息
+        order.setOrderNodeImg(orderNodeImg);
+        order.setUploadTime(new Date());
+        order.setStatus(RecycleOrderStatusEnum.UPLOADED.getCode());
+        
+        // 保存订单
+        updateById(order);
+        
+        // 添加订单明细
+        if (items != null && !items.isEmpty()) {
+            for (ProcessingOrderSubmitRequest.OrderItemUpdateRequest itemRequest : items) {
+                // 创建新的订单明细
+                RecycleOrderItem orderItem = new RecycleOrderItem();
+                orderItem.setRecycleOrderId(orderId);
+                orderItem.setGoodNo(itemRequest.getGoodNo());
+                orderItem.setGoodType(itemRequest.getGoodType());
+                orderItem.setGoodName(itemRequest.getGoodName());
+                orderItem.setGoodModel(itemRequest.getGoodModel());
+                orderItem.setGoodCount(itemRequest.getGoodCount());
+                orderItem.setGoodWeight(itemRequest.getGoodWeight());
+                orderItem.setGoodPrice(itemRequest.getGoodPrice());
+                orderItem.setGoodTotalPrice(itemRequest.getGoodTotalPrice());
+                orderItem.setGoodRemark(itemRequest.getGoodRemark());
+                
+                // 保存新的明细
+                recycleOrderItemService.save(orderItem);
+            }
+        }
     }
 }

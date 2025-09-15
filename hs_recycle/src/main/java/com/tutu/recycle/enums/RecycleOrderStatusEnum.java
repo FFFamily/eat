@@ -14,6 +14,11 @@ public enum RecycleOrderStatusEnum {
     PROCESSING("processing", "执行中"),
 
     /**
+     * 已上传
+     */
+    UPLOADED("uploaded", "已上传"),
+
+    /**
      * 已结算
      */
     COMPLETED("completed", "已结算");

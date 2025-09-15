@@ -15,6 +15,7 @@ import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.mapper.RecycleFundMapper;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 
 import java.math.BigDecimal;
 
@@ -125,6 +126,25 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
      */
     public Page<RecycleFund> pageWithContract(Page<RecycleFund> page, RecycleFund query) {
         return baseMapper.selectPageWithContract(page, query);
+    }
+
+    /**
+     * 获取合作方的走款记录列表
+     * @param partnerId 合作方ID
+     * @param status 走款状态，可为空或"all"表示查询所有状态
+     * @return 走款记录列表
+     */
+    public List<RecycleFund> getPartnerFundList(String partnerId, String status) {
+        LambdaQueryWrapper<RecycleFund> wrapper = new LambdaQueryWrapper<RecycleFund>()
+                .eq(RecycleFund::getPartner, partnerId)
+                .orderByDesc(RecycleFund::getCreateTime);
+        
+        // 如果状态不为空且不是"all"，则添加状态过滤条件
+        if (StrUtil.isNotBlank(status) && !"all".equals(status)) {
+            wrapper.eq(RecycleFund::getStatus, status);
+        }
+        
+        return list(wrapper);
     }
 
 } 

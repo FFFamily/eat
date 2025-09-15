@@ -1,11 +1,10 @@
-package com.tutu.api.controller.mobile.user;
+package com.tutu.api.controller.account;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.entity.Account;
-import com.tutu.user.enums.UserUseTypeEnum;
 import com.tutu.user.service.AccountService;
 
 import cn.hutool.core.util.StrUtil;

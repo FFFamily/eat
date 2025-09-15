@@ -1,4 +1,4 @@
-package com.tutu.api.controller.mobile;
+package com.tutu.api.controller.wx;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(originPatterns = "*",allowCredentials="true",allowedHeaders = "*")
 @RestController
 @RequestMapping("/wx/auth")
-public class UserLoginController {
+public class WxLoginController {
     @Resource
     private AccountService accountService;
     @Resource
@@ -94,11 +94,6 @@ public class UserLoginController {
         }
         // 校验身份证
         queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Account::getIdCard, loginRequest.getIdCard());
-        existingAccount = accountService.getOne(queryWrapper);
-        if (existingAccount != null) {
-            return BaseResponse.error("身份证已绑定其他用户");
-        }
         Account account = new Account();
         BeanUtil.copyProperties(loginRequest, account);
         account.setStatus(UserStatusEnum.USE.getCode());

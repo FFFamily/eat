@@ -13,11 +13,11 @@ public enum RecycleOrderTypeEnum implements BaseEnum<RecycleOrderTypeEnum,String
     // 采购订单
     PURCHASE("purchase", "采购订单"),
     // 运输
-    TRANSPORT("transport", "运输"),
+    TRANSPORT("transport", "运输订单"),
     // 加工
-    PROCESSING("processing", "加工"),
+    PROCESSING("process", "加工订单"),
     // 仓储
-    STORAGE("storage", "仓储"),
+    STORAGE("storage", "仓储订单"),
     // 销售订单
     SALE("sale", "销售订单"),
     // 其他
