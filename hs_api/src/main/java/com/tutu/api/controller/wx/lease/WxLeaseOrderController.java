@@ -1,4 +1,4 @@
-package com.tutu.api.controller.mobile;
+package com.tutu.api.controller.wx.lease;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/wx/lease/order")
-public class UserLeaseOrderController {
+public class WxLeaseOrderController {
 
     @Autowired
     private LeaseOrderService leaseOrderService;
