@@ -528,4 +528,57 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             }
         }
     }
+
+    /**
+     * 订单结算
+     * @param orderId 订单ID
+     * @param settlementPdfUrl 结算单PDF URL地址
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void settlementOrder(String orderId, String settlementPdfUrl) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        if (StrUtil.isBlank(settlementPdfUrl)) {
+            throw new ServiceException("结算单PDF URL不能为空");
+        }
+        
+        RecycleOrder order = getById(orderId);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
+        }
+        
+        // 更新结算单PDF URL
+        order.setSettlementPdfUrl(settlementPdfUrl);
+        // 更新订单状态为已结算
+        order.setStatus(RecycleOrderStatusEnum.COMPLETED.getCode());
+        // 更新结算时间
+        order.setSettlementTime(new Date());
+        updateById(order);
+    }
+
+    /**
+     * 订单申请
+     * @param orderId 订单ID
+     * @param applicationPdfUrl 申请单PDF URL地址
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void applicationOrder(String orderId, String applicationPdfUrl) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        if (StrUtil.isBlank(applicationPdfUrl)) {
+            throw new ServiceException("申请单PDF URL不能为空");
+        }
+        
+        RecycleOrder order = getById(orderId);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
+        }
+        
+        // 更新申请单PDF URL
+        order.setApplicationPdfUrl(applicationPdfUrl);
+        
+        updateById(order);
+    }
 }

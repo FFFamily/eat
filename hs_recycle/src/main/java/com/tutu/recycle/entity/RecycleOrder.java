@@ -137,4 +137,14 @@ public class RecycleOrder extends BaseEntity {
     //=========金额=========
     // 货物总金额
     private BigDecimal goodsTotalAmount;
+
+    // 结算单PDF URL地址
+    @TableField("settlement_pdf_url")
+    private String settlementPdfUrl;
+    // 结算时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date settlementTime;
+    // 申请单PDF URL地址
+    @TableField("application_pdf_url")
+    private String applicationPdfUrl;
 }

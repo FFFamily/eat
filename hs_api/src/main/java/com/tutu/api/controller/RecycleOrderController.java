@@ -1,7 +1,5 @@
 package com.tutu.api.controller;
 
-import cn.hutool.core.util.PageUtil;
-import jakarta.servlet.http.HttpServletResponse;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -120,5 +118,29 @@ public class RecycleOrderController {
         Page<RecycleOrder> ipage = new Page<>(page, size);
         Page<RecycleOrder> result = recycleOrderService.page(ipage, new QueryWrapper<>());
         return BaseResponse.success(result);
+    }
+
+    /**
+     * 订单结算
+     * @param orderId 订单ID
+     * @param settlementPdfUrl 结算单PDF URL地址
+     * @return 结算结果
+     */
+    @PostMapping("/settlement")
+    public BaseResponse<Void> settlementOrder(@RequestParam String orderId, @RequestParam String settlementPdfUrl) {
+        recycleOrderService.settlementOrder(orderId, settlementPdfUrl);
+        return BaseResponse.success();
+    }
+
+    /**
+     * 订单申请
+     * @param orderId 订单ID
+     * @param applicationPdfUrl 申请单PDF URL地址
+     * @return 申请结果
+     */
+    @PostMapping("/application")
+    public BaseResponse<Void> applicationOrder(@RequestParam String orderId, @RequestParam String applicationPdfUrl) {
+        recycleOrderService.applicationOrder(orderId, applicationPdfUrl);
+        return BaseResponse.success();
     }
 }
