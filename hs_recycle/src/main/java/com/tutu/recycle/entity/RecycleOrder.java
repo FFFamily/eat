@@ -134,4 +134,7 @@ public class RecycleOrder extends BaseEntity {
      */
     @TableField("payment_account")
     private String paymentAccount;
+    //=========金额=========
+    // 货物总金额
+    private BigDecimal goodsTotalAmount;
 }
