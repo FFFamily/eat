@@ -11,24 +11,74 @@
         <result column="total_amount" property="totalAmount"/>
     </resultMap>
 
+    <resultMap id="InventoryReportItemMap" type="com.tutu.recycle.dto.InventoryReportItemDto">
+        <result column="good_no" property="goodNo"/>
+        <result column="good_name" property="goodName" />
+        <result column="good_type" property="goodType" />
+        <result column="good_model" property="goodModel" />
+        <result column="good_count" property="goodCount" />
+        <result column="good_total_price" property="goodTotalPrice" />
+        <result column="recycle_order_no" property="recycleOrderNo" />
+        <result column="recycle_order_flow_direction" property="recycleOrderFlowDirection" />
+        <result column="recycle_order_type" property="recycleOrderType" />
+    </resultMap>
+       
     <select id="selectInventoryReport" resultMap="InventoryReportMap">
         SELECT
-            i.good_no,
-            i.good_name,
-            i.good_type,
-            i.good_model,
-            SUM(i.good_count) AS total_quantity,
-            SUM(i.good_total_price) AS total_amount
-        FROM recycle_order_item i
-                LEFT JOIN recycle_order o ON o.id = i.recycle_order_id
-        AND o.is_deleted = 0
-        AND o.type = 'storage'
-        AND o.flow_direction = 'IN'
-        WHERE i.is_deleted = 0
-        AND o.id IS NOT NULL
-        GROUP BY  i.good_no, i.good_name, i.good_type, i.good_model
-        ORDER BY  i.good_no
+            in_data.good_no,
+            in_data.good_name,
+            in_data.good_type,
+            in_data.good_model,
+            SUM(in_data.good_count) AS total_quantity,
+            COALESCE((
+                SELECT SUM(CASE 
+                    WHEN o2.flow_direction = 'IN' THEN i2.good_total_price 
+                    WHEN o2.flow_direction = 'OUT' THEN -i2.good_total_price 
+                    ELSE 0 
+                END)
+                FROM recycle_order_item i2
+                LEFT JOIN recycle_order o2 ON o2.id = i2.recycle_order_id
+                WHERE i2.is_deleted = 0 
+                AND o2.is_deleted = 0 
+                AND o2.type = 'storage'
+                AND o2.flow_direction IN ('IN', 'OUT')
+                AND i2.good_no = in_data.good_no
+                AND o2.id IS NOT NULL
+            ), 0) AS total_amount
+        FROM (
+            SELECT 
+                i.good_no,
+                i.good_name,
+                i.good_type,
+                i.good_model,
+                i.good_count
+            FROM recycle_order_item i
+            LEFT JOIN recycle_order o ON o.id = i.recycle_order_id
+            WHERE i.is_deleted = 0
+            AND o.is_deleted = 0
+            AND o.type = 'storage'
+            AND o.flow_direction = 'IN'
+            AND o.id IS NOT NULL
+        ) in_data
+        GROUP BY in_data.good_no, in_data.good_name, in_data.good_type, in_data.good_model
+        ORDER BY in_data.good_no
         LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectInventoryReportDetail" resultMap="InventoryReportItemMap">
+        select 
+        i.good_no, 
+        i.good_name, 
+        i.good_type, 
+        i.good_model, 
+        i.good_count, 
+        i.good_total_price,
+        ro.no as recycle_order_no,
+        ro.flow_direction as recycle_order_flow_direction,
+        ro.type as recycle_order_type
+    from recycle_order_item i
+    left join eat.recycle_order ro on ro.id = i.recycle_order_id
+    where i.good_no = #{no} and ro.type = 'storage'
     </select>
 
     <select id="selectInventoryReportCount" resultType="long">
@@ -37,7 +87,7 @@
         LEFT JOIN recycle_order o ON o.id = i.recycle_order_id 
             AND o.is_deleted = 0 
             AND o.type = 'storage' 
-            AND o.flow_direction = 'IN'
+            AND o.flow_direction IN ('IN', 'OUT')
         WHERE i.is_deleted = 0
             AND o.id IS NOT NULL
     </select>

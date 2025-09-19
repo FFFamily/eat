@@ -3,7 +3,11 @@ package com.tutu.api.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.dto.InventoryReportDto;
+import com.tutu.recycle.dto.InventoryReportItemDto;
 import com.tutu.recycle.service.InventoryReportService;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,14 +35,15 @@ public class InventoryReportController {
         IPage<InventoryReportDto> reportPage = inventoryReportService.getInventoryReport(page, size);
         return BaseResponse.success(reportPage);
     }
-    
+
     /**
-     * 获取库存报表总数
-     * @return 库存报表记录总数
+     * 获取库存明细
      */
-    @GetMapping("/count")
-    public BaseResponse<Long> getInventoryReportCount() {
-        long count = inventoryReportService.getInventoryReportCount();
-        return BaseResponse.success(count);
+    @GetMapping("/detail/{no}")
+    public BaseResponse<List<InventoryReportItemDto>> getInventoryReportDetail(@PathVariable String no) {
+        List<InventoryReportItemDto> report = inventoryReportService.getInventoryReportDetail(no);
+        return BaseResponse.success(report);
     }
+    
+
 }
