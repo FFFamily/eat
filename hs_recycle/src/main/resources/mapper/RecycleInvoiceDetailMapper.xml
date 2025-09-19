@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.recycle.mapper.RecycleInvoiceDetailMapper">
+    
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.tutu.recycle.entity.RecycleInvoiceDetail">
+        <id column="id" property="id"/>
+        <result column="invoice_id" property="invoiceId"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="order_total_amount" property="orderTotalAmount"/>
+        <result column="order_actual_invoice" property="orderActualInvoice"/>
+        <result column="order_should_invoice" property="orderShouldInvoice"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+</mapper>

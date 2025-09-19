@@ -60,7 +60,17 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
      * @param accountTypeId 用户类型
      * @return 用户账号
      */
-    public String generateAccountUsername(String accountTypeId) {
+    public String generateAccountUsername(String accountId,String accountTypeId) {
+        if (!StrUtil.isBlank(accountId)) {
+            // 老用户需要判断是否又是这个用户类型
+            Account account = getById(accountId);
+            if (account == null) {
+                throw new ServiceException("用户不存在");
+            }
+            if (account.getType().equals(accountTypeId)) {
+                return account.getUsername();
+            }
+        }
         // 查询当前用户类型对应的用户数量
         long count = this.baseMapper.getUserCountByAccountTypeId(accountTypeId);
         // 转为String
@@ -100,7 +110,7 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
     public void changeStatus(String userId) {
         Account account = getById(userId);
         if (account == null) {
-            throw new RuntimeException("用户不存在");
+            throw new ServiceException("用户不存在");
         }
         account.setStatus(account.getStatus().equals(UserStatusEnum.USE.getCode()) ? UserStatusEnum.DISABLE.getCode() : UserStatusEnum.USE.getCode());
         updateById(account);
@@ -113,11 +123,11 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
     public void create(Account account) {
         Account oldAccount = getUserByUsername(account.getUsername());
         if (oldAccount != null) {
-            throw new RuntimeException("用户名已被使用");
+            throw new ServiceException("用户名已被使用");
         }
         oldAccount = getUserByPhone(account.getPhone());
         if (oldAccount != null) {
-            throw new RuntimeException("手机号已被使用");
+            throw new ServiceException("手机号已被使用");
         }
         account.setPassword(PasswordUtil.encode(account.getPassword()));
         account.setStatus(UserStatusEnum.USE.getCode());
@@ -144,7 +154,7 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
      */
     public void updateUser(Account account) {
         if (account == null) {
-            throw new RuntimeException("用户不存在");
+            throw new ServiceException("用户不存在");
         }
         // 加密密码
         account.setPassword(PasswordUtil.encode(account.getPassword()));

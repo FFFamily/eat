@@ -31,7 +31,7 @@ public class ProcessorController {
     /**
      * 修改经办人
      */
-    @PutMapping
+    @PutMapping("/update")
     public BaseResponse<Boolean> update(@RequestBody Processor processor) {
         return BaseResponse.success(processorService.updateById(processor));
     }

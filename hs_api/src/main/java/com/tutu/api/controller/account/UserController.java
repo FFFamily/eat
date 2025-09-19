@@ -38,8 +38,8 @@ public class UserController {
      * @return 用户账号
      */
     @GetMapping("/generateAccountUsername/{accountType}")
-    public BaseResponse<String> generateAccountUsername(@PathVariable String accountType) {
-        return BaseResponse.success(accountService.generateAccountUsername(accountType));
+    public BaseResponse<String> generateAccountUsername(@RequestParam String accountId,@PathVariable String accountType) {
+        return BaseResponse.success(accountService.generateAccountUsername(accountId,accountType));
     }
     /**
      * 拿到所有的useType

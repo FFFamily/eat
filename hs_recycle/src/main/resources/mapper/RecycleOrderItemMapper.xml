@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.recycle.mapper.RecycleOrderItemMapper">
+    
+    <resultMap id="InventoryReportMap" type="com.tutu.recycle.dto.InventoryReportDto">
+        <result column="good_no" property="goodNo"/>
+        <result column="good_name" property="goodName"/>
+        <result column="good_type" property="goodType"/>
+        <result column="good_model" property="goodModel"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="total_amount" property="totalAmount"/>
+    </resultMap>
+
+    <select id="selectInventoryReport" resultMap="InventoryReportMap">
+        SELECT
+            i.good_no,
+            i.good_name,
+            i.good_type,
+            i.good_model,
+            SUM(i.good_count) AS total_quantity,
+            SUM(i.good_total_price) AS total_amount
+        FROM recycle_order_item i
+                LEFT JOIN recycle_order o ON o.id = i.recycle_order_id
+        AND o.is_deleted = 0
+        AND o.type = 'storage'
+        AND o.flow_direction = 'IN'
+        WHERE i.is_deleted = 0
+        AND o.id IS NOT NULL
+        GROUP BY  i.good_no, i.good_name, i.good_type, i.good_model
+        ORDER BY  i.good_no
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectInventoryReportCount" resultType="long">
+        SELECT COUNT(DISTINCT CONCAT(o.warehouse_address, '-', i.good_no))
+        FROM recycle_order_item i
+        LEFT JOIN recycle_order o ON o.id = i.recycle_order_id 
+            AND o.is_deleted = 0 
+            AND o.type = 'storage' 
+            AND o.flow_direction = 'IN'
+        WHERE i.is_deleted = 0
+            AND o.id IS NOT NULL
+    </select>
+
+</mapper>

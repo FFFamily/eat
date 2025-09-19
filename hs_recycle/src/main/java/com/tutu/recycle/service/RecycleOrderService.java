@@ -14,6 +14,7 @@ import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
 import com.tutu.recycle.request.CreateRecycleOrderRequest;
 import com.tutu.recycle.request.ProcessingOrderSubmitRequest;
+import com.tutu.recycle.request.RecycleOrderQueryRequest;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -580,5 +581,37 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         order.setApplicationPdfUrl(applicationPdfUrl);
         
         updateById(order);
+    }
+
+    /**
+     * 分页查询回收订单（支持多条件查询）
+     * @param page 分页对象
+     * @param queryRequest 查询请求参数
+     * @return 分页结果
+     */
+    public com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> getRecycleOrdersByPage(
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> page,
+            RecycleOrderQueryRequest queryRequest) {
+        
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>();
+        
+        // 添加查询条件
+        if (StrUtil.isNotBlank(queryRequest.getType())) {
+            wrapper.eq(RecycleOrder::getType, queryRequest.getType());
+        }
+        if (StrUtil.isNotBlank(queryRequest.getStatus())) {
+            wrapper.eq(RecycleOrder::getStatus, queryRequest.getStatus());
+        }
+        if (StrUtil.isNotBlank(queryRequest.getIdentifyCode())) {
+            wrapper.like(RecycleOrder::getIdentifyCode, queryRequest.getIdentifyCode());
+        }
+        if (StrUtil.isNotBlank(queryRequest.getContractPartner())) {
+            wrapper.like(RecycleOrder::getContractPartner, queryRequest.getContractPartner());
+        }
+        
+        // 按创建时间倒序排列
+        wrapper.orderByDesc(RecycleOrder::getCreateTime);
+        
+        return page(page, wrapper);
     }
 }

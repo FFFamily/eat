@@ -38,6 +38,9 @@ public class BusinessScopeService extends ServiceImpl<BusinessScopeMapper, Busin
      */
     @Transactional(rollbackFor = Exception.class)
     public BusinessScope createBusinessScope(BusinessScope businessScope) {
+        // 检查编号唯一性
+        checkNoUniqueness(businessScope.getNo(), null);
+        
         Integer maxSortNum = getMaxSortNum();
         businessScope.setSortNum(maxSortNum + 1);
         save(businessScope);
@@ -48,6 +51,9 @@ public class BusinessScopeService extends ServiceImpl<BusinessScopeMapper, Busin
      * 更新经营范围
      */
     public boolean updateBusinessScope(BusinessScope businessScope) {
+        // 检查编号唯一性
+        checkNoUniqueness(businessScope.getNo(), businessScope.getId());
+        
         return updateById(businessScope);
     }
     
@@ -69,6 +75,30 @@ public class BusinessScopeService extends ServiceImpl<BusinessScopeMapper, Busin
         }
         businessScope.setIsShow(param.getIsShow());
         updateById(businessScope);
+    }
+    
+    /**
+     * 检查编号唯一性
+     * @param no 编号
+     * @param excludeId 排除的ID（更新时使用）
+     */
+    private void checkNoUniqueness(String no, String excludeId) {
+        if (no == null || no.trim().isEmpty()) {
+            throw new ServiceException("编号不能为空");
+        }
+        
+        LambdaQueryWrapper<BusinessScope> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(BusinessScope::getNo, no);
+        
+        // 如果是更新操作，排除当前记录
+        if (excludeId != null) {
+            wrapper.ne(BusinessScope::getId, excludeId);
+        }
+        
+        BusinessScope existing = getOne(wrapper);
+        if (existing != null) {
+            throw new ServiceException("编号已存在，请使用其他编号");
+        }
     }
     
     /**

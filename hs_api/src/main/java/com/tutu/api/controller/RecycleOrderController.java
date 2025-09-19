@@ -1,12 +1,12 @@
 package com.tutu.api.controller;
 
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.entity.RecycleOrder;
 import com.tutu.recycle.request.CreateRecycleOrderRequest;
+import com.tutu.recycle.request.RecycleOrderQueryRequest;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 import com.tutu.recycle.service.RecycleOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,15 +108,13 @@ public class RecycleOrderController {
 
     /**
      * 分页查询回收订单
-     * @param page 页码
-     * @param size 每页数量
+     * @param queryRequest 查询请求参数
      * @return 分页结果
      */
-    @GetMapping("/page")
-    public BaseResponse<IPage<RecycleOrder>> getRecycleOrdersByPage(@RequestParam(defaultValue = "1") int page,
-                                                      @RequestParam(defaultValue = "10") int size) {
-        Page<RecycleOrder> ipage = new Page<>(page, size);
-        Page<RecycleOrder> result = recycleOrderService.page(ipage, new QueryWrapper<>());
+    @PostMapping("/page")
+    public BaseResponse<IPage<RecycleOrder>> getRecycleOrdersByPage(@RequestBody RecycleOrderQueryRequest queryRequest) {
+        Page<RecycleOrder> ipage = new Page<>(queryRequest.getPage(), queryRequest.getSize());
+        Page<RecycleOrder> result = recycleOrderService.getRecycleOrdersByPage(ipage, queryRequest);
         return BaseResponse.success(result);
     }
 
