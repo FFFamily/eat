@@ -5,8 +5,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.recycle.entity.RecycleInvoice;
 import com.tutu.recycle.entity.RecycleInvoiceDetail;
+import com.tutu.recycle.entity.RecycleOrder;
+import com.tutu.recycle.enums.RecycleInvoiceStatusEnum;
+import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.mapper.RecycleInvoiceDetailMapper;
 import com.tutu.recycle.mapper.RecycleInvoiceMapper;
+import com.tutu.recycle.request.ConfirmInvoiceRequest;
+import com.tutu.recycle.request.InvoiceDetailResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +32,9 @@ public class RecycleInvoiceService {
     @Autowired
     private RecycleInvoiceDetailMapper recycleInvoiceDetailMapper;
     
+    @Autowired
+    private RecycleOrderService recycleOrderService;
+    
     /**
      * 创建发票
      * @param invoice 发票信息
@@ -39,15 +47,9 @@ public class RecycleInvoiceService {
         BigDecimal totalAmount = details.stream()
                 .map(RecycleInvoiceDetail::getOrderTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        // 计算税额（假设税率为13%）
-        BigDecimal taxRate = new BigDecimal("0.13");
-        BigDecimal taxAmount = totalAmount.multiply(taxRate);
-        BigDecimal amountWithoutTax = totalAmount.subtract(taxAmount);
-        
+     
         invoice.setTotalAmount(totalAmount);
-        invoice.setTaxAmount(taxAmount);
-        invoice.setAmountWithoutTax(amountWithoutTax);
+        invoice.setStatus(RecycleInvoiceStatusEnum.PENDING.getCode()); // 设置默认状态为待开票
         invoice.setCreateTime(new Date());
         
         // 保存发票
@@ -72,46 +74,21 @@ public class RecycleInvoiceService {
      * @param details 发票明细列表
      * @return 是否成功
      */
-    @Transactional
-    public boolean updateInvoice(RecycleInvoice invoice, List<RecycleInvoiceDetail> details) {
+    @Transactional(rollbackFor = Exception.class)
+    public void updateInvoice(RecycleInvoice invoice, List<RecycleInvoiceDetail> details) {
         // 删除原有明细
         QueryWrapper<RecycleInvoiceDetail> deleteWrapper = new QueryWrapper<>();
         deleteWrapper.eq("invoice_id", invoice.getId());
         recycleInvoiceDetailMapper.delete(deleteWrapper);
-        
-        // 重新计算金额
-        if (details != null && !details.isEmpty()) {
-            BigDecimal totalAmount = details.stream()
-                    .map(RecycleInvoiceDetail::getOrderTotalAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-            BigDecimal taxRate = new BigDecimal("0.13");
-            BigDecimal taxAmount = totalAmount.multiply(taxRate);
-            BigDecimal amountWithoutTax = totalAmount.subtract(taxAmount);
-            
-            invoice.setTotalAmount(totalAmount);
-            invoice.setTaxAmount(taxAmount);
-            invoice.setAmountWithoutTax(amountWithoutTax);
-        }
-        
-        invoice.setUpdateTime(new Date());
-        
         // 更新发票
-        int result = recycleInvoiceMapper.updateById(invoice);
-        if (result <= 0) {
-            return false;
-        }
-        
+        recycleInvoiceMapper.updateById(invoice);
         // 保存新明细
         if (details != null && !details.isEmpty()) {
             for (RecycleInvoiceDetail detail : details) {
                 detail.setInvoiceId(invoice.getId());
-                detail.setCreateTime(new Date());
                 recycleInvoiceDetailMapper.insert(detail);
             }
         }
-        
-        return true;
     }
     
     /**
@@ -141,14 +118,35 @@ public class RecycleInvoiceService {
     }
     
     /**
+     * 根据ID获取发票完整信息（包含明细）
+     * @param invoiceId 发票ID
+     * @return 发票完整信息
+     */
+    public InvoiceDetailResponse getInvoiceWithDetails(String invoiceId) {
+        // 获取发票基本信息
+        RecycleInvoice invoice = recycleInvoiceMapper.selectById(invoiceId);
+        if (invoice == null) {
+            return null;
+        }
+        
+        // 获取发票明细
+        List<RecycleInvoiceDetail> details = getInvoiceDetails(invoiceId);
+        
+        // 构建返回对象
+        InvoiceDetailResponse response = new InvoiceDetailResponse();
+        response.setInvoice(invoice);
+        response.setDetails(details);
+        
+        return response;
+    }
+    
+    /**
      * 获取发票明细
      * @param invoiceId 发票ID
      * @return 发票明细列表
      */
     public List<RecycleInvoiceDetail> getInvoiceDetails(String invoiceId) {
-        QueryWrapper<RecycleInvoiceDetail> wrapper = new QueryWrapper<>();
-        wrapper.eq("invoice_id", invoiceId);
-        return recycleInvoiceDetailMapper.selectList(wrapper);
+        return recycleInvoiceDetailMapper.selectByInvoiceId(invoiceId);
     }
     
     /**
@@ -216,5 +214,66 @@ public class RecycleInvoiceService {
         
         int result = recycleInvoiceMapper.updateById(invoice);
         return result > 0;
+    }
+    
+    /**
+     * 确认发票
+     * @param request 确认发票请求
+     * @return 是否成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean confirmInvoice(ConfirmInvoiceRequest request) {
+        // 根据发票ID查询发票信息
+        RecycleInvoice invoice = recycleInvoiceMapper.selectById(request.getInvoiceId());
+        if (invoice == null) {
+            throw new RuntimeException("发票不存在");
+        }
+        
+        // 计算不含税金额 = 总金额 - 税额
+        BigDecimal amountWithoutTax = request.getTotalAmount().subtract(request.getTaxAmount());
+        
+        // 更新发票信息
+        invoice.setProcessor(request.getProcessor());
+        invoice.setInvoiceNo(request.getInvoiceNo());
+        invoice.setInvoiceTime(request.getInvoiceTime());
+        invoice.setTotalAmount(request.getTotalAmount());
+        invoice.setTaxAmount(request.getTaxAmount());
+        invoice.setAmountWithoutTax(amountWithoutTax);
+        invoice.setStatus(RecycleInvoiceStatusEnum.INVOICED.getCode()); // 更新状态为已开票
+        invoice.setUpdateTime(new Date());
+        
+        // 保存发票更新
+        int result = recycleInvoiceMapper.updateById(invoice);
+        if (result <= 0) {
+            throw new RuntimeException("发票更新失败");
+        }
+        
+        // 更新相关订单状态为已开票
+        updateRelatedOrdersStatus(invoice.getId());
+        
+        return true;
+    }
+    
+    /**
+     * 更新相关订单状态为已开票
+     * @param invoiceId 发票ID
+     */
+    private void updateRelatedOrdersStatus(String invoiceId) {
+        // 获取发票明细，从中获取订单编号
+        List<RecycleInvoiceDetail> details = getInvoiceDetails(invoiceId);
+        
+        for (RecycleInvoiceDetail detail : details) {
+            String orderNo = detail.getOrderNo();
+            if (orderNo != null && !orderNo.trim().isEmpty()) {
+                // 根据订单编号查询订单
+                RecycleOrder order = recycleOrderService.getByOrderNo(orderNo);
+                if (order != null) {
+                    // 更新订单状态为已开票
+                    order.setStatus(RecycleOrderStatusEnum.INVOICED.getCode());
+                    order.setUpdateTime(new Date());
+                    recycleOrderService.updateById(order);
+                }
+            }
+        }
     }
 }

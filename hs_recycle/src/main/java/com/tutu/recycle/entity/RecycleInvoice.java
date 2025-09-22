@@ -17,72 +17,29 @@ import java.util.Date;
 @Getter
 @Setter
 public class RecycleInvoice extends BaseEntity {
-    
-    /**
-     * 主键ID
-     */
+    // 主键ID
     @TableId(value = "id", type = IdType.ASSIGN_ID)
     private String id;
-    
-    /**
-     * 发票号码
-     */
-    @TableField("invoice_no")
+    // 发票号码
     private String invoiceNo;
-    
-    /**
-     * 发票类型（进项、销项）
-     */
-    @TableField("invoice_type")
+    // 发票类型（进项、销项）
     private String invoiceType;
-    
-    /**
-     * 开票银行
-     */
-    @TableField("invoice_bank")
+    // 开票银行
     private String invoiceBank;
-    
-    /**
-     * 计划开票时间
-     */
+    // 计划开票时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    @TableField("planned_invoice_time")
     private Date plannedInvoiceTime;
-    
-    /**
-     * 状态
-     */
-    @TableField("status")
+    // 状态
     private String status;
-    
-    /**
-     * 经办人
-     */
-    @TableField("processor")
+    // 经办人
     private String processor;
-    
-    /**
-     * 开票时间
-     */
+    // 开票时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    @TableField("invoice_time")
     private Date invoiceTime;
-    
-    /**
-     * 总金额
-     */
-    @TableField("total_amount")
+    // 总金额
     private BigDecimal totalAmount;
-    
-    /**
-     * 税额
-     */
-    @TableField("tax_amount")
+    // 税额
     private BigDecimal taxAmount;
-    
-    /**
-     * 不含税金额
-     */
-    @TableField("amount_without_tax")
+    // 不含税金额
     private BigDecimal amountWithoutTax;
 }

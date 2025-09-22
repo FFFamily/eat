@@ -31,8 +31,8 @@ public class RecycleInvoiceDetail extends BaseEntity {
     /**
      * 订单编号
      */
-    @TableField("order_no")
-    private String orderNo;
+    @TableField("order_id")
+    private String orderId;
     
     /**
      * 订单总金额
@@ -51,4 +51,16 @@ public class RecycleInvoiceDetail extends BaseEntity {
      */
     @TableField("order_should_invoice")
     private BigDecimal orderShouldInvoice;
+    // 订单编号
+    @TableField(exist = false)
+    private String orderNo;
+    // 合作方
+    @TableField(exist = false)
+    private String orderPartner;
+    // 订单合作方
+    @TableField(exist = false)
+    private String orderPartnerName;
+    // 订单类型
+    @TableField(exist = false)
+    private String orderType;
 }

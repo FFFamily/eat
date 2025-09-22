@@ -1,8 +1,11 @@
 package com.tutu.user.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tutu.common.constant.CommonConstant;
+import com.tutu.common.exceptions.ServiceException;
 import com.tutu.user.entity.Address;
 import com.tutu.user.mapper.AddressMapper;
 import com.tutu.user.service.AddressService;
@@ -10,6 +13,7 @@ import com.tutu.user.service.AddressService;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 地址管理 Service 实现类
@@ -40,5 +44,34 @@ public class AddressService extends ServiceImpl<AddressMapper, Address> {
      */ 
     public List<Address> findByAccountId(Long accountId) {
         return list(new LambdaQueryWrapper<Address>().eq(Address::getAccountId, accountId));
+    }
+
+    /**
+     * 设为默认地址
+     * @param addressId 地址ID
+     * @param accountId 用户ID
+     * @return 是否成功
+     */
+    @Transactional
+    public boolean setDefaultAddress(String addressId) {
+        Address address = getById(addressId);
+        if (address == null) {
+            throw new ServiceException("地址不存在");
+        }
+    
+
+        // 1. 先将该用户的所有地址设为非默认
+        LambdaUpdateWrapper<Address> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Address::getAccountId, address.getAccountId())
+                    .set(Address::getIsDefault, CommonConstant.NO_STR);
+        this.update(updateWrapper);
+        
+        // 2. 将指定地址设为默认
+        LambdaUpdateWrapper<Address> setDefaultWrapper = new LambdaUpdateWrapper<>();
+        setDefaultWrapper.eq(Address::getId, addressId)
+                        .eq(Address::getAccountId, address.getAccountId())
+                        .set(Address::getIsDefault, CommonConstant.YES_STR);
+        
+        return this.update(setDefaultWrapper);
     }
 } 

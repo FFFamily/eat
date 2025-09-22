@@ -584,6 +584,21 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     }
 
     /**
+     * 根据订单编号查询订单
+     * @param orderNo 订单编号
+     * @return 订单信息
+     */
+    public RecycleOrder getByOrderNo(String orderNo) {
+        if (StrUtil.isBlank(orderNo)) {
+            return null;
+        }
+        
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RecycleOrder::getNo, orderNo);
+        return getOne(wrapper);
+    }
+
+    /**
      * 分页查询回收订单（支持多条件查询）
      * @param page 分页对象
      * @param queryRequest 查询请求参数

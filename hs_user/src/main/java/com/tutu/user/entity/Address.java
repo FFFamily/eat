@@ -34,8 +34,8 @@ public class Address extends BaseEntity{
     private String detailAddress;
     // 地址
     private String realAddress;
-    // 是否默认
-    private Boolean isDefault;
+    // 是否默认 (1:是, 0:否)
+    private String isDefault;
     // 备注
     private String remark;
 

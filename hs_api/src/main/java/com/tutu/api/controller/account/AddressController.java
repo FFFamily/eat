@@ -6,8 +6,6 @@ import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.Address;
 import com.tutu.user.service.AddressService;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -80,5 +78,15 @@ public class AddressController {
         queryWrapper.orderByDesc("create_time");
         
         return BaseResponse.success(addressService.page(page, queryWrapper));
+    }
+    
+    /**
+     * 设为默认地址
+     */
+    @PutMapping("/set-default/{addressId}")
+    public BaseResponse<Boolean> setDefaultAddress(
+            @PathVariable String addressId) {
+        boolean result = addressService.setDefaultAddress(addressId);
+        return BaseResponse.success(result);
     }
 } 

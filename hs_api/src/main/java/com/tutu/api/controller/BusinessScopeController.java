@@ -55,9 +55,22 @@ public class BusinessScopeController {
     @GetMapping("/page")
     public BaseResponse<Page<BusinessScope>> page(
             @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String goodType,
+            @RequestParam(required = false) String goodName) {
         Page<BusinessScope> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<BusinessScope> wrapper = new LambdaQueryWrapper<>();
+        
+        // 货物类型模糊查询
+        if (goodType != null && !goodType.trim().isEmpty()) {
+            wrapper.like(BusinessScope::getGoodType, goodType.trim());
+        }
+        
+        // 货物名称模糊查询
+        if (goodName != null && !goodName.trim().isEmpty()) {
+            wrapper.like(BusinessScope::getGoodName, goodName.trim());
+        }
+        
         wrapper.orderByAsc(BusinessScope::getSortNum);
         return BaseResponse.success(businessScopeService.page(page, wrapper));
     }

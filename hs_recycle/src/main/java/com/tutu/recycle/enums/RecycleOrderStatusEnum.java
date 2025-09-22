@@ -19,6 +19,11 @@ public enum RecycleOrderStatusEnum {
     UPLOADED("uploaded", "已上传"),
 
     /**
+     * 已开票
+     */
+    INVOICED("invoiced", "已开票"),
+
+    /**
      * 已结算
      */
     COMPLETED("completed", "已结算");
