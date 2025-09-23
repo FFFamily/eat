@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.Address;
 import com.tutu.user.service.AddressService;
+import com.tutu.system.service.CityService;
 
 import java.util.List;
 
+import com.tutu.system.entity.City;
 import cn.dev33.satoken.stp.StpUtil;
 
 import jakarta.annotation.Resource;
@@ -25,6 +27,17 @@ import jakarta.annotation.Resource;
 public class WxAddressController {
     @Resource
     private AddressService addressService;
+    @Resource
+    private CityService cityService;
+
+ /**
+     * 根据父级编码获取子级城市
+     */
+    @GetMapping("/children/{pCode}")
+    public BaseResponse<List<City>> getChildrenByParentCode(@PathVariable String pCode) {
+        return BaseResponse.success(cityService.getByParentCode(pCode));
+    }
+
     // 获取地址列表
     @GetMapping("/current/list")
     public BaseResponse<List<Address>> list() {
@@ -34,7 +47,7 @@ public class WxAddressController {
     }
     
     // 根据ID获取地址信息
-    @GetMapping("/{addressId}")
+    @GetMapping("/getById/{addressId}")
     public BaseResponse<Address> getById(@PathVariable String addressId) {
         Long userId = StpUtil.getLoginIdAsLong();
         Address address = addressService.getById(addressId);
