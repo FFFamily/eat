@@ -125,8 +125,8 @@ decorator:
 file:
   upload:
     # 文件上传根路径（可以根据实际情况修改）
-    base-path: /Users/tujunjie/Downloads/files
-    #    base-path: /opt/data/files/
+    base-path: /opt/data/files/
+
     # 文件访问URL前缀
     url-prefix: /files
     # 允许上传的文件类型

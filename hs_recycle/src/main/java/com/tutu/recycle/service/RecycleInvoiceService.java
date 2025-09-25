@@ -2,6 +2,7 @@ package com.tutu.recycle.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.recycle.entity.RecycleInvoice;
 import com.tutu.recycle.entity.RecycleInvoiceDetail;
@@ -24,7 +25,7 @@ import java.util.List;
  * 回收发票服务
  */
 @Service
-public class RecycleInvoiceService {
+public class RecycleInvoiceService extends ServiceImpl<RecycleInvoiceMapper, RecycleInvoice> {
     
     @Autowired
     private RecycleInvoiceMapper recycleInvoiceMapper;
@@ -42,7 +43,7 @@ public class RecycleInvoiceService {
      * @return 是否成功
      */
     @Transactional
-    public boolean createInvoice(RecycleInvoice invoice, List<RecycleInvoiceDetail> details) {
+    public void createInvoice(RecycleInvoice invoice, List<RecycleInvoiceDetail> details) {
         // 计算总金额
         BigDecimal totalAmount = details.stream()
                 .map(RecycleInvoiceDetail::getOrderTotalAmount)
@@ -50,22 +51,14 @@ public class RecycleInvoiceService {
      
         invoice.setTotalAmount(totalAmount);
         invoice.setStatus(RecycleInvoiceStatusEnum.PENDING.getCode()); // 设置默认状态为待开票
-        invoice.setCreateTime(new Date());
-        
+        invoice.setInvoiceAccountId(details.getFirst().getOrderPartner());
         // 保存发票
-        int result = recycleInvoiceMapper.insert(invoice);
-        if (result <= 0) {
-            return false;
-        }
-        
+        recycleInvoiceMapper.insert(invoice);
         // 保存发票明细
         for (RecycleInvoiceDetail detail : details) {
             detail.setInvoiceId(invoice.getId());
-            detail.setCreateTime(new Date());
             recycleInvoiceDetailMapper.insert(detail);
         }
-        
-        return true;
     }
     
     /**
@@ -82,6 +75,7 @@ public class RecycleInvoiceService {
         recycleInvoiceDetailMapper.delete(deleteWrapper);
         // 更新发票
         recycleInvoiceMapper.updateById(invoice);
+        invoice.setInvoiceAccountId(details.get(0).getOrderPartner());
         // 保存新明细
         if (details != null && !details.isEmpty()) {
             for (RecycleInvoiceDetail detail : details) {

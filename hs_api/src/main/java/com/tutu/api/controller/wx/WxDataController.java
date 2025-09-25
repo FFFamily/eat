@@ -18,7 +18,6 @@ public class WxDataController {
 
     /**
      * 获取用户年度统计汇总
-     * @param userId 用户ID
      * @param year 统计年份，默认为当前年份
      * @return 年度统计汇总信息
      */

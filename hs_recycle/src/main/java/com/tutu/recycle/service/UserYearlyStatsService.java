@@ -2,9 +2,12 @@ package com.tutu.recycle.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.tutu.recycle.dto.UserYearlyStatsDto;
+import com.tutu.recycle.dto.MonthlyStatsDto;
 import com.tutu.recycle.entity.RecycleOrder;
 import com.tutu.recycle.entity.RecycleOrderItem;
 import com.tutu.recycle.entity.RecycleContract;
+import com.tutu.recycle.entity.RecycleFund;
+import com.tutu.recycle.entity.RecycleInvoice;
 import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +15,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 用户年度统计服务
@@ -31,6 +33,12 @@ public class UserYearlyStatsService {
     @Autowired
     private RecycleOrderItemService recycleOrderItemService;
 
+    @Autowired
+    private RecycleFundService recycleFundService;
+
+    @Autowired
+    private RecycleInvoiceService recycleInvoiceService;
+
     /**
      * 获取用户年度统计汇总
      * @param userId 用户ID
@@ -46,45 +54,48 @@ public class UserYearlyStatsService {
         UserYearlyStatsDto stats = new UserYearlyStatsDto();
         stats.setUserId(userId);
         stats.setYear(year);
-        stats.setGenerateTime(new Date());
 
         // 计算年份的开始和结束时间
         Date startTime = getYearStartTime(year);
         Date endTime = getYearEndTime(year);
 
+
+        // 统计合同数量
+        calculateContractStats(stats, userId, startTime, endTime);
         // 统计采购订单（已结算状态）
         calculatePurchaseOrderStats(stats, userId, startTime, endTime);
-
-        // 统计运输订单
-        calculateTransportOrderStats(stats, userId, startTime, endTime);
-
-        // 统计加工订单
-        calculateProcessingOrderStats(stats, userId, startTime, endTime);
-
-        // 统计仓储订单
-        calculateStorageOrderStats(stats, userId, startTime, endTime);
-
-        // 统计销售订单
-        calculateSalesOrderStats(stats, userId, startTime, endTime);
-
-        // 统计其他订单
-        calculateOtherOrderStats(stats, userId, startTime, endTime);
-
-        // 统计采购合同数量
-        calculatePurchaseContractStats(stats, userId, startTime, endTime);
-
-        // 统计所有采购订单数量
-        calculateAllPurchaseOrderStats(stats, userId, startTime, endTime);
-
-        // 统计采购订单已结算订单的合计重量
-        calculateSettledPurchaseOrderWeight(stats, userId, startTime, endTime);
-
-        // 计算总收益和总订单数
-        calculateTotals(stats);
+        // 统计发票
+        calculateInvoiceStats(stats, userId, startTime, endTime);   
+        
+        // 统计月度数据
+        calculateMonthlyStats(stats, userId, year);
 
         return stats;
     }
 
+    /**
+     * 统计发票
+     */
+    private void calculateInvoiceStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
+        LambdaQueryWrapper<RecycleInvoice> wrapper = new LambdaQueryWrapper<RecycleInvoice>()
+                .eq(RecycleInvoice::getInvoiceAccountId, userId)
+                .between(RecycleInvoice::getCreateTime, startTime, endTime);
+
+        List<RecycleInvoice> invoices = recycleInvoiceService.list(wrapper);
+        // 统计已开票的金额
+        BigDecimal totalAmount = invoices.stream()
+                .map(RecycleInvoice::getTotalAmount)
+                .filter(amount -> amount != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        stats.setSettledInvoiceAmount(totalAmount);
+        // 统计未开票的金额
+        totalAmount = invoices.stream()
+                .map(RecycleInvoice::getTotalAmount)
+                .filter(amount -> amount != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        stats.setNotSettledInvoiceAmount(totalAmount);
+
+    }
     /**
      * 统计采购订单（已结算状态）
      */
@@ -102,163 +113,43 @@ public class UserYearlyStatsService {
                 .filter(amount -> amount != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        stats.setSettlementIncome(totalAmount);
+        stats.setOrderAmount(totalAmount);
         stats.setPurchaseOrderCount(orders.size());
-    }
-
-    /**
-     * 统计运输订单
-     */
-    private void calculateTransportOrderStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
-                .eq(RecycleOrder::getContractPartner, userId)
-                .eq(RecycleOrder::getType, RecycleOrderTypeEnum.TRANSPORT.getCode())
-                .eq(RecycleOrder::getStatus, RecycleOrderStatusEnum.COMPLETED.getCode())
-                .between(RecycleOrder::getCreateTime, startTime, endTime);
-
-        List<RecycleOrder> orders = recycleOrderService.list(wrapper);
-        
-        BigDecimal totalAmount = orders.stream()
-                .map(RecycleOrder::getTotalAmount)
+        if (orders.isEmpty()){
+            return;
+        }
+        // 统计对应订单的货物明细重量
+        List<RecycleOrderItem> orderItems = recycleOrderItemService.list(new LambdaQueryWrapper<RecycleOrderItem>()
+                .in(RecycleOrderItem::getRecycleOrderId, orders.stream().map(RecycleOrder::getId).toList()));
+        BigDecimal totalWeight = orderItems.stream()
+                .map(RecycleOrderItem::getGoodWeight)
+                .filter(weight -> weight != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        stats.setTotalWeight(totalWeight);
+        // 统计订单明细中评级调价金额
+        BigDecimal totalRatingAdjustAmount = orderItems.stream()
+                .map(RecycleOrderItem::getRatingAdjustAmount)
                 .filter(amount -> amount != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        stats.setTransportIncome(totalAmount);
-        stats.setTransportOrderCount(orders.size());
-    }
-
-    /**
-     * 统计加工订单
-     */
-    private void calculateProcessingOrderStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
-                .eq(RecycleOrder::getContractPartner, userId)
-                .eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
-                .eq(RecycleOrder::getStatus, RecycleOrderStatusEnum.COMPLETED.getCode())
-                .between(RecycleOrder::getCreateTime, startTime, endTime);
-
-        List<RecycleOrder> orders = recycleOrderService.list(wrapper);
-        
-        BigDecimal totalAmount = orders.stream()
-                .map(RecycleOrder::getTotalAmount)
+        stats.setRatingAdjustAmount(totalRatingAdjustAmount);
+        // 统计对应订单走款中的货款金额之和
+        List<RecycleFund> funds = recycleFundService.list(new LambdaQueryWrapper<RecycleFund>()
+                .in(RecycleFund::getOrderId, orders.stream().map(RecycleOrder::getId).toList()));
+        BigDecimal totalFundAmount = funds.stream()
+                .map(RecycleFund::getFundAmount)
                 .filter(amount -> amount != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        stats.setProcessingIncome(totalAmount);
-        stats.setProcessingOrderCount(orders.size());
-    }
-
-    /**
-     * 统计仓储订单
-     */
-    private void calculateStorageOrderStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
-                .eq(RecycleOrder::getContractPartner, userId)
-                .eq(RecycleOrder::getType, RecycleOrderTypeEnum.STORAGE.getCode())
-                .eq(RecycleOrder::getStatus, RecycleOrderStatusEnum.COMPLETED.getCode())
-                .between(RecycleOrder::getCreateTime, startTime, endTime);
-
-        List<RecycleOrder> orders = recycleOrderService.list(wrapper);
-        
-        BigDecimal totalAmount = orders.stream()
-                .map(RecycleOrder::getTotalAmount)
+        stats.setOrderFundAmount(totalFundAmount);
+        // 对应订单走款中的走款金额之和
+        BigDecimal totalFundFlowAmount = funds.stream()
+                .map(RecycleFund::getFundFlowAmount)
                 .filter(amount -> amount != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        stats.setStorageIncome(totalAmount);
-        stats.setStorageOrderCount(orders.size());
-    }
-
-    /**
-     * 统计销售订单
-     */
-    private void calculateSalesOrderStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
-                .eq(RecycleOrder::getContractPartner, userId)
-                .eq(RecycleOrder::getType, RecycleOrderTypeEnum.SALE.getCode())
-                .eq(RecycleOrder::getStatus, RecycleOrderStatusEnum.COMPLETED.getCode())
-                .between(RecycleOrder::getCreateTime, startTime, endTime);
-
-        List<RecycleOrder> orders = recycleOrderService.list(wrapper);
+        stats.setFundFlowAmount(totalFundFlowAmount);
         
-        BigDecimal totalAmount = orders.stream()
-                .map(RecycleOrder::getTotalAmount)
-                .filter(amount -> amount != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        stats.setSalesIncome(totalAmount);
-        stats.setSalesOrderCount(orders.size());
     }
 
-    /**
-     * 统计其他订单
-     */
-    private void calculateOtherOrderStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
-                .eq(RecycleOrder::getContractPartner, userId)
-                .eq(RecycleOrder::getType, RecycleOrderTypeEnum.OTHER.getCode())
-                .eq(RecycleOrder::getStatus, RecycleOrderStatusEnum.COMPLETED.getCode())
-                .between(RecycleOrder::getCreateTime, startTime, endTime);
 
-        List<RecycleOrder> orders = recycleOrderService.list(wrapper);
-        
-        BigDecimal totalAmount = orders.stream()
-                .map(RecycleOrder::getTotalAmount)
-                .filter(amount -> amount != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        stats.setOtherIncome(totalAmount);
-        stats.setOtherOrderCount(orders.size());
-    }
-
-    /**
-     * 计算总收益和总订单数
-     */
-    private void calculateTotals(UserYearlyStatsDto stats) {
-        // 计算总收益
-        BigDecimal totalIncome = BigDecimal.ZERO;
-        if (stats.getSettlementIncome() != null) {
-            totalIncome = totalIncome.add(stats.getSettlementIncome());
-        }
-        if (stats.getTransportIncome() != null) {
-            totalIncome = totalIncome.add(stats.getTransportIncome());
-        }
-        if (stats.getProcessingIncome() != null) {
-            totalIncome = totalIncome.add(stats.getProcessingIncome());
-        }
-        if (stats.getStorageIncome() != null) {
-            totalIncome = totalIncome.add(stats.getStorageIncome());
-        }
-        if (stats.getSalesIncome() != null) {
-            totalIncome = totalIncome.add(stats.getSalesIncome());
-        }
-        if (stats.getOtherIncome() != null) {
-            totalIncome = totalIncome.add(stats.getOtherIncome());
-        }
-        stats.setTotalIncome(totalIncome);
-
-        // 计算总订单数
-        int totalOrderCount = 0;
-        if (stats.getPurchaseOrderCount() != null) {
-            totalOrderCount += stats.getPurchaseOrderCount();
-        }
-        if (stats.getTransportOrderCount() != null) {
-            totalOrderCount += stats.getTransportOrderCount();
-        }
-        if (stats.getProcessingOrderCount() != null) {
-            totalOrderCount += stats.getProcessingOrderCount();
-        }
-        if (stats.getStorageOrderCount() != null) {
-            totalOrderCount += stats.getStorageOrderCount();
-        }
-        if (stats.getSalesOrderCount() != null) {
-            totalOrderCount += stats.getSalesOrderCount();
-        }
-        if (stats.getOtherOrderCount() != null) {
-            totalOrderCount += stats.getOtherOrderCount();
-        }
-        stats.setTotalOrderCount(totalOrderCount);
-    }
 
     /**
      * 获取年份开始时间
@@ -281,65 +172,84 @@ public class UserYearlyStatsService {
     }
 
     /**
-     * 统计采购合同数量
+     * 统计回收合同数量
      */
-    private void calculatePurchaseContractStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
+    private void calculateContractStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
         LambdaQueryWrapper<RecycleContract> wrapper = new LambdaQueryWrapper<RecycleContract>()
                 .eq(RecycleContract::getPartner, userId)
-                .eq(RecycleContract::getType, "purchase") // 假设采购合同类型为"purchase"
                 .between(RecycleContract::getCreateTime, startTime, endTime);
 
         List<RecycleContract> contracts = recycleContractService.list(wrapper);
-        stats.setPurchaseContractCount(contracts.size());
+        stats.setContractCount(contracts.size());
     }
 
     /**
-     * 统计所有采购订单数量（所有状态）
+     * 统计月度数据
      */
-    private void calculateAllPurchaseOrderStats(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
+    private void calculateMonthlyStats(UserYearlyStatsDto stats, String userId, Integer year) {
+        List<MonthlyStatsDto> monthlyStatsList = new ArrayList<>();
+        
+        // 初始化12个月的数据
+        for (int month = 1; month <= 12; month++) {
+            monthlyStatsList.add(new MonthlyStatsDto(month));
+        }
+        
+        // 获取该年度所有已结算的采购订单
+        Date yearStartTime = getYearStartTime(year);
+        Date yearEndTime = getYearEndTime(year);
+        
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>()
                 .eq(RecycleOrder::getContractPartner, userId)
                 .eq(RecycleOrder::getType, RecycleOrderTypeEnum.PURCHASE.getCode())
-                .between(RecycleOrder::getCreateTime, startTime, endTime);
+                .eq(RecycleOrder::getStatus, RecycleOrderStatusEnum.COMPLETED.getCode())
+                .between(RecycleOrder::getCreateTime, yearStartTime, yearEndTime);
 
         List<RecycleOrder> orders = recycleOrderService.list(wrapper);
-        stats.setAllPurchaseOrderCount(orders.size());
-    }
-
-    /**
-     * 统计采购订单已结算订单的合计重量
-     */
-    private void calculateSettledPurchaseOrderWeight(UserYearlyStatsDto stats, String userId, Date startTime, Date endTime) {
-        // 先查询已结算的采购订单
-        LambdaQueryWrapper<RecycleOrder> orderWrapper = new LambdaQueryWrapper<RecycleOrder>()
-                .eq(RecycleOrder::getContractPartner, userId)
-                .eq(RecycleOrder::getType, RecycleOrderTypeEnum.PURCHASE.getCode())
-                .eq(RecycleOrder::getStatus, RecycleOrderStatusEnum.COMPLETED.getCode())
-                .between(RecycleOrder::getCreateTime, startTime, endTime);
-
-        List<RecycleOrder> settledOrders = recycleOrderService.list(orderWrapper);
         
-        if (settledOrders.isEmpty()) {
-            stats.setSettledPurchaseOrderWeight(BigDecimal.ZERO);
-            return;
+        // 按月份分组统计
+        Map<Integer, List<RecycleOrder>> ordersByMonth = orders.stream()
+                .collect(Collectors.groupingBy(order -> {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(order.getCreateTime());
+                    return cal.get(Calendar.MONTH) + 1; // Calendar.MONTH 从0开始，所以+1
+                }));
+        
+        // 统计每个月的重量和结算收益
+        for (Map.Entry<Integer, List<RecycleOrder>> entry : ordersByMonth.entrySet()) {
+            Integer month = entry.getKey();
+            List<RecycleOrder> monthOrders = entry.getValue();
+            
+            MonthlyStatsDto monthlyStats = monthlyStatsList.get(month - 1); // 数组索引从0开始
+            
+            // 统计当月订单数量
+            monthlyStats.setOrderCount(monthOrders.size());
+            
+            // 统计当月结算收益
+            BigDecimal monthSettlementAmount = monthOrders.stream()
+                    .map(RecycleOrder::getTotalAmount)
+                    .filter(amount -> amount != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            monthlyStats.setSettlementAmount(monthSettlementAmount);
+            
+            // 获取当月订单的明细
+            List<String> monthOrderIds = monthOrders.stream()
+                    .map(RecycleOrder::getId)
+                    .collect(Collectors.toList());
+            
+            if (!monthOrderIds.isEmpty()) {
+                List<RecycleOrderItem> monthOrderItems = recycleOrderItemService.list(
+                        new LambdaQueryWrapper<RecycleOrderItem>()
+                                .in(RecycleOrderItem::getRecycleOrderId, monthOrderIds));
+                
+                // 统计当月重量
+                BigDecimal monthWeight = monthOrderItems.stream()
+                        .map(RecycleOrderItem::getGoodWeight)
+                        .filter(weight -> weight != null)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                monthlyStats.setWeight(monthWeight);
+            }
         }
-
-        // 获取这些订单的ID列表
-        List<String> orderIds = settledOrders.stream()
-                .map(RecycleOrder::getId)
-                .toList();
-
-        // 查询这些订单的明细，计算总重量
-        LambdaQueryWrapper<RecycleOrderItem> itemWrapper = new LambdaQueryWrapper<RecycleOrderItem>()
-                .in(RecycleOrderItem::getRecycleOrderId, orderIds);
-
-        List<RecycleOrderItem> orderItems = recycleOrderItemService.list(itemWrapper);
         
-        BigDecimal totalWeight = orderItems.stream()
-                .map(RecycleOrderItem::getGoodWeight)
-                .filter(weight -> weight != null)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        stats.setSettledPurchaseOrderWeight(totalWeight);
+        stats.setMonthlyStats(monthlyStatsList);
     }
 }

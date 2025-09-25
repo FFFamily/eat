@@ -52,17 +52,9 @@ public class RecycleInvoiceController {
      * @return 操作结果
      */
     @PostMapping("/create")
-    public BaseResponse<Boolean> createInvoice(@RequestBody CreateInvoiceRequest request) {
-        try {
-            boolean success = recycleInvoiceService.createInvoice(request.getInvoice(), request.getDetails());
-            if (success) {
-                return BaseResponse.success(true);
-            } else {
-                return BaseResponse.error("发票创建失败");
-            }
-        } catch (Exception e) {
-            return BaseResponse.error("发票创建异常：" + e.getMessage());
-        }
+    public BaseResponse<Void> createInvoice(@RequestBody CreateInvoiceRequest request) {
+        recycleInvoiceService.createInvoice(request.getInvoice(), request.getDetails());
+        return BaseResponse.success();
     }
     /**
      * 更新发票

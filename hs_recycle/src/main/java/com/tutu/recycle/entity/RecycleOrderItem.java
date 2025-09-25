@@ -35,6 +35,12 @@ public class RecycleOrderItem extends BaseEntity {
     private BigDecimal goodPrice;
     // 货物总价
     private BigDecimal goodTotalPrice;
+    // 评级系数
+    private BigDecimal ratingCoefficient;
+    // 评级调价金额
+    private BigDecimal ratingAdjustAmount;
+    // 其他调价
+    private BigDecimal otherAdjustAmount;
     // 货物备注
     private String goodRemark;
 }

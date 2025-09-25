@@ -42,4 +42,6 @@ public class RecycleInvoice extends BaseEntity {
     private BigDecimal taxAmount;
     // 不含税金额
     private BigDecimal amountWithoutTax;
+    // 开票用户
+    private String invoiceAccountId;
 }
