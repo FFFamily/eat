@@ -13,6 +13,8 @@ import com.tutu.recycle.enums.RecycleFundStatusEnum;
 import com.tutu.recycle.enums.RecycleMoneyDirectionEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.mapper.RecycleFundMapper;
+import com.tutu.system.service.MessageService;
+import com.tutu.system.utils.MessageUtil;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
@@ -34,6 +36,8 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
     private RecycleCapitalPoolService recycleCapitalPoolService;
     @Resource
     private RecycleContractService recycleContractService;
+    @Resource
+    private MessageService messageService;
     /**
      * 新增走款记录
      * @param entity
@@ -86,7 +90,7 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
             throw new ServiceException("走款记录不存在：" + entity.getId());
         }
         // 使用安全的金额变更方法更新资金池余额
-        BigDecimal amount = fund.getFundPoolAmount();
+        BigDecimal amount = fund.getFundFlowAmount();
         if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) {
             throw new ServiceException("走款金额不能为空或零");
         }
@@ -96,26 +100,33 @@ public class RecycleFundService extends ServiceImpl<RecycleFundMapper, RecycleFu
         this.updateById(fund);
         // 查询资金池
         RecycleCapitalPool capitalPool = recycleCapitalPoolService.getByContractId(fund.getContractId());
-        if (capitalPool == null) {
+        // 资金走款金额
+        BigDecimal fundPoolAmount = fund.getFundPoolAmount();
+        if (capitalPool == null && fundPoolAmount != null && fundPoolAmount.compareTo(BigDecimal.ZERO) != 0) {
             throw new ServiceException("合同对应资金池不存在：" + fund.getContractId());
         }
-        if (capitalPool.getFundPoolDirection().equals(fund.getFundPoolDirection())) {
-            // 走款方向和资金池方向一致，减少资金池余额 
-            recycleCapitalPoolService.decreaseBalance(
-                fund.getContractId(), 
-                amount,
-                RecycleMoneyDirectionEnum.PAY.getCode(),
-                fund.getOrderId().toString()
-            );
-        } else {
-            // 走款方向和资金池方向不一致，增加资金池余额
-            recycleCapitalPoolService.increaseBalance(
-                fund.getContractId(), 
-                amount,
-                RecycleMoneyDirectionEnum.OUT.getCode(),
-                fund.getOrderId().toString()
-            );
+        if (capitalPool != null){
+            if (capitalPool.getFundPoolDirection().equals(fund.getFundPoolDirection())) {
+                // 走款方向和资金池方向一致，减少资金池余额
+                recycleCapitalPoolService.decreaseBalance(
+                        fund.getContractId(),
+                        amount,
+                        RecycleMoneyDirectionEnum.PAY.getCode(),
+                        fund.getOrderId().toString()
+                );
+            } else {
+                // 走款方向和资金池方向不一致，增加资金池余额
+                recycleCapitalPoolService.increaseBalance(
+                        fund.getContractId(),
+                        amount,
+                        RecycleMoneyDirectionEnum.OUT.getCode(),
+                        fund.getOrderId().toString()
+                );
+            }
         }
+        // 给特定的用户发送已结算消息
+        String userId = fund.getPartner();
+        messageService.sendMessage(MessageUtil.buildFundSettleMessage(userId, fund.getId()));
     }
 
     /**

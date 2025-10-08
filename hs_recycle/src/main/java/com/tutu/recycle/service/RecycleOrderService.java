@@ -35,7 +35,10 @@ import java.util.List;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 
+import com.tutu.system.service.MessageService;
 import com.tutu.system.service.SysFileService;
+import com.tutu.system.utils.MessageUtil;
+
 import jakarta.annotation.Resource;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +61,8 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     private RecycleContractService recycleContractService;
     @Resource
     private RecycleContractItemService recycleContractItemService;
+    @Resource
+    private MessageService messageService;
     /**
      * 创建微信订单
      * @param request 订单信息
@@ -555,6 +560,9 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         order.setStatus(RecycleOrderStatusEnum.COMPLETED.getCode());
         // 更新结算时间
         order.setSettlementTime(new Date());
+        // 给特定的用户发送已结算消息
+        String userId = order.getContractPartner();
+        messageService.sendMessage(MessageUtil.buildOrderSettleMessage(userId, orderId));
         updateById(order);
     }
 
