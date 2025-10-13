@@ -7,17 +7,21 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.entity.RecycleContractItem;
-import com.tutu.recycle.entity.RecycleOrder;
-import com.tutu.recycle.entity.RecycleOrderItem;
+import com.tutu.recycle.entity.order.RecycleOrder;
+import com.tutu.recycle.entity.order.RecycleOrderItem;
+import com.tutu.recycle.entity.order.RecycleOrderTrace;
 import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
-import com.tutu.recycle.request.CreateRecycleOrderRequest;
 import com.tutu.recycle.request.ProcessingOrderSubmitRequest;
 import com.tutu.recycle.request.RecycleOrderQueryRequest;
+import com.tutu.recycle.request.recycle_order.CreateRecycleOrderRequest;
+import com.tutu.recycle.request.recycle_order.SourceCode;
+import com.tutu.recycle.request.recycle_order.TraceAbilityData;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -30,8 +34,10 @@ import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 
@@ -40,6 +46,7 @@ import com.tutu.system.service.SysFileService;
 import com.tutu.system.utils.MessageUtil;
 
 import jakarta.annotation.Resource;
+import lombok.var;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,6 +70,8 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     private RecycleContractItemService recycleContractItemService;
     @Resource
     private MessageService messageService;
+    @Resource
+    private RecycleOrderTraceService recycleOrderTraceService;
     /**
      * 创建微信订单
      * @param request 订单信息
@@ -115,49 +124,57 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             recycleOrderItemService.save(orderItem);
         }
     }
+
     /**
-     * 创建回收订单
+     * 创建或更新回收订单
      * @param request 回收订单信息
      */
     @Transactional(rollbackFor = Exception.class)
-    public RecycleOrder createOrder(CreateRecycleOrderRequest request) {
-        
-        // 状态
-        // recycleOrder.setStatus(RecycleOrderStatusEnum.PENDING.getCode());
+    public RecycleOrder createOrUpdate(CreateRecycleOrderRequest request){
+        String id = request.getId();
         // 保存订单
         RecycleOrder recycleOrder = new RecycleOrder();
         BeanUtil.copyProperties(request, recycleOrder);
-        // 生成订单编号
-        recycleOrder.setNo(IdUtil.simpleUUID());
-        save(recycleOrder);
-        // 保存订单项
+        if (StrUtil.isBlank(id)) {
+            // 生成订单编号
+            recycleOrder.setNo(IdUtil.simpleUUID());
+            save(recycleOrder);
+        }else{
+            updateById(recycleOrder);
+        }
+        // 先查找对应订单的订单项
+        List<RecycleOrderItem> orderItems = recycleOrderItemService.list(new LambdaQueryWrapper<RecycleOrderItem>().eq(RecycleOrderItem::getRecycleOrderId, recycleOrder.getId()));
+        if (CollUtil.isNotEmpty(orderItems)) {
+            // 和传递过来的订单项进行对比，删除不存在的订单项
+            List<String> itemIds = request.getItems().stream().map(RecycleOrderItem::getId).collect(Collectors.toList());
+            orderItems.stream().filter(item -> !itemIds.contains(item.getId())).forEach(item -> recycleOrderItemService.removeById(item.getId()));
+        }
+        // 保存订单明细
         List<RecycleOrderItem> items = request.getItems();
         for (RecycleOrderItem item : items) {
             item.setRecycleOrderId(recycleOrder.getId());
-            recycleOrderItemService.save(item);
-        }
-        return recycleOrder;
-    }
-
-    /**
-     * 更新回收订单
-     * @param request 更新请求
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void updateOrder(CreateRecycleOrderRequest request) {
-        RecycleOrder recycleOrder = new RecycleOrder();
-        BeanUtil.copyProperties(request, recycleOrder);
-        updateById(recycleOrder);
-        // 更新订单项
-        List<RecycleOrderItem> items = request.getItems();
-        for (RecycleOrderItem item : items) {
             if (StrUtil.isNotBlank(item.getId())) {
                 recycleOrderItemService.updateById(item);
             }else {
-                item.setRecycleOrderId(recycleOrder.getId());
                 recycleOrderItemService.save(item);
             }
         }
+        // 保存轨迹
+        List<SourceCode> sourceCodes = request.getSourceCodes();
+        if (CollUtil.isEmpty(sourceCodes)) {
+            sourceCodes = new ArrayList<>();
+        }
+        // 移除原有的轨迹
+        recycleOrderTraceService.removeByOrderId(recycleOrder.getId());
+        // 说明有父轨迹
+        for (SourceCode sourceCode : sourceCodes) {
+            RecycleOrderTrace trace = new RecycleOrderTrace();
+            trace.setOrderId(recycleOrder.getId());
+            trace.setParentCode(sourceCode.getIdentifyCode());
+            trace.setChangeReason(sourceCode.getChangeReason());
+            recycleOrderTraceService.save(trace);
+        }
+        return recycleOrder;
     }
 
     /**
@@ -301,6 +318,15 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         RecycleOrderInfo recycleOrderInfo = new RecycleOrderInfo();
         BeanUtil.copyProperties(getById(id), recycleOrderInfo);
         recycleOrderInfo.setItems(recycleOrderItemService.list(new LambdaQueryWrapper<RecycleOrderItem>().eq(RecycleOrderItem::getRecycleOrderId, id)));
+        // 轨迹能力数据
+        List<RecycleOrderTrace> traceList =  recycleOrderTraceService.getByOrderId(id);
+        recycleOrderInfo.setSourceCodes(traceList.stream().map(trace ->{
+            SourceCode sourceCode = new SourceCode();
+            sourceCode.setChangeReason(trace.getChangeReason());
+            sourceCode.setIdentifyCode(trace.getParentCode());
+            return sourceCode;
+        }).collect(Collectors.toList()));
+        
         return recycleOrderInfo;
     }
 

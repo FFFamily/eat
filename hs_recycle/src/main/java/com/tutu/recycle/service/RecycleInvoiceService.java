@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.recycle.entity.RecycleInvoice;
 import com.tutu.recycle.entity.RecycleInvoiceDetail;
-import com.tutu.recycle.entity.RecycleOrder;
+import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.enums.RecycleInvoiceStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.mapper.RecycleInvoiceDetailMapper;

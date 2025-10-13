@@ -1,4 +1,4 @@
-package com.tutu.recycle.entity;
+package com.tutu.recycle.entity.order;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -15,6 +15,8 @@ public class RecycleOrderItem extends BaseEntity {
     // 合同ID
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
+    // 方向（进/销）
+    private String direction;
     // 订单id
     private String recycleOrderId;
     // 货物编号

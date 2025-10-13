@@ -7,7 +7,8 @@ import org.apache.ibatis.annotations.Mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.tutu.recycle.dto.InventoryReportDto;
 import com.tutu.recycle.dto.InventoryReportItemDto;
-import com.tutu.recycle.entity.RecycleOrderItem;
+import com.tutu.recycle.entity.order.RecycleOrderItem;
+
 import org.apache.ibatis.annotations.Param;
 
 

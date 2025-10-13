@@ -4,9 +4,9 @@ package com.tutu.api.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.recycle.entity.RecycleOrder;
-import com.tutu.recycle.request.CreateRecycleOrderRequest;
+import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.request.RecycleOrderQueryRequest;
+import com.tutu.recycle.request.recycle_order.CreateRecycleOrderRequest;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 import com.tutu.recycle.service.RecycleOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class RecycleOrderController {
      */
     @PostMapping("/create")
     public BaseResponse<RecycleOrder> addRecycleOrder(@RequestBody CreateRecycleOrderRequest recycleOrder) {
-        return BaseResponse.success(recycleOrderService.createOrder(recycleOrder));
+        return BaseResponse.success(recycleOrderService.createOrUpdate(recycleOrder));
     }
 
     /**
@@ -38,7 +38,7 @@ public class RecycleOrderController {
      */
     @PutMapping("/update")
     public BaseResponse<Void> updateRecycleOrder(@RequestBody CreateRecycleOrderRequest request) {
-        recycleOrderService.updateOrder(request);
+        recycleOrderService.createOrUpdate(request);
         return BaseResponse.success();
     }
 

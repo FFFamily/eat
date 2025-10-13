@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.recycle.entity.RecycleOrder;
 import com.tutu.recycle.request.QueryOrderByIdRequest;
 import com.tutu.recycle.request.QueryOrderByIdentifyCodeRequest;
 import com.tutu.recycle.request.TransportOrderSubmitRequest;
+import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.request.ProcessingOrderSubmitRequest;
 import com.tutu.recycle.service.RecycleOrderService;
 

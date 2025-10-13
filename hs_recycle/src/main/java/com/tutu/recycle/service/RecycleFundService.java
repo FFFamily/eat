@@ -8,7 +8,7 @@ import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.entity.RecycleCapitalPool;
 import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.entity.RecycleFund;
-import com.tutu.recycle.entity.RecycleOrder;
+import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.enums.RecycleFundStatusEnum;
 import com.tutu.recycle.enums.RecycleMoneyDirectionEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;

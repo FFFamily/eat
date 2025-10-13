@@ -1,4 +1,4 @@
-package com.tutu.recycle.entity;
+package com.tutu.recycle.entity.order;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
