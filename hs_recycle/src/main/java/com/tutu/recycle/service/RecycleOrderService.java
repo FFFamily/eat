@@ -36,13 +36,8 @@ import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
@@ -52,7 +47,7 @@ import com.tutu.system.service.SysFileService;
 import com.tutu.system.utils.MessageUtil;
 
 import jakarta.annotation.Resource;
-import lombok.var;
+
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -127,6 +122,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             RecycleOrderItem orderItem = new RecycleOrderItem();
             BeanUtil.copyProperties(item, orderItem);
             orderItem.setRecycleOrderId(order.getId());
+            orderItem.setDirection("in");
             recycleOrderItemService.save(orderItem);
         }
     }
@@ -701,16 +697,38 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }
         Map<String,List<RecycleOrderTracePath>> result = new HashMap<>();
         // 先往上查询链路
+        recursiveQueryTrace(orderId, result);
+        // 遍历链路拿到所有的订单id
+        Set<String> orderIds = result.values().stream().flatMap(List::stream).map(RecycleOrderTracePath::getOrderId).collect(Collectors.toSet());
+        if (!orderIds.isEmpty()) {
+            // 根据id查询对应的订单
+            Map<String, RecycleOrder> orderMap = listByIds(orderIds).stream().collect(Collectors.toMap(RecycleOrder::getId, Function.identity()));
+            // 填充链路中的订单信息
+            result.values().forEach(paths -> paths.forEach(path -> {
+                path.setContext(RecycleOrderTracePath.Order.convert(orderMap.get(path.getOrderId())));
+            }));
+        }
+
+        return result;
+    }
+    /**
+     * 递归查询订单追溯链路
+     * @param orderId 订单ID
+     * @param result 结果映射
+     */
+    private void recursiveQueryTrace(String orderId, Map<String,List<RecycleOrderTracePath>> result) {
         // 拿到这个订单的上级
         List<RecycleOrderTrace> recycleOrderTraces = recycleOrderTraceService.getByOrderId(orderId);
-        Queue<RecycleOrderTrace> queue = new LinkedList<>(recycleOrderTraces);
-        while (!queue.isEmpty()) {
-            RecycleOrderTrace trace = queue.poll();
-            RecycleOrderTracePath path = new RecycleOrderTracePath();
-            path.setCurrent(trace);
-            path.setPrev(trace.getParentCode());
-            result.computeIfAbsent(trace.getParentCode(), k -> new ArrayList<>()).add(path);
+        // 递归查询链路
+        for (RecycleOrderTrace trace : recycleOrderTraces) {
+            if (trace.getParentCode() == null) {
+                continue;
+            }
+            String parentOrderId = trace.getParentOrderId();
+            result.putIfAbsent(parentOrderId, new ArrayList<>());
+            List<RecycleOrderTracePath> child = result.get(parentOrderId);
+            child.add(RecycleOrderTracePath.builder().orderId(orderId).build());
+            recursiveQueryTrace(parentOrderId, result);
         }
-        return null;
     }
 }

@@ -50,26 +50,20 @@ public class UserYearlyStatsService {
         if (year == null) {
             year = LocalDate.now().getYear();
         }
-
         UserYearlyStatsDto stats = new UserYearlyStatsDto();
         stats.setUserId(userId);
         stats.setYear(year);
-
         // 计算年份的开始和结束时间
         Date startTime = getYearStartTime(year);
         Date endTime = getYearEndTime(year);
-
-
         // 统计合同数量
         calculateContractStats(stats, userId, startTime, endTime);
         // 统计采购订单（已结算状态）
         calculatePurchaseOrderStats(stats, userId, startTime, endTime);
         // 统计发票
-        calculateInvoiceStats(stats, userId, startTime, endTime);   
-        
+        calculateInvoiceStats(stats, userId, startTime, endTime);
         // 统计月度数据
         calculateMonthlyStats(stats, userId, year);
-
         return stats;
     }
 
@@ -105,7 +99,6 @@ public class UserYearlyStatsService {
                 .eq(RecycleOrder::getType, RecycleOrderTypeEnum.PURCHASE.getCode())
                 .eq(RecycleOrder::getStatus, RecycleOrderStatusEnum.COMPLETED.getCode()) // 已结算状态
                 .between(RecycleOrder::getCreateTime, startTime, endTime);
-
         List<RecycleOrder> orders = recycleOrderService.list(wrapper);
         
         BigDecimal totalAmount = orders.stream()

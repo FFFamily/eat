@@ -4,6 +4,7 @@ package com.tutu.api.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.recycle.dto.RecycleOrderTracePath;
 import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.request.RecycleOrderQueryRequest;
 import com.tutu.recycle.request.recycle_order.CreateRecycleOrderRequest;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/recycle/order")
@@ -44,13 +46,12 @@ public class RecycleOrderController {
 
     /**
      * 订单追溯链路
-     * @param identifyCode 订单识别码
+     * @param orderId 订单识别码
      * @return 订单追溯链路
      */
-    @GetMapping("/trace/{identifyCode}")
-    public BaseResponse<List<RecycleOrderInfo>> getRecycleOrderTrace(@PathVariable String identifyCode) {
-        List<RecycleOrderInfo> recycleOrderInfos = recycleOrderService.getRecycleOrderTrace(identifyCode);
-        return BaseResponse.success(recycleOrderInfos);
+    @GetMapping("/trace/{orderId}")
+    public BaseResponse<Map<String, List<RecycleOrderTracePath>>> getRecycleOrderTrace(@PathVariable String orderId) {
+        return BaseResponse.success(recycleOrderService.getRecycleOrderTrace(orderId));
     }
 
     /**
