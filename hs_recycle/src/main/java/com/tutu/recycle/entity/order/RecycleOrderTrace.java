@@ -1,5 +1,7 @@
 package com.tutu.recycle.entity.order;
 
+import org.bouncycastle.cms.PasswordRecipient.PRF;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.tutu.common.entity.BaseEntity;
@@ -26,6 +28,18 @@ public class RecycleOrderTrace extends BaseEntity {
      * 父轨迹识别码
      */
     private String parentCode;
+    /**
+     * 父订单ID
+     */
+    private String parentOrderId;
+    /**
+     * 父订单编号
+     */
+    private String parentOrderNo;
+    /**
+     * 订单类型
+     */
+    private String parentOrderType;
     /**
      * 变更原因
      */

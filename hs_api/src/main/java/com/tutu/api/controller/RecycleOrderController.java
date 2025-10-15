@@ -43,6 +43,28 @@ public class RecycleOrderController {
     }
 
     /**
+     * 订单追溯链路
+     * @param identifyCode 订单识别码
+     * @return 订单追溯链路
+     */
+    @GetMapping("/trace/{identifyCode}")
+    public BaseResponse<List<RecycleOrderInfo>> getRecycleOrderTrace(@PathVariable String identifyCode) {
+        List<RecycleOrderInfo> recycleOrderInfos = recycleOrderService.getRecycleOrderTrace(identifyCode);
+        return BaseResponse.success(recycleOrderInfos);
+    }
+
+    /**
+     * 根据订单识别码查询对应的订单
+     * @param identifyCode 订单识别码
+     * @return 订单列表
+     */
+    @GetMapping("/identifyCode/{identifyCode}")
+    public BaseResponse<List<RecycleOrder>> getRecycleOrderByIdentifyCode(@PathVariable String identifyCode) {
+        List<RecycleOrder> recycleOrders = recycleOrderService.getByIdentifyCode(identifyCode);
+        return BaseResponse.success(recycleOrders);
+    }
+
+    /**
      * 获取订单二维码
      * @param orderId 订单ID
      */

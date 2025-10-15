@@ -5,6 +5,7 @@ import cn.binarywang.wx.miniapp.api.WxMaService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.recycle.dto.RecycleOrderTracePath;
 import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.entity.RecycleContractItem;
 import com.tutu.recycle.entity.order.RecycleOrder;
@@ -24,6 +25,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.db.sql.Query;
 
 import com.tutu.user.entity.Account;
 import com.tutu.user.enums.UserUseTypeEnum;
@@ -36,7 +38,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.stream.Collectors;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
@@ -172,6 +178,9 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             trace.setOrderId(recycleOrder.getId());
             trace.setParentCode(sourceCode.getIdentifyCode());
             trace.setChangeReason(sourceCode.getChangeReason());
+            trace.setParentOrderId(sourceCode.getOrderId());
+            trace.setParentOrderNo(sourceCode.getOrderNo());
+            trace.setParentOrderType(sourceCode.getOrderType());
             recycleOrderTraceService.save(trace);
         }
         return recycleOrder;
@@ -324,6 +333,9 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             SourceCode sourceCode = new SourceCode();
             sourceCode.setChangeReason(trace.getChangeReason());
             sourceCode.setIdentifyCode(trace.getParentCode());
+            sourceCode.setOrderId(trace.getParentOrderId());
+            sourceCode.setOrderNo(trace.getParentOrderNo());
+            sourceCode.setOrderType(trace.getParentOrderType());
             return sourceCode;
         }).collect(Collectors.toList()));
         
@@ -662,5 +674,43 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         wrapper.orderByDesc(RecycleOrder::getCreateTime);
         
         return page(page, wrapper);
+    }
+
+    /**
+     * 根据订单识别码查询订单信息
+     * @param identifyCode 订单识别码
+     * @return 订单信息
+     */
+    public List<RecycleOrder> getByIdentifyCode(String identifyCode) {
+        if (StrUtil.isBlank(identifyCode)) {
+            return null;
+        }
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>();
+        wrapper.eq(RecycleOrder::getIdentifyCode, identifyCode);
+        return list(wrapper);
+    }
+
+    /**
+     * 获取订单追溯链路
+     * @param orderId 订单ID
+     * @return 订单追溯链路
+     */
+    public Map<String,List<RecycleOrderTracePath>> getRecycleOrderTrace(String orderId) {
+        if (StrUtil.isBlank(orderId)) {
+            return null;
+        }
+        Map<String,List<RecycleOrderTracePath>> result = new HashMap<>();
+        // 先往上查询链路
+        // 拿到这个订单的上级
+        List<RecycleOrderTrace> recycleOrderTraces = recycleOrderTraceService.getByOrderId(orderId);
+        Queue<RecycleOrderTrace> queue = new LinkedList<>(recycleOrderTraces);
+        while (!queue.isEmpty()) {
+            RecycleOrderTrace trace = queue.poll();
+            RecycleOrderTracePath path = new RecycleOrderTracePath();
+            path.setCurrent(trace);
+            path.setPrev(trace.getParentCode());
+            result.computeIfAbsent(trace.getParentCode(), k -> new ArrayList<>()).add(path);
+        }
+        return null;
     }
 }
