@@ -1,18 +1,18 @@
 package com.tutu.common;
 
+import lombok.Getter;
+
 import java.util.*;
 
 /**
  * 有向图
  * @param <T> 图中节点的类型
  */
+@Getter
 public class DirectedGraph<T> {
     // 有向图的邻接表
     private Map<T, List<T>> graph;
 
-    public Map<T, List<T>> getGraph() {
-        return graph;
-    }
     /**
      * 初始化有向图
      * @return 有向图
