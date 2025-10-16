@@ -22,7 +22,14 @@ public class RecycleOrderTraceService extends ServiceImpl<RecycleOrderTraceMappe
     public List<RecycleOrderTrace> getByOrderId(String orderId) {
         return baseMapper.selectList(new LambdaQueryWrapper<RecycleOrderTrace>().eq(RecycleOrderTrace::getOrderId, orderId));
     }
-
+    /**
+     * 根据订单ID获取子订单轨迹列表
+     * @param orderId 订单ID
+     * @return 子订单轨迹列表
+     */
+    public List<RecycleOrderTrace> getChildrenByOrderId(String orderId) {
+        return baseMapper.selectList(new LambdaQueryWrapper<RecycleOrderTrace>().eq(RecycleOrderTrace::getParentOrderId, orderId));
+    }
     /**
      * 根据订单ID删除轨迹
      * @param orderId 订单ID

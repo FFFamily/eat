@@ -700,11 +700,13 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         RecycleOrderTraceResponse response = new RecycleOrderTraceResponse();
         DirectedGraph<RecycleOrderTracePath> result = DirectedGraph.init();
         // 先往上查询链路
-        recursiveQueryTrace(orderId, result);
+        recursiveQueryFormTrace(orderId, result);
         Map<String, List<RecycleOrderTracePath>> graph = new HashMap<>();
         result.getGraph().forEach((key, value) -> {
             graph.put(key.getOrderId(), value);
         });
+        // 往下查询当前节点能到达的地方
+        recursiveQueryToTrace(orderId, result);
         response.setGraph(graph);
 
         response.setPaths(result.layeredTopologicalSort());
@@ -730,7 +732,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param orderId 订单ID
      * @param result 结果映射
      */
-    private void recursiveQueryTrace(String orderId, DirectedGraph<RecycleOrderTracePath> result) {
+    private void recursiveQueryFormTrace(String orderId, DirectedGraph<RecycleOrderTracePath> result) {
         // 拿到这个订单的上级
         List<RecycleOrderTrace> recycleOrderTraces = recycleOrderTraceService.getByOrderId(orderId);
         // 递归查询链路
@@ -743,7 +745,24 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
                 RecycleOrderTracePath.builder().orderId(parentOrderId).build(), 
                 RecycleOrderTracePath.builder().orderId(orderId).build()
                 );
-            recursiveQueryTrace(parentOrderId, result);
+                recursiveQueryFormTrace(parentOrderId, result);
+        }
+    }
+    /**
+     * 递归查询订单追溯链路
+     * @param orderId 订单ID
+     * @param result 结果映射
+     */
+    private void recursiveQueryToTrace(String orderId, DirectedGraph<RecycleOrderTracePath> result) {
+        // 拿到这个订单的下级
+        List<RecycleOrderTrace> recycleOrderTraces = recycleOrderTraceService.getChildrenByOrderId(orderId);
+        // 递归查询链路
+        for (RecycleOrderTrace trace : recycleOrderTraces) {
+            result.addEdge(
+                RecycleOrderTracePath.builder().orderId(orderId).build(), 
+                RecycleOrderTracePath.builder().orderId(trace.getOrderId()).build()
+            );
+            recursiveQueryToTrace(trace.getOrderId(), result);
         }
     }
 }

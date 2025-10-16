@@ -1,8 +1,12 @@
 package com.tutu.recycle.dto;
 
+import java.util.Objects;
+
 import com.tutu.recycle.entity.order.RecycleOrder;
 
 import com.tutu.recycle.schema.RecycleOrderInfo;
+
+import cn.hutool.core.util.StrUtil;
 import lombok.Builder;
 import lombok.Data;
 
@@ -30,6 +34,22 @@ public class RecycleOrderTracePath {
             o.setIdentifyCode(order.getIdentifyCode());
             return o;
         }
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        RecycleOrderTracePath other = (RecycleOrderTracePath) obj;
+        return StrUtil.equals(this.orderId, other.orderId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orderId);
     }
 
 }
