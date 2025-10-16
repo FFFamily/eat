@@ -1,7 +1,6 @@
 package com.tutu.common;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 有向图
@@ -10,6 +9,10 @@ import java.util.stream.Collectors;
 public class DirectedGraph<T> {
     // 有向图的邻接表
     private Map<T, List<T>> graph;
+
+    public Map<T, List<T>> getGraph() {
+        return graph;
+    }
     /**
      * 初始化有向图
      * @return 有向图
@@ -85,32 +88,4 @@ public class DirectedGraph<T> {
         }
         return result;
     }
-
-    /**
-     * 根据子顶点获取整个邻接表
-     * @param vertex 子顶点
-     * @return 子图
-     */
-    public Map<T, List<T>> getGraphBySubVertex(T vertex){
-        Map<T, List<T>> result = new HashMap<>();
-        List<T> form = getReachableFrom(vertex);
-    }
-
-    /**
-     * 从指定节点出发，找出所有能到达的节点（前向推理）
-     */
-    public List<T> getReachableFrom(T vertex){
-        List<T> reachable = new ArrayList<>();
-        dfsReachable(vertex, reachable);
-        return reachable;
-    }
-    private void dfsReachable(T v, List<T> visited) {
-        if (visited.contains(v)) return;
-        visited.add(v);
-        for (T neighbor : getNeighbors(v)) {
-            dfsReachable(neighbor, visited);
-        }
-    }
-
-
 }

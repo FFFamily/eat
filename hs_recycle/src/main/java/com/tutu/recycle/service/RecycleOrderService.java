@@ -4,8 +4,10 @@ import cn.binarywang.wx.miniapp.api.WxMaService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tutu.common.DirectedGraph;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.dto.RecycleOrderTracePath;
+import com.tutu.recycle.dto.RecycleOrderTraceResponse;
 import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.entity.RecycleContractItem;
 import com.tutu.recycle.entity.order.RecycleOrder;
@@ -691,32 +693,44 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param orderId 订单ID
      * @return 订单追溯链路
      */
-    public Map<String,List<RecycleOrderTracePath>> getRecycleOrderTrace(String orderId) {
+    public RecycleOrderTraceResponse getRecycleOrderTrace(String orderId) {
         if (StrUtil.isBlank(orderId)) {
             return null;
         }
-        Map<String,List<RecycleOrderTracePath>> result = new HashMap<>();
+        RecycleOrderTraceResponse response = new RecycleOrderTraceResponse();
+        DirectedGraph<RecycleOrderTracePath> result = DirectedGraph.init();
         // 先往上查询链路
         recursiveQueryTrace(orderId, result);
+        Map<String, List<RecycleOrderTracePath>> graph = new HashMap<>();
+        result.getGraph().forEach((key, value) -> {
+            graph.put(key.getOrderId(), value);
+        });
+        response.setGraph(graph);
+
+        response.setPaths(result.layeredTopologicalSort());
         // 遍历链路拿到所有的订单id
-        Set<String> orderIds = result.values().stream().flatMap(List::stream).map(RecycleOrderTracePath::getOrderId).collect(Collectors.toSet());
+        Set<String> orderIds = response.getPaths().stream().flatMap(List::stream).map(RecycleOrderTracePath::getOrderId).collect(Collectors.toSet());
         if (!orderIds.isEmpty()) {
             // 根据id查询对应的订单
             Map<String, RecycleOrder> orderMap = listByIds(orderIds).stream().collect(Collectors.toMap(RecycleOrder::getId, Function.identity()));
             // 填充链路中的订单信息
-            result.values().forEach(paths -> paths.forEach(path -> {
+            response.getPaths().forEach(paths -> paths.forEach(path -> {
                 path.setContext(RecycleOrderTracePath.Order.convert(orderMap.get(path.getOrderId())));
             }));
+            response.getGraph().forEach((key, value) -> {
+                value.forEach(path -> {
+                    path.setContext(RecycleOrderTracePath.Order.convert(orderMap.get(path.getOrderId())));
+                });
+            });
         }
-
-        return result;
+        return response;
     }
     /**
      * 递归查询订单追溯链路
      * @param orderId 订单ID
      * @param result 结果映射
      */
-    private void recursiveQueryTrace(String orderId, Map<String,List<RecycleOrderTracePath>> result) {
+    private void recursiveQueryTrace(String orderId, DirectedGraph<RecycleOrderTracePath> result) {
         // 拿到这个订单的上级
         List<RecycleOrderTrace> recycleOrderTraces = recycleOrderTraceService.getByOrderId(orderId);
         // 递归查询链路
@@ -725,9 +739,10 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
                 continue;
             }
             String parentOrderId = trace.getParentOrderId();
-            result.putIfAbsent(parentOrderId, new ArrayList<>());
-            List<RecycleOrderTracePath> child = result.get(parentOrderId);
-            child.add(RecycleOrderTracePath.builder().orderId(orderId).build());
+            result.addEdge(
+                RecycleOrderTracePath.builder().orderId(parentOrderId).build(), 
+                RecycleOrderTracePath.builder().orderId(orderId).build()
+                );
             recursiveQueryTrace(parentOrderId, result);
         }
     }

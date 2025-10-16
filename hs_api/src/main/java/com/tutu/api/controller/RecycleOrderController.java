@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.dto.RecycleOrderTracePath;
+import com.tutu.recycle.dto.RecycleOrderTraceResponse;
 import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.request.RecycleOrderQueryRequest;
 import com.tutu.recycle.request.recycle_order.CreateRecycleOrderRequest;
@@ -50,7 +51,7 @@ public class RecycleOrderController {
      * @return 订单追溯链路
      */
     @GetMapping("/trace/{orderId}")
-    public BaseResponse<Map<String, List<RecycleOrderTracePath>>> getRecycleOrderTrace(@PathVariable String orderId) {
+    public BaseResponse<RecycleOrderTraceResponse> getRecycleOrderTrace(@PathVariable String orderId) {
         return BaseResponse.success(recycleOrderService.getRecycleOrderTrace(orderId));
     }
 
