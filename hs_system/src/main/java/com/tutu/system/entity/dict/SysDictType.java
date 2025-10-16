@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import java.util.List;
 
 /**
- * 字典类型实体
+ * 系统字典类型实体
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

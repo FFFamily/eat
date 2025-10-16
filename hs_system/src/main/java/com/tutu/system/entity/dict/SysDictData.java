@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 字典数据实体
+ * 系统字典数据实体
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

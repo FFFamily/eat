@@ -5,11 +5,14 @@ import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * 字典类型DTO
+ * 系统字典类型DTO
  */
 @Data
 public class SysDictTypeDTO {
     
+    /**
+     * 主键ID（更新时必填）
+     */
     private String id;
     
     /**

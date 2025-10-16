@@ -5,8 +5,8 @@ import com.tutu.system.entity.dict.SysDictType;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 字典类型Mapper接口
- * 使用MyBatis Plus方式，复杂查询在Service层实现
+ * 系统字典类型Mapper接口
+ * 使用MyBatis-Plus方式，复杂查询在Service层实现
  */
 @Mapper
 public interface SysDictTypeMapper extends BaseMapper<SysDictType> {

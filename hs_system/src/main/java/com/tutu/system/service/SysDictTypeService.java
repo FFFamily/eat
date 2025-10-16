@@ -18,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * 字典类型服务实现类 - 使用MyBatis Plus方式
+ * 系统字典类型服务实现类
+ * 使用MyBatis-Plus方式
  */
 @Service
 public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictType> {
@@ -28,6 +29,8 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
     
     /**
      * 根据字典类型查询字典类型信息
+     * @param dictType 字典类型
+     * @return 字典类型信息
      */
     public SysDictType findByDictType(String dictType) {
         LambdaQueryWrapper<SysDictType> queryWrapper = new LambdaQueryWrapper<>();
@@ -38,6 +41,10 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
     
     /**
      * 分页查询字典类型列表
+     * @param current 当前页
+     * @param size 每页大小
+     * @param keyword 关键字
+     * @return 分页结果
      */
     public IPage<SysDictType> getPageList(int current, int size, String keyword) {
         Page<SysDictType> page = new Page<>(current, size);
@@ -60,6 +67,8 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
     
     /**
      * 创建字典类型
+     * @param dictTypeDTO 字典类型DTO
+     * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean createDictType(SysDictTypeDTO dictTypeDTO) {
@@ -81,6 +90,8 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
     
     /**
      * 更新字典类型
+     * @param dictTypeDTO 字典类型DTO
+     * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean updateDictType(SysDictTypeDTO dictTypeDTO) {
@@ -107,6 +118,8 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
     
     /**
      * 删除字典类型
+     * @param id 字典类型ID
+     * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteDictType(String id) {
@@ -126,6 +139,8 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
     
     /**
      * 批量删除字典类型
+     * @param ids ID列表
+     * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean batchDeleteDictTypes(List<String> ids) {
@@ -143,6 +158,7 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
     
     /**
      * 查询所有启用的字典类型
+     * @return 字典类型列表
      */
     public List<SysDictType> findAllEnabled() {
         LambdaQueryWrapper<SysDictType> queryWrapper = new LambdaQueryWrapper<>();
@@ -150,14 +166,5 @@ public class SysDictTypeService extends ServiceImpl<SysDictTypeMapper, SysDictTy
                    .eq(SysDictType::getIsDeleted, CommonConstant.NO_STR)
                    .orderByDesc(SysDictType::getCreateTime);
         return list(queryWrapper);
-    }
-    
-    /**
-     * 刷新字典缓存
-     */
-    public void refreshCache() {
-        // 这里可以实现字典缓存刷新逻辑
-        // 比如清除Redis缓存等
-//        log.info("字典类型缓存已刷新");
     }
 }

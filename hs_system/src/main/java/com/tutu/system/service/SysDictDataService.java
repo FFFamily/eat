@@ -10,7 +10,6 @@ import com.tutu.common.constant.CommonConstant;
 import com.tutu.system.dto.SysDictDataDTO;
 import com.tutu.system.entity.dict.SysDictData;
 import com.tutu.system.mapper.SysDictDataMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,14 +18,16 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 字典数据服务实现类 - 使用MyBatis Plus方式
+ * 系统字典数据服务实现类
+ * 使用MyBatis-Plus方式
  */
-@Slf4j
 @Service
 public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictData> {
     
     /**
      * 根据字典类型查询字典数据
+     * @param dictType 字典类型
+     * @return 字典数据列表
      */
     public List<SysDictData> findByDictType(String dictType) {
         LambdaQueryWrapper<SysDictData> queryWrapper = new LambdaQueryWrapper<>();
@@ -40,6 +41,9 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 根据字典类型和字典值查询字典标签
+     * @param dictType 字典类型
+     * @param dictValue 字典值
+     * @return 字典标签
      */
     public String getDictLabel(String dictType, String dictValue) {
         LambdaQueryWrapper<SysDictData> queryWrapper = new LambdaQueryWrapper<>();
@@ -54,6 +58,9 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 根据字典类型和字典标签查询字典值
+     * @param dictType 字典类型
+     * @param dictLabel 字典标签
+     * @return 字典值
      */
     public String getDictValue(String dictType, String dictLabel) {
         LambdaQueryWrapper<SysDictData> queryWrapper = new LambdaQueryWrapper<>();
@@ -68,6 +75,11 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 分页查询字典数据列表
+     * @param current 当前页
+     * @param size 每页大小
+     * @param dictType 字典类型
+     * @param keyword 关键字
+     * @return 分页结果
      */
     public IPage<SysDictData> getPageList(int current, int size, String dictType, String keyword) {
         Page<SysDictData> page = new Page<>(current, size);
@@ -97,6 +109,8 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 创建字典数据
+     * @param dictDataDTO 字典数据DTO
+     * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean createDictData(SysDictDataDTO dictDataDTO) {
@@ -129,6 +143,8 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 更新字典数据
+     * @param dictDataDTO 字典数据DTO
+     * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean updateDictData(SysDictDataDTO dictDataDTO) {
@@ -156,6 +172,8 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 删除字典数据
+     * @param id 字典数据ID
+     * @return 是否成功
      */
     public boolean deleteDictData(String id) {
         return removeById(id);
@@ -163,6 +181,8 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 批量删除字典数据
+     * @param ids ID列表
+     * @return 是否成功
      */
     public boolean batchDeleteDictData(List<String> ids) {
         return removeByIds(ids);
@@ -170,6 +190,8 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 根据字典类型删除字典数据
+     * @param dictType 字典类型
+     * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteByDictType(String dictType) {
@@ -183,6 +205,8 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
     
     /**
      * 设置默认字典数据
+     * @param id 字典数据ID
+     * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean setDefault(String id) {
@@ -205,14 +229,5 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
                     .set(SysDictData::getUpdateTime, new Date());
         
         return update(updateWrapper);
-    }
-    
-    /**
-     * 刷新字典缓存
-     */
-    public void refreshCache() {
-        // 这里可以实现字典缓存刷新逻辑
-        // 比如清除Redis缓存等
-        log.info("字典数据缓存已刷新");
     }
 }

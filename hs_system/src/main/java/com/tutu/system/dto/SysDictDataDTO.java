@@ -1,15 +1,18 @@
 package com.tutu.system.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import jakarta.validation.constraints.NotBlank;
 
 /**
- * 字典数据DTO
+ * 系统字典数据DTO
  */
 @Data
 public class SysDictDataDTO {
     
+    /**
+     * 主键ID（更新时必填）
+     */
     private String id;
     
     /**
