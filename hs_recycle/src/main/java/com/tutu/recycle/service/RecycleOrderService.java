@@ -701,20 +701,20 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         DirectedGraph<RecycleOrderTracePath> result = DirectedGraph.init();
         // 先往上查询链路
         recursiveQueryFormTrace(orderId, result);
+        // 往下查询当前节点能到达的地方
+        recursiveQueryToTrace(orderId, result);
         Map<String, List<RecycleOrderTracePath>> graph = new HashMap<>();
         result.getGraph().forEach((key, value) -> {
             graph.put(key.getOrderId(), value);
         });
-        // 往下查询当前节点能到达的地方
-        recursiveQueryToTrace(orderId, result);
         response.setGraph(graph);
-
         response.setPaths(result.layeredTopologicalSort());
         // 遍历链路拿到所有的订单id
         Set<String> orderIds = response.getPaths().stream().flatMap(List::stream).map(RecycleOrderTracePath::getOrderId).collect(Collectors.toSet());
         if (!orderIds.isEmpty()) {
             // 根据id查询对应的订单
-            Map<String, RecycleOrder> orderMap = listByIds(orderIds).stream().collect(Collectors.toMap(RecycleOrder::getId, Function.identity()));
+            List<RecycleOrder> allOrders = listByIds(orderIds);
+            Map<String, RecycleOrder> orderMap = allOrders.stream().collect(Collectors.toMap(RecycleOrder::getId, Function.identity()));
             // 填充链路中的订单信息
             response.getPaths().forEach(paths -> paths.forEach(path -> {
                 path.setContext(RecycleOrderTracePath.Order.convert(orderMap.get(path.getOrderId())));
@@ -724,6 +724,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
                     path.setContext(RecycleOrderTracePath.Order.convert(orderMap.get(path.getOrderId())));
                 });
             });
+            response.setAllOrders(allOrders);
         }
         return response;
     }
@@ -743,7 +744,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             String parentOrderId = trace.getParentOrderId();
             result.addEdge(
                 RecycleOrderTracePath.builder().orderId(parentOrderId).build(), 
-                RecycleOrderTracePath.builder().orderId(orderId).build()
+                RecycleOrderTracePath.builder().orderId(orderId).changeReason(trace.getChangeReason()).build()
                 );
                 recursiveQueryFormTrace(parentOrderId, result);
         }
@@ -759,7 +760,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         // 递归查询链路
         for (RecycleOrderTrace trace : recycleOrderTraces) {
             result.addEdge(
-                RecycleOrderTracePath.builder().orderId(orderId).build(), 
+                RecycleOrderTracePath.builder().orderId(orderId).changeReason(trace.getChangeReason()).build(), 
                 RecycleOrderTracePath.builder().orderId(trace.getOrderId()).build()
             );
             recursiveQueryToTrace(trace.getOrderId(), result);

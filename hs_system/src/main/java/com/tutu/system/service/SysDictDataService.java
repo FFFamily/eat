@@ -33,7 +33,6 @@ public class SysDictDataService extends ServiceImpl<SysDictDataMapper, SysDictDa
         LambdaQueryWrapper<SysDictData> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SysDictData::getDictType, dictType)
                    .eq(SysDictData::getStatus, 1)
-                   .eq(SysDictData::getIsDeleted, CommonConstant.NO_STR)
                    .orderByAsc(SysDictData::getDictSort)
                    .orderByDesc(SysDictData::getCreateTime);
         return list(queryWrapper);

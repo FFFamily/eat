@@ -97,7 +97,7 @@ public class SysDictDataController {
      * @param dictDataDTO 字典数据DTO
      * @return 创建结果
      */
-    @PostMapping
+    @PostMapping("/create")
     public BaseResponse<String> createDictData(@Valid @RequestBody SysDictDataDTO dictDataDTO) {
         try {
             boolean result = sysDictDataService.createDictData(dictDataDTO);
@@ -116,7 +116,7 @@ public class SysDictDataController {
      * @param dictDataDTO 字典数据DTO
      * @return 更新结果
      */
-    @PutMapping
+    @PutMapping("/update")
     public BaseResponse<String> updateDictData(@Valid @RequestBody SysDictDataDTO dictDataDTO) {
         try {
             boolean result = sysDictDataService.updateDictData(dictDataDTO);
@@ -135,7 +135,7 @@ public class SysDictDataController {
      * @param id 字典数据ID
      * @return 删除结果
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public BaseResponse<String> deleteDictData(@PathVariable String id) {
         try {
             boolean result = sysDictDataService.deleteDictData(id);

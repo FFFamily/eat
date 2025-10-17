@@ -15,9 +15,10 @@ import lombok.Data;
 public class RecycleOrderTracePath {
     // 对应订单ID
     private String orderId;
+    // 改变原因
+    private String changeReason;
     // 对应订单
     private Order context;
-
     @Data
     public static class Order{
         // 订单编号
@@ -26,7 +27,6 @@ public class RecycleOrderTracePath {
         private String type;
         // 订单识别码
         private String identifyCode;
-
         public static Order convert(RecycleOrder order){
             Order o = new Order();
             o.setNo(order.getNo());

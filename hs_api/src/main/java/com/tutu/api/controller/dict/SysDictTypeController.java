@@ -80,7 +80,7 @@ public class SysDictTypeController {
      * @param dictTypeDTO 字典类型DTO
      * @return 创建结果
      */
-    @PostMapping
+    @PostMapping("/create")
     public BaseResponse<String> createDictType(@Valid @RequestBody SysDictTypeDTO dictTypeDTO) {
         try {
             boolean result = sysDictTypeService.createDictType(dictTypeDTO);
@@ -118,7 +118,7 @@ public class SysDictTypeController {
      * @param id 字典类型ID
      * @return 删除结果
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public BaseResponse<String> deleteDictType(@PathVariable String id) {
         try {
             boolean result = sysDictTypeService.deleteDictType(id);
