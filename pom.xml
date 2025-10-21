@@ -23,6 +23,7 @@
         <module>hs_invoice</module>
         <module>hs_recycle</module>
         <module>hs_lease</module>
+        <module>hs_inventory</module>
     </modules>
     <packaging>pom</packaging>
     <properties>
