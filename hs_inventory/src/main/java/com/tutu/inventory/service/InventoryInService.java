@@ -10,6 +10,7 @@ import com.tutu.common.exceptions.ServiceException;
 import com.tutu.inventory.dto.InventoryInRequest;
 import com.tutu.inventory.entity.InventoryIn;
 import com.tutu.inventory.entity.InventoryInItem;
+import com.tutu.inventory.entity.Warehouse;
 import com.tutu.inventory.enums.InventoryBusinessTypeEnum;
 import com.tutu.inventory.enums.InventoryStatusEnum;
 import com.tutu.inventory.enums.InventoryTransactionTypeEnum;
@@ -36,6 +37,9 @@ public class InventoryInService extends ServiceImpl<InventoryInMapper, Inventory
     
     @Resource
     private InventoryTransactionService inventoryTransactionService;
+    
+    @Resource
+    private WarehouseService warehouseService;
     
     /**
      * 创建入库单
@@ -179,7 +183,21 @@ public class InventoryInService extends ServiceImpl<InventoryInMapper, Inventory
         
         wrapper.orderByDesc(InventoryIn::getCreateTime);
         
-        return page(new Page<>(page, size), wrapper);
+        Page<InventoryIn> result = page(new Page<>(page, size), wrapper);
+        
+        // 填充仓库名称
+        if (CollUtil.isNotEmpty(result.getRecords())) {
+            for (InventoryIn inventoryIn : result.getRecords()) {
+                if (StrUtil.isNotBlank(inventoryIn.getWarehouseId())) {
+                    Warehouse warehouse = warehouseService.getById(inventoryIn.getWarehouseId());
+                    if (warehouse != null) {
+                        inventoryIn.setWarehouseName(warehouse.getWarehouseName());
+                    }
+                }
+            }
+        }
+        
+        return result;
     }
     
     /**
