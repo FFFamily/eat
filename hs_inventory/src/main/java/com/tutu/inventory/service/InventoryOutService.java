@@ -2,7 +2,6 @@ package com.tutu.inventory.service;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -71,6 +70,7 @@ public class InventoryOutService extends ServiceImpl<InventoryOutMapper, Invento
         for (InventoryOutRequest.InventoryOutItemRequest itemRequest : request.getItems()) {
             InventoryOutItem item = new InventoryOutItem();
             item.setOutId(inventoryOut.getId());
+            item.setGoodId(itemRequest.getGoodId());
             item.setGoodNo(itemRequest.getGoodNo());
             item.setGoodName(itemRequest.getGoodName());
             item.setGoodType(itemRequest.getGoodType());
@@ -119,6 +119,7 @@ public class InventoryOutService extends ServiceImpl<InventoryOutMapper, Invento
             // 记录库存流水（出库数量记为负数）
             inventoryTransactionService.recordTransaction(
                 inventoryOut.getWarehouseId(),
+                item.getGoodId(),
                 item.getGoodNo(),
                 item.getGoodName(),
                 InventoryTransactionTypeEnum.OUT.getCode(),
@@ -158,24 +159,8 @@ public class InventoryOutService extends ServiceImpl<InventoryOutMapper, Invento
      */
     public Page<InventoryOut> pageInventoryOut(Integer page, Integer size, String warehouseId, 
                                                String outType, String status, String outNo) {
-        LambdaQueryWrapper<InventoryOut> wrapper = new LambdaQueryWrapper<>();
-        
-        if (StrUtil.isNotBlank(warehouseId)) {
-            wrapper.eq(InventoryOut::getWarehouseId, warehouseId);
-        }
-        if (StrUtil.isNotBlank(outType)) {
-            wrapper.eq(InventoryOut::getOutType, outType);
-        }
-        if (StrUtil.isNotBlank(status)) {
-            wrapper.eq(InventoryOut::getStatus, status);
-        }
-        if (StrUtil.isNotBlank(outNo)) {
-            wrapper.like(InventoryOut::getOutNo, outNo);
-        }
-        
-        wrapper.orderByDesc(InventoryOut::getCreateTime);
-        
-        return page(new Page<>(page, size), wrapper);
+        Page<InventoryOut> pageParam = new Page<>(page, size);
+        return baseMapper.pageInventoryOutWithWarehouse(pageParam, warehouseId, outType, status, outNo);
     }
     
     /**

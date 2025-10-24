@@ -54,6 +54,11 @@ public class InventoryInRequest {
     @Setter
     public static class InventoryInItemRequest {
         /**
+         * 货物ID
+         */
+        private String goodId;
+        
+        /**
          * 货物编号
          */
         private String goodNo;

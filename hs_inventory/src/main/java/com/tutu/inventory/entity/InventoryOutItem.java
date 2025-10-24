@@ -31,6 +31,12 @@ public class InventoryOutItem extends BaseEntity {
     private String outId;
     
     /**
+     * 货物ID
+     */
+    @TableField("good_id")
+    private String goodId;
+    
+    /**
      * 货物编号
      */
     @TableField("good_no")

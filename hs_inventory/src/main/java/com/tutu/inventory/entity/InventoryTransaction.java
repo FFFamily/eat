@@ -39,6 +39,12 @@ public class InventoryTransaction extends BaseEntity {
     private String warehouseId;
     
     /**
+     * 货物ID
+     */
+    @TableField("good_id")
+    private String goodId;
+    
+    /**
      * 货物编号
      */
     @TableField("good_no")

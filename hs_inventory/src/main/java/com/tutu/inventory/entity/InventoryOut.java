@@ -92,5 +92,11 @@ public class InventoryOut extends BaseEntity {
      */
     @TableField("remark")
     private String remark;
+    
+    /**
+     * 仓库名称（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String warehouseName;
 }
 

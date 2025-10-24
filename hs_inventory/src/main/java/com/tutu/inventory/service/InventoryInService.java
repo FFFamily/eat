@@ -2,7 +2,6 @@ package com.tutu.inventory.service;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,7 +9,6 @@ import com.tutu.common.exceptions.ServiceException;
 import com.tutu.inventory.dto.InventoryInRequest;
 import com.tutu.inventory.entity.InventoryIn;
 import com.tutu.inventory.entity.InventoryInItem;
-import com.tutu.inventory.entity.Warehouse;
 import com.tutu.inventory.enums.InventoryBusinessTypeEnum;
 import com.tutu.inventory.enums.InventoryStatusEnum;
 import com.tutu.inventory.enums.InventoryTransactionTypeEnum;
@@ -75,6 +73,7 @@ public class InventoryInService extends ServiceImpl<InventoryInMapper, Inventory
         for (InventoryInRequest.InventoryInItemRequest itemRequest : request.getItems()) {
             InventoryInItem item = new InventoryInItem();
             item.setInId(inventoryIn.getId());
+            item.setGoodId(itemRequest.getGoodId());
             item.setGoodNo(itemRequest.getGoodNo());
             item.setGoodName(itemRequest.getGoodName());
             item.setGoodType(itemRequest.getGoodType());
@@ -127,6 +126,7 @@ public class InventoryInService extends ServiceImpl<InventoryInMapper, Inventory
             // 记录库存流水
             inventoryTransactionService.recordTransaction(
                 inventoryIn.getWarehouseId(),
+                item.getGoodId(),
                 item.getGoodNo(),
                 item.getGoodName(),
                 InventoryTransactionTypeEnum.IN.getCode(),
@@ -166,38 +166,8 @@ public class InventoryInService extends ServiceImpl<InventoryInMapper, Inventory
      */
     public Page<InventoryIn> pageInventoryIn(Integer page, Integer size, String warehouseId, 
                                             String inType, String status, String inNo) {
-        LambdaQueryWrapper<InventoryIn> wrapper = new LambdaQueryWrapper<>();
-        
-        if (StrUtil.isNotBlank(warehouseId)) {
-            wrapper.eq(InventoryIn::getWarehouseId, warehouseId);
-        }
-        if (StrUtil.isNotBlank(inType)) {
-            wrapper.eq(InventoryIn::getInType, inType);
-        }
-        if (StrUtil.isNotBlank(status)) {
-            wrapper.eq(InventoryIn::getStatus, status);
-        }
-        if (StrUtil.isNotBlank(inNo)) {
-            wrapper.like(InventoryIn::getInNo, inNo);
-        }
-        
-        wrapper.orderByDesc(InventoryIn::getCreateTime);
-        
-        Page<InventoryIn> result = page(new Page<>(page, size), wrapper);
-        
-        // 填充仓库名称
-        if (CollUtil.isNotEmpty(result.getRecords())) {
-            for (InventoryIn inventoryIn : result.getRecords()) {
-                if (StrUtil.isNotBlank(inventoryIn.getWarehouseId())) {
-                    Warehouse warehouse = warehouseService.getById(inventoryIn.getWarehouseId());
-                    if (warehouse != null) {
-                        inventoryIn.setWarehouseName(warehouse.getWarehouseName());
-                    }
-                }
-            }
-        }
-        
-        return result;
+        Page<InventoryIn> pageParam = new Page<>(page, size);
+        return baseMapper.pageInventoryInWithWarehouse(pageParam, warehouseId, inType, status, inNo);
     }
     
     /**

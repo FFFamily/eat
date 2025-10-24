@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.inventory.mapper.InventoryOutMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="InventoryOutWithWarehouseMap" type="com.tutu.inventory.entity.InventoryOut">
+        <id column="id" property="id"/>
+        <result column="out_no" property="outNo"/>
+        <result column="warehouse_id" property="warehouseId"/>
+        <result column="out_type" property="outType"/>
+        <result column="target_order_id" property="targetOrderId"/>
+        <result column="target_order_no" property="targetOrderNo"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="out_time" property="outTime"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="operator_name" property="operatorName"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="warehouse_name" property="warehouseName"/>
+    </resultMap>
+
+    <!-- 分页查询出库单（带仓库名称） -->
+    <select id="pageInventoryOutWithWarehouse" resultMap="InventoryOutWithWarehouseMap">
+        SELECT
+            o.id,
+            o.out_no,
+            o.warehouse_id,
+            o.out_type,
+            o.target_order_id,
+            o.target_order_no,
+            o.total_quantity,
+            o.out_time,
+            o.operator_id,
+            o.operator_name,
+            o.status,
+            o.remark,
+            o.create_time,
+            o.update_time,
+            o.create_by,
+            o.update_by,
+            w.warehouse_name
+        FROM
+            inventory_out o
+        LEFT JOIN
+            warehouse w ON o.warehouse_id = w.id
+        <where>
+            <if test="warehouseId != null and warehouseId != ''">
+                AND o.warehouse_id = #{warehouseId}
+            </if>
+            <if test="outType != null and outType != ''">
+                AND o.out_type = #{outType}
+            </if>
+            <if test="status != null and status != ''">
+                AND o.status = #{status}
+            </if>
+            <if test="outNo != null and outNo != ''">
+                AND o.out_no LIKE CONCAT('%', #{outNo}, '%')
+            </if>
+        </where>
+        ORDER BY o.create_time DESC
+    </select>
+
+</mapper>
+

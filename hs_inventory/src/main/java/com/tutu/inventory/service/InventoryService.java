@@ -150,30 +150,8 @@ public class InventoryService extends ServiceImpl<InventoryMapper, Inventory> {
      * 分页查询库存
      */
     public Page<Inventory> pageInventory(InventoryQueryRequest request) {
-        LambdaQueryWrapper<Inventory> wrapper = new LambdaQueryWrapper<>();
-        
-        if (StrUtil.isNotBlank(request.getWarehouseId())) {
-            wrapper.eq(Inventory::getWarehouseId, request.getWarehouseId());
-        }
-        if (StrUtil.isNotBlank(request.getGoodNo())) {
-            wrapper.eq(Inventory::getGoodNo, request.getGoodNo());
-        }
-        if (StrUtil.isNotBlank(request.getGoodName())) {
-            wrapper.like(Inventory::getGoodName, request.getGoodName());
-        }
-        if (StrUtil.isNotBlank(request.getGoodType())) {
-            wrapper.eq(Inventory::getGoodType, request.getGoodType());
-        }
-        
-        // 只查询预警库存
-        if (request.getWarningOnly() != null && request.getWarningOnly()) {
-            wrapper.and(w -> w.le(Inventory::getCurrentStock, 
-                w.nested(n -> n.isNotNull(Inventory::getMinStock))));
-        }
-        
-        wrapper.orderByDesc(Inventory::getUpdateTime);
-        
-        return page(new Page<>(request.getPage(), request.getSize()), wrapper);
+        Page<Inventory> page = new Page<>(request.getPage(), request.getSize());
+        return baseMapper.pageInventoryWithWarehouse(page, request);
     }
     
     /**

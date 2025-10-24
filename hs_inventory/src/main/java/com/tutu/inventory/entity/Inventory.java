@@ -105,5 +105,11 @@ public class Inventory extends BaseEntity {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @TableField("last_out_time")
     private Date lastOutTime;
+    
+    /**
+     * 仓库名称（非数据库字段）
+     */
+    @TableField(exist = false)
+    private String warehouseName;
 }
 

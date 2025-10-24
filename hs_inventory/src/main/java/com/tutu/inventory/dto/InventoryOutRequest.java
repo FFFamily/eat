@@ -54,6 +54,11 @@ public class InventoryOutRequest {
     @Setter
     public static class InventoryOutItemRequest {
         /**
+         * 货物ID
+         */
+        private String goodId;
+        
+        /**
          * 货物编号
          */
         private String goodNo;

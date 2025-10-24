@@ -33,11 +33,24 @@ public class InventoryTransactionController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String warehouseId,
+            @RequestParam(required = false) String goodId,
             @RequestParam(required = false) String goodNo,
             @RequestParam(required = false) String transactionType,
             @RequestParam(required = false) String businessType) {
         return BaseResponse.success(inventoryTransactionService.pageTransaction(
-            page, size, warehouseId, goodNo, transactionType, businessType));
+            page, size, warehouseId, goodId, goodNo, transactionType, businessType));
+    }
+    
+    /**
+     * 根据货物ID查询所有流水
+     */
+    @GetMapping("/listByGoodId/{goodId}")
+    public BaseResponse<Page<InventoryTransaction>> listByGoodId(
+            @PathVariable String goodId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        return BaseResponse.success(inventoryTransactionService.pageTransaction(
+            page, size, null, goodId, null, null, null));
     }
 }
 

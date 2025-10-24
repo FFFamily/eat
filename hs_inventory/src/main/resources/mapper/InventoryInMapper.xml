@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.inventory.mapper.InventoryInMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="InventoryInWithWarehouseMap" type="com.tutu.inventory.entity.InventoryIn">
+        <id column="id" property="id"/>
+        <result column="in_no" property="inNo"/>
+        <result column="warehouse_id" property="warehouseId"/>
+        <result column="in_type" property="inType"/>
+        <result column="source_order_id" property="sourceOrderId"/>
+        <result column="source_order_no" property="sourceOrderNo"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="in_time" property="inTime"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="operator_name" property="operatorName"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="warehouse_name" property="warehouseName"/>
+    </resultMap>
+
+    <!-- 分页查询入库单（带仓库名称） -->
+    <select id="pageInventoryInWithWarehouse" resultMap="InventoryInWithWarehouseMap">
+        SELECT
+            i.id,
+            i.in_no,
+            i.warehouse_id,
+            i.in_type,
+            i.source_order_id,
+            i.source_order_no,
+            i.total_quantity,
+            i.in_time,
+            i.operator_id,
+            i.operator_name,
+            i.status,
+            i.remark,
+            i.create_time,
+            i.update_time,
+            i.create_by,
+            i.update_by,
+            w.warehouse_name
+        FROM
+            inventory_in i
+        LEFT JOIN
+            warehouse w ON i.warehouse_id = w.id
+        <where>
+            <if test="warehouseId != null and warehouseId != ''">
+                AND i.warehouse_id = #{warehouseId}
+            </if>
+            <if test="inType != null and inType != ''">
+                AND i.in_type = #{inType}
+            </if>
+            <if test="status != null and status != ''">
+                AND i.status = #{status}
+            </if>
+            <if test="inNo != null and inNo != ''">
+                AND i.in_no LIKE CONCAT('%', #{inNo}, '%')
+            </if>
+        </where>
+        ORDER BY i.create_time DESC
+    </select>
+
+</mapper>
+

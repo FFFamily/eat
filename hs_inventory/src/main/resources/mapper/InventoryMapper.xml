@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.inventory.mapper.InventoryMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="InventoryWithWarehouseMap" type="com.tutu.inventory.entity.Inventory">
+        <id column="id" property="id"/>
+        <result column="warehouse_id" property="warehouseId"/>
+        <result column="good_no" property="goodNo"/>
+        <result column="good_name" property="goodName"/>
+        <result column="good_type" property="goodType"/>
+        <result column="good_model" property="goodModel"/>
+        <result column="current_stock" property="currentStock"/>
+        <result column="available_stock" property="availableStock"/>
+        <result column="locked_stock" property="lockedStock"/>
+        <result column="min_stock" property="minStock"/>
+        <result column="max_stock" property="maxStock"/>
+        <result column="unit" property="unit"/>
+        <result column="last_in_time" property="lastInTime"/>
+        <result column="last_out_time" property="lastOutTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="warehouse_name" property="warehouseName"/>
+    </resultMap>
+
+    <!-- 分页查询库存（带仓库名称） -->
+    <select id="pageInventoryWithWarehouse" resultMap="InventoryWithWarehouseMap">
+        SELECT
+            i.id,
+            i.warehouse_id,
+            i.good_no,
+            i.good_name,
+            i.good_type,
+            i.good_model,
+            i.current_stock,
+            i.available_stock,
+            i.locked_stock,
+            i.min_stock,
+            i.max_stock,
+            i.unit,
+            i.last_in_time,
+            i.last_out_time,
+            i.create_time,
+            i.update_time,
+            i.create_by,
+            i.update_by,
+            w.warehouse_name
+        FROM
+            inventory i
+        LEFT JOIN
+            warehouse w ON i.warehouse_id = w.id
+        <where>
+            <if test="request.warehouseId != null and request.warehouseId != ''">
+                AND i.warehouse_id = #{request.warehouseId}
+            </if>
+            <if test="request.goodNo != null and request.goodNo != ''">
+                AND i.good_no = #{request.goodNo}
+            </if>
+            <if test="request.goodName != null and request.goodName != ''">
+                AND i.good_name LIKE CONCAT('%', #{request.goodName}, '%')
+            </if>
+            <if test="request.goodType != null and request.goodType != ''">
+                AND i.good_type = #{request.goodType}
+            </if>
+            <if test="request.warningOnly != null and request.warningOnly == true">
+                AND i.min_stock IS NOT NULL
+                AND i.current_stock &lt;= i.min_stock
+            </if>
+        </where>
+        ORDER BY i.update_time DESC
+    </select>
+
+</mapper>
+

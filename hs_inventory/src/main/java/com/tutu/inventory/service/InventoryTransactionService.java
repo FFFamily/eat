@@ -26,7 +26,7 @@ public class InventoryTransactionService extends ServiceImpl<InventoryTransactio
     /**
      * 记录库存流水
      */
-    public void recordTransaction(String warehouseId, String goodNo, String goodName,
+    public void recordTransaction(String warehouseId, String goodId, String goodNo, String goodName,
                                   String transactionType, String businessType, BigDecimal quantity,
                                   String relatedNo, String operatorId, String operatorName) {
         // 获取当前库存
@@ -45,6 +45,7 @@ public class InventoryTransactionService extends ServiceImpl<InventoryTransactio
         InventoryTransaction transaction = new InventoryTransaction();
         transaction.setTransactionNo(generateTransactionNo());
         transaction.setWarehouseId(warehouseId);
+        transaction.setGoodId(goodId);
         transaction.setGoodNo(goodNo);
         transaction.setGoodName(goodName);
         transaction.setTransactionType(transactionType);
@@ -64,11 +65,14 @@ public class InventoryTransactionService extends ServiceImpl<InventoryTransactio
      * 分页查询库存流水
      */
     public Page<InventoryTransaction> pageTransaction(Integer page, Integer size, String warehouseId,
-                                                     String goodNo, String transactionType, String businessType) {
+                                                     String goodId, String goodNo, String transactionType, String businessType) {
         LambdaQueryWrapper<InventoryTransaction> wrapper = new LambdaQueryWrapper<>();
         
         if (StrUtil.isNotBlank(warehouseId)) {
             wrapper.eq(InventoryTransaction::getWarehouseId, warehouseId);
+        }
+        if (StrUtil.isNotBlank(goodId)) {
+            wrapper.eq(InventoryTransaction::getGoodId, goodId);
         }
         if (StrUtil.isNotBlank(goodNo)) {
             wrapper.eq(InventoryTransaction::getGoodNo, goodNo);
