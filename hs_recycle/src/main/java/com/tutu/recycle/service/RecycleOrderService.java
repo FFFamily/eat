@@ -15,6 +15,7 @@ import com.tutu.recycle.entity.order.RecycleOrderItem;
 import com.tutu.recycle.entity.order.RecycleOrderTrace;
 import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
+import com.tutu.recycle.enums.RecycleFlowDirectionEnum;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
 import com.tutu.recycle.request.ProcessingOrderSubmitRequest;
 import com.tutu.recycle.request.RecycleOrderQueryRequest;
@@ -686,6 +687,39 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>();
         wrapper.eq(RecycleOrder::getIdentifyCode, identifyCode);
         return list(wrapper);
+    }
+
+    /**
+     * 分页查询仓储入库订单
+     * @param page 分页对象
+     * @param queryRequest 查询请求参数
+     * @return 分页结果
+     */
+    public com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> getStorageInboundOrdersByPage(
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> page,
+            RecycleOrderQueryRequest queryRequest) {
+        
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<RecycleOrder>();
+        
+        // 固定查询条件：订单类型为仓储订单，流转方向为入库
+        wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.STORAGE.getCode())
+               .eq(RecycleOrder::getFlowDirection, RecycleFlowDirectionEnum.IN.getValue());
+        
+        // 添加其他查询条件
+        if (StrUtil.isNotBlank(queryRequest.getStatus())) {
+            wrapper.eq(RecycleOrder::getStatus, queryRequest.getStatus());
+        }
+        if (StrUtil.isNotBlank(queryRequest.getIdentifyCode())) {
+            wrapper.like(RecycleOrder::getIdentifyCode, queryRequest.getIdentifyCode());
+        }
+        if (StrUtil.isNotBlank(queryRequest.getContractPartner())) {
+            wrapper.like(RecycleOrder::getContractPartner, queryRequest.getContractPartner());
+        }
+        
+        // 按创建时间倒序排列
+        wrapper.orderByDesc(RecycleOrder::getCreateTime);
+        
+        return page(page, wrapper);
     }
 
     /**

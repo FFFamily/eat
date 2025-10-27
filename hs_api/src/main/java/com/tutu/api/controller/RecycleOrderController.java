@@ -165,4 +165,16 @@ public class RecycleOrderController {
         recycleOrderService.applicationOrder(orderId, applicationPdfUrl);
         return BaseResponse.success();
     }
+
+    /**
+     * 分页查询仓储入库订单
+     * @param queryRequest 查询请求参数
+     * @return 分页结果
+     */
+    @PostMapping("/storage/inbound/page")
+    public BaseResponse<IPage<RecycleOrder>> getStorageInboundOrdersByPage(@RequestBody RecycleOrderQueryRequest queryRequest) {
+        Page<RecycleOrder> ipage = new Page<>(queryRequest.getPage(), queryRequest.getSize());
+        Page<RecycleOrder> result = recycleOrderService.getStorageInboundOrdersByPage(ipage, queryRequest);
+        return BaseResponse.success(result);
+    }
 }
