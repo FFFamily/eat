@@ -668,7 +668,10 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isNotBlank(queryRequest.getContractPartner())) {
             wrapper.like(RecycleOrder::getContractPartner, queryRequest.getContractPartner());
         }
-        
+        if (StrUtil.isNotBlank(queryRequest.getFlowDirection())) {
+            wrapper.eq(RecycleOrder::getFlowDirection, queryRequest.getFlowDirection());
+        }
+
         // 按创建时间倒序排列
         wrapper.orderByDesc(RecycleOrder::getCreateTime);
         

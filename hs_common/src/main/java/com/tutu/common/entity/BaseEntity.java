@@ -27,6 +27,12 @@ public class BaseEntity {
     // 更新人
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private String updateBy;
+    // 创建人姓名
+    @TableField(exist = false)
+    private String createByName;
+    // 更新人姓名
+    @TableField(exist = false)
+    private String updateByName;
     // 逻辑删除
     @TableLogic(value = CommonConstant.NO_STR, delval = CommonConstant.YES_STR)
     private String isDeleted;

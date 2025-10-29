@@ -39,4 +39,8 @@ public class RecycleOrderQueryRequest {
      * 合作方名称
      */
     private String contractPartner;
+    /**
+     * 流转方向
+     */
+    private String flowDirection;
 }

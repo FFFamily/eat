@@ -13,6 +13,8 @@ import com.tutu.inventory.enums.InventoryBusinessTypeEnum;
 import com.tutu.inventory.enums.InventoryStatusEnum;
 import com.tutu.inventory.enums.InventoryTransactionTypeEnum;
 import com.tutu.inventory.mapper.InventoryInMapper;
+import com.tutu.recycle.service.RecycleOrderService;
+
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,9 @@ public class InventoryInService extends ServiceImpl<InventoryInMapper, Inventory
     
     @Resource
     private WarehouseService warehouseService;
+
+    @Resource
+    private RecycleOrderService recycleOrderService;
     
     /**
      * 创建入库单
@@ -168,6 +173,23 @@ public class InventoryInService extends ServiceImpl<InventoryInMapper, Inventory
                                             String inType, String status, String inNo) {
         Page<InventoryIn> pageParam = new Page<>(page, size);
         return baseMapper.pageInventoryInWithWarehouse(pageParam, warehouseId, inType, status, inNo);
+    }
+
+    /**
+     * 根据ID获取入库单详情（包含仓库名称）
+     */
+    public InventoryIn getDetailById(String id) {
+        InventoryIn inventoryIn = getById(id);
+        if (inventoryIn == null) {
+            return null;
+        }
+        if (inventoryIn.getWarehouseId() != null) {
+            var warehouse = warehouseService.getById(inventoryIn.getWarehouseId());
+            if (warehouse != null) {
+                inventoryIn.setWarehouseName(warehouse.getWarehouseName());
+            }
+        }
+        return inventoryIn;
     }
     
     /**

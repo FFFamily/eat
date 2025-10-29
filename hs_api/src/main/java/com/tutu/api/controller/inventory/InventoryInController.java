@@ -8,6 +8,8 @@ import com.tutu.inventory.entity.InventoryIn;
 import com.tutu.inventory.entity.InventoryInItem;
 import com.tutu.inventory.service.InventoryInItemService;
 import com.tutu.inventory.service.InventoryInService;
+import com.tutu.user.entity.Account;
+import com.tutu.user.service.AccountService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +27,9 @@ public class InventoryInController {
     
     @Resource
     private InventoryInItemService inventoryInItemService;
+
+    @Resource
+    private AccountService accountService;
     
     /**
      * 创建入库单
@@ -42,7 +47,14 @@ public class InventoryInController {
      */
     @GetMapping("/get/{id}")
     public BaseResponse<InventoryIn> getInventoryIn(@PathVariable String id) {
-        return BaseResponse.success(inventoryInService.getById(id));
+        InventoryIn inventoryIn = inventoryInService.getDetailById(id);
+        if (inventoryIn != null && inventoryIn.getCreateBy() != null) {
+            Account account = accountService.getById(inventoryIn.getCreateBy());
+            if (account != null) {
+                inventoryIn.setCreateByName(account.getNickname());
+            }
+        }
+        return BaseResponse.success(inventoryIn);
     }
     
     /**
