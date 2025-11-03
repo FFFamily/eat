@@ -4,7 +4,6 @@ package com.tutu.api.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.recycle.dto.RecycleOrderTracePath;
 import com.tutu.recycle.dto.RecycleOrderTraceResponse;
 import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.request.RecycleOrderQueryRequest;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/recycle/order")
@@ -118,6 +116,21 @@ public class RecycleOrderController {
     @GetMapping("/get/{id}")
     public BaseResponse<RecycleOrderInfo> getRecycleOrder(@PathVariable String id) {
         RecycleOrderInfo recycleOrderInfo = recycleOrderService.getOrderInfo(id);
+        return BaseResponse.success(recycleOrderInfo);
+    }
+    
+    /**
+     * 根据父订单ID查询回收订单（包含订单明细）
+     * 同一个parentId下只会有一个订单，若查询到多个则报错
+     * @param parentId 父订单ID
+     * @return 回收订单信息（包含订单明细和追溯信息）
+     */
+    @GetMapping("/parent/{parentId}")
+    public BaseResponse<RecycleOrderInfo> getRecycleOrderByParentId(@PathVariable String parentId) {
+        RecycleOrderInfo recycleOrderInfo = recycleOrderService.getByParentId(parentId);
+        if (recycleOrderInfo == null) {
+            return BaseResponse.error("未找到对应的回收订单");
+        }
         return BaseResponse.success(recycleOrderInfo);
     }
 

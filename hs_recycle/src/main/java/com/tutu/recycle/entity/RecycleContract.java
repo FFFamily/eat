@@ -2,6 +2,7 @@ package com.tutu.recycle.entity;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -53,4 +54,8 @@ public class RecycleContract extends BaseEntity{
     private String mainInvoice;
     // 合同文件路径
     private String filePath;
+    
+    // 受益人列表（非数据库字段，用于查询展示和传递）
+    @TableField(exist = false)
+    private List<RecycleContractBeneficiary> beneficiaries;
 }

@@ -1,6 +1,5 @@
 package com.tutu.api.controller.recycle.contract;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
@@ -33,53 +32,53 @@ public class RecycleContractController {
 
     /**
      * 根据合同编号查询合同
-     * @param no
-     * @return
+     * @param no 合同编号
+     * @return 合同信息（包含受益人列表）
      */
     @GetMapping("/getByNo/{no}")
     public BaseResponse<RecycleContract> getByNo(@PathVariable String no) {
-        return BaseResponse.success(recycleContractService.getOne(new LambdaQueryWrapper<RecycleContract>().eq(RecycleContract::getNo, no)));
+        return BaseResponse.success(recycleContractService.getContractByNo(no));
     }
 
     /**
      * 根据 ID 查询回收合同
      * @param id 合同 ID
-     * @return 合同信息
+     * @return 合同信息（包含受益人列表）
      */
     @GetMapping("/{id}")
     public BaseResponse<RecycleContract> getContract(@PathVariable String id) {
-        return BaseResponse.success(recycleContractService.getById(id));
+        return BaseResponse.success(recycleContractService.getContractById(id));
     }
 
     /**
      * 查询所有回收合同
-     * @return 合同列表
+     * @return 合同列表（包含受益人列表和名称）
      */
     @GetMapping("/list")
     public BaseResponse<List<RecycleContract>> getAllContracts() {
-        return BaseResponse.success(recycleContractService.list());
+        return BaseResponse.success(recycleContractService.getAllContractsWithBeneficiaries());
     }
 
     /**
      * 分页查询回收合同
      * @param pageNum 页码
      * @param pageSize 每页数量
-     * @return 分页结果
+     * @return 分页结果（包含受益人列表和名称）
      */
     @GetMapping("/page")
     public BaseResponse<IPage<RecycleContract>> getContractPage(@RequestParam("pageNum") long pageNum, @RequestParam("pageSize") long pageSize) {
         Page<RecycleContract> page = new Page<>(pageNum, pageSize);
-        return BaseResponse.success(recycleContractService.page(page));
+        return BaseResponse.success(recycleContractService.getContractPageWithBeneficiaries(page));
     }
 
     /**
      * 更新回收合同信息
-     * @param recycleContract 合同信息
+     * @param recycleContract 合同信息（包含受益人列表）
      * @return 更新结果
      */
     @PutMapping("/update")
     public BaseResponse<Void> updateContract(@RequestBody RecycleContract recycleContract) {
-        recycleContractService.updateById(recycleContract);
+        recycleContractService.updateContract(recycleContract);
         return BaseResponse.success();
     }
 

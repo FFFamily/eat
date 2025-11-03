@@ -55,6 +55,18 @@ public class InventoryIn extends BaseEntity {
      */
     @TableField("source_order_no")
     private String sourceOrderNo;
+
+    /**
+     * 来源订单合作方
+     */
+    @TableField("source_order_partner")
+    private String sourceOrderPartner;
+    
+    /**
+     * 来源订单合作方名称
+     */
+    @TableField("source_order_partner_name")
+    private String sourceOrderPartnerName;
     
     /**
      * 总数量
