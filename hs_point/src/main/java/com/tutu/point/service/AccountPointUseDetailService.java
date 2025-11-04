@@ -1,0 +1,192 @@
+package com.tutu.point.service;
+
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tutu.common.exceptions.ServiceException;
+import com.tutu.point.entity.AccountPointUseDetail;
+import com.tutu.point.mapper.AccountPointUseDetailMapper;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * 账户积分使用详情 Service
+ */
+@Service
+public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDetailMapper, AccountPointUseDetail> {
+    
+    /**
+     * 根据账户ID查询积分使用详情列表
+     * @param accountId 账户ID
+     * @return 积分使用详情列表
+     */
+    public List<AccountPointUseDetail> getByAccountId(String accountId) {
+        if (StrUtil.isBlank(accountId)) {
+            throw new ServiceException("账户ID不能为空");
+        }
+        LambdaQueryWrapper<AccountPointUseDetail> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AccountPointUseDetail::getAccountId, accountId);
+        wrapper.orderByDesc(AccountPointUseDetail::getCreateTime);
+        return list(wrapper);
+    }
+    
+    /**
+     * 根据账户ID查询已使用的积分详情
+     * @param accountId 账户ID
+     * @return 已使用的积分详情列表
+     */
+    public List<AccountPointUseDetail> getUsedByAccountId(String accountId) {
+        if (StrUtil.isBlank(accountId)) {
+            throw new ServiceException("账户ID不能为空");
+        }
+        LambdaQueryWrapper<AccountPointUseDetail> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AccountPointUseDetail::getAccountId, accountId);
+        wrapper.eq(AccountPointUseDetail::getIsUsed, true);
+        wrapper.orderByDesc(AccountPointUseDetail::getCreateTime);
+        return list(wrapper);
+    }
+    
+    /**
+     * 根据账户ID查询未使用的积分详情
+     * @param accountId 账户ID
+     * @return 未使用的积分详情列表
+     */
+    public List<AccountPointUseDetail> getUnusedByAccountId(String accountId) {
+        if (StrUtil.isBlank(accountId)) {
+            throw new ServiceException("账户ID不能为空");
+        }
+        LambdaQueryWrapper<AccountPointUseDetail> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AccountPointUseDetail::getAccountId, accountId);
+        wrapper.eq(AccountPointUseDetail::getIsUsed, false);
+        wrapper.orderByDesc(AccountPointUseDetail::getCreateTime);
+        return list(wrapper);
+    }
+    
+    /**
+     * 根据兑换码查询积分使用详情
+     * @param exchangeCode 兑换码
+     * @return 积分使用详情
+     */
+    public AccountPointUseDetail getByExchangeCode(String exchangeCode) {
+        if (StrUtil.isBlank(exchangeCode)) {
+            throw new ServiceException("兑换码不能为空");
+        }
+        LambdaQueryWrapper<AccountPointUseDetail> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AccountPointUseDetail::getExchangeCode, exchangeCode);
+        return getOne(wrapper);
+    }
+    
+    /**
+     * 根据积分商品ID查询积分使用详情
+     * @param pointGoodsId 积分商品ID
+     * @return 积分使用详情列表
+     */
+    public List<AccountPointUseDetail> getByPointGoodsId(String pointGoodsId) {
+        if (StrUtil.isBlank(pointGoodsId)) {
+            throw new ServiceException("积分商品ID不能为空");
+        }
+        LambdaQueryWrapper<AccountPointUseDetail> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AccountPointUseDetail::getPointGoodsId, pointGoodsId);
+        wrapper.orderByDesc(AccountPointUseDetail::getCreateTime);
+        return list(wrapper);
+    }
+    
+    /**
+     * 分页查询积分使用详情
+     * @param page 页码
+     * @param size 每页条数
+     * @param accountId 账户ID（可选）
+     * @param pointGoodsId 积分商品ID（可选）
+     * @param isUsed 是否已使用（可选）
+     * @return 分页结果
+     */
+    public Page<AccountPointUseDetail> pageDetail(Integer page, Integer size, String accountId, String pointGoodsId, Boolean isUsed) {
+        LambdaQueryWrapper<AccountPointUseDetail> wrapper = new LambdaQueryWrapper<>();
+        
+        if (StrUtil.isNotBlank(accountId)) {
+            wrapper.eq(AccountPointUseDetail::getAccountId, accountId);
+        }
+        if (StrUtil.isNotBlank(pointGoodsId)) {
+            wrapper.eq(AccountPointUseDetail::getPointGoodsId, pointGoodsId);
+        }
+        if (isUsed != null) {
+            wrapper.eq(AccountPointUseDetail::getIsUsed, isUsed);
+        }
+        
+        wrapper.orderByDesc(AccountPointUseDetail::getCreateTime);
+        
+        return page(new Page<>(page, size), wrapper);
+    }
+    
+    /**
+     * 创建积分使用详情记录（兑换商品）
+     * @param useDetail 积分使用详情
+     * @return 积分使用详情
+     */
+    public AccountPointUseDetail createUseDetail(AccountPointUseDetail useDetail) {
+        if (StrUtil.isBlank(useDetail.getAccountId())) {
+            throw new ServiceException("账户ID不能为空");
+        }
+        if (StrUtil.isBlank(useDetail.getPointGoodsId())) {
+            throw new ServiceException("积分商品ID不能为空");
+        }
+        if (useDetail.getPoint() == null || useDetail.getPoint() <= 0) {
+            throw new ServiceException("消耗积分必须大于0");
+        }
+        
+        // 生成兑换码
+        if (StrUtil.isBlank(useDetail.getExchangeCode())) {
+            useDetail.setExchangeCode(generateExchangeCode());
+        }
+        
+        // 默认未使用
+        if (useDetail.getIsUsed() == null) {
+            useDetail.setIsUsed(false);
+        }
+        
+        save(useDetail);
+        return useDetail;
+    }
+    
+    /**
+     * 使用兑换码（标记为已使用）
+     * @param exchangeCode 兑换码
+     * @return 是否成功
+     */
+    public boolean useExchangeCode(String exchangeCode) {
+        if (StrUtil.isBlank(exchangeCode)) {
+            throw new ServiceException("兑换码不能为空");
+        }
+        
+        AccountPointUseDetail useDetail = getByExchangeCode(exchangeCode);
+        if (useDetail == null) {
+            throw new ServiceException("兑换码不存在");
+        }
+        
+        if (useDetail.getIsUsed()) {
+            throw new ServiceException("兑换码已被使用");
+        }
+        
+        LambdaUpdateWrapper<AccountPointUseDetail> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AccountPointUseDetail::getId, useDetail.getId())
+                    .set(AccountPointUseDetail::getIsUsed, true);
+        
+        return update(updateWrapper);
+    }
+    
+    /**
+     * 生成兑换码
+     * @return 兑换码
+     */
+    private String generateExchangeCode() {
+        // 生成格式：POINT + 时间戳后8位 + UUID前8位
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        return "POINT" + timestamp.substring(timestamp.length() - 8) + uuid.substring(0, 8).toUpperCase();
+    }
+}
+

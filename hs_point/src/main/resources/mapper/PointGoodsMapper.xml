@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.point.mapper.PointGoodsMapper">
+
+    <!-- 分页查询商品（带分类名称） -->
+    <select id="pageGoodsWithTypeName" resultType="com.tutu.point.entity.PointGoods">
+        SELECT 
+            g.*,
+            t.type_name as typeName
+        FROM point_goods g
+        LEFT JOIN point_goods_type t ON g.type_id = t.id
+        <where>
+            g.is_deleted = '0'
+            <if test="goodsName != null and goodsName != ''">
+                AND g.goods_name LIKE CONCAT('%', #{goodsName}, '%')
+            </if>
+            <if test="typeId != null and typeId != ''">
+                AND g.type_id = #{typeId}
+            </if>
+            <if test="status != null and status != ''">
+                AND g.status = #{status}
+            </if>
+        </where>
+        ORDER BY g.create_time DESC
+    </select>
+
+</mapper>
+

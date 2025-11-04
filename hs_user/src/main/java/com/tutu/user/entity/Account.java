@@ -28,4 +28,6 @@ public class Account extends BaseUserEntity {
     private String scoreFactor;
     // 纳税人识别号
     private String taxNumber;
+    // 积分
+    private Long point;
 }
