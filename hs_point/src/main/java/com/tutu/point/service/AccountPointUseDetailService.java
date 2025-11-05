@@ -6,9 +6,17 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.point.constant.UserPointLockConstant;
+import com.tutu.point.entity.AccountPointDetail;
 import com.tutu.point.entity.AccountPointUseDetail;
+import com.tutu.point.enums.PointChangeDirectionEnum;
+import com.tutu.point.enums.PointChangeTypeEnum;
 import com.tutu.point.mapper.AccountPointUseDetailMapper;
+import com.tutu.user.entity.Account;
+import com.tutu.user.service.AccountService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +26,11 @@ import java.util.UUID;
  */
 @Service
 public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDetailMapper, AccountPointUseDetail> {
-    
+    @Resource
+    private AccountService accountService;
+
+    @Resource
+    private AccountPointDetailService accountPointDetailService;
     /**
      * 根据账户ID查询积分使用详情列表
      * @param accountId 账户ID
@@ -127,6 +139,7 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
      * @param useDetail 积分使用详情
      * @return 积分使用详情
      */
+    @Transactional(rollbackFor = Exception.class)
     public AccountPointUseDetail createUseDetail(AccountPointUseDetail useDetail) {
         if (StrUtil.isBlank(useDetail.getAccountId())) {
             throw new ServiceException("账户ID不能为空");
@@ -134,21 +147,24 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
         if (StrUtil.isBlank(useDetail.getPointGoodsId())) {
             throw new ServiceException("积分商品ID不能为空");
         }
-        if (useDetail.getPoint() == null || useDetail.getPoint() <= 0) {
-            throw new ServiceException("消耗积分必须大于0");
-        }
-        
         // 生成兑换码
         if (StrUtil.isBlank(useDetail.getExchangeCode())) {
             useDetail.setExchangeCode(generateExchangeCode());
         }
-        
         // 默认未使用
         if (useDetail.getIsUsed() == null) {
             useDetail.setIsUsed(false);
         }
-        
+        // 系统兑换 无需积分
+        useDetail.setPoint(0L);
         save(useDetail);
+        // 新增积分明细记录
+        AccountPointDetail pointDetail = new AccountPointDetail();
+        pointDetail.setAccountId(useDetail.getAccountId());
+        pointDetail.setChangeDirection(PointChangeDirectionEnum.SUB.getValue());
+        pointDetail.setChangePoint(0L);
+        pointDetail.setChangeType(PointChangeTypeEnum.SYSTEM_REWARD.getType());
+        accountPointDetailService.createDetail(pointDetail);
         return useDetail;
     }
     

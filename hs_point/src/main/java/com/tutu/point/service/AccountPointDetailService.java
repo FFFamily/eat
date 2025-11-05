@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.point.constant.UserPointLockConstant;
 import com.tutu.point.entity.AccountPointDetail;
 import com.tutu.point.enums.PointChangeDirectionEnum;
 import com.tutu.point.mapper.AccountPointDetailMapper;
@@ -97,11 +98,11 @@ public class AccountPointDetailService extends ServiceImpl<AccountPointDetailMap
         if (StrUtil.isBlank(detail.getAccountId())) {
             throw new ServiceException("账户ID不能为空");
         }
-        if (detail.getChangePoint() == null || detail.getChangePoint() == 0) {
-            throw new ServiceException("变更积分不能为空或0");
+        if (detail.getChangePoint() == null) {
+            throw new ServiceException("变更积分不能为空");
         }
         Account account = accountService.getById(detail.getAccountId());
-        synchronized ("account:point:" + detail.getAccountId()){
+        synchronized (UserPointLockConstant.POINT_LOCK_KEY + detail.getAccountId().intern()){
             account.setPoint(account.getPoint() + PointChangeDirectionEnum.getPointValue(detail.getChangeDirection(), detail.getChangePoint()));
             accountService.updateById(account);
             save(detail);
