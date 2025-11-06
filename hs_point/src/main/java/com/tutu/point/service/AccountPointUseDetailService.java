@@ -7,18 +7,22 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.point.constant.UserPointLockConstant;
+import com.tutu.point.dto.ExchangePointGoodsDto;
 import com.tutu.point.entity.AccountPointDetail;
 import com.tutu.point.entity.AccountPointUseDetail;
 import com.tutu.point.enums.PointChangeDirectionEnum;
 import com.tutu.point.enums.PointChangeTypeEnum;
 import com.tutu.point.mapper.AccountPointUseDetailMapper;
+import com.tutu.point.vo.AccountPointUseDetailVO;
 import com.tutu.user.entity.Account;
 import com.tutu.user.service.AccountService;
 import jakarta.annotation.Resource;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -32,7 +36,7 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
     @Resource
     private AccountPointDetailService accountPointDetailService;
     /**
-     * 根据账户ID查询积分使用详情列表
+     * 根据账户ID查询积分使用详情列表（关联查询商品名称）
      * @param accountId 账户ID
      * @return 积分使用详情列表
      */
@@ -40,10 +44,7 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
         if (StrUtil.isBlank(accountId)) {
             throw new ServiceException("账户ID不能为空");
         }
-        LambdaQueryWrapper<AccountPointUseDetail> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AccountPointUseDetail::getAccountId, accountId);
-        wrapper.orderByDesc(AccountPointUseDetail::getCreateTime);
-        return list(wrapper);
+        return baseMapper.getByAccountIdWithJoin(accountId);
     }
     
     /**
@@ -108,7 +109,7 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
     }
     
     /**
-     * 分页查询积分使用详情
+     * 分页查询积分使用详情（带用户名和商品名称）
      * @param page 页码
      * @param size 每页条数
      * @param accountId 账户ID（可选）
@@ -116,31 +117,24 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
      * @param isUsed 是否已使用（可选）
      * @return 分页结果
      */
-    public Page<AccountPointUseDetail> pageDetail(Integer page, Integer size, String accountId, String pointGoodsId, Boolean isUsed) {
-        LambdaQueryWrapper<AccountPointUseDetail> wrapper = new LambdaQueryWrapper<>();
-        
-        if (StrUtil.isNotBlank(accountId)) {
-            wrapper.eq(AccountPointUseDetail::getAccountId, accountId);
-        }
-        if (StrUtil.isNotBlank(pointGoodsId)) {
-            wrapper.eq(AccountPointUseDetail::getPointGoodsId, pointGoodsId);
-        }
-        if (isUsed != null) {
-            wrapper.eq(AccountPointUseDetail::getIsUsed, isUsed);
-        }
-        
-        wrapper.orderByDesc(AccountPointUseDetail::getCreateTime);
-        
-        return page(new Page<>(page, size), wrapper);
+    public Page<AccountPointUseDetailVO> pageDetail(Integer page, Integer size, String accountId, String pointGoodsId, Boolean isUsed) {
+        Page<AccountPointUseDetailVO> pageObj = new Page<>(page, size);
+        return baseMapper.pageDetailWithJoin(pageObj, accountId, pointGoodsId, isUsed);
     }
-    
+    /**
+     * 兑换商品
+     * @param useDetail 积分使用详情
+     */
+    public void exchangeGoods(AccountPointUseDetail useDetail) {
+    }
+
     /**
      * 创建积分使用详情记录（兑换商品）
      * @param useDetail 积分使用详情
      * @return 积分使用详情
      */
     @Transactional(rollbackFor = Exception.class)
-    public AccountPointUseDetail createUseDetail(AccountPointUseDetail useDetail) {
+    public AccountPointUseDetail createUseDetail(ExchangePointGoodsDto useDetail) {
         if (StrUtil.isBlank(useDetail.getAccountId())) {
             throw new ServiceException("账户ID不能为空");
         }
@@ -155,42 +149,40 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
         if (useDetail.getIsUsed() == null) {
             useDetail.setIsUsed(false);
         }
-        // 系统兑换 无需积分
-        useDetail.setPoint(0L);
-        save(useDetail);
         // 新增积分明细记录
+        Long point = useDetail.getPoint();
         AccountPointDetail pointDetail = new AccountPointDetail();
         pointDetail.setAccountId(useDetail.getAccountId());
         pointDetail.setChangeDirection(PointChangeDirectionEnum.SUB.getValue());
-        pointDetail.setChangePoint(0L);
+        pointDetail.setChangePoint(Objects.requireNonNullElse(point, 0L));
         pointDetail.setChangeType(PointChangeTypeEnum.SYSTEM_REWARD.getType());
+        pointDetail.setChangeReason(useDetail.getReason());
+        pointDetail.setRemark(useDetail.getRemark());
         accountPointDetailService.createDetail(pointDetail);
+        // 系统兑换 无需积分
+        useDetail.setPoint(0L);
+        useDetail.setDetailId(pointDetail.getId());
+        save(useDetail);
         return useDetail;
     }
     
     /**
      * 使用兑换码（标记为已使用）
-     * @param exchangeCode 兑换码
+     * @param detail 兑换码详情
      * @return 是否成功
      */
-    public boolean useExchangeCode(String exchangeCode) {
-        if (StrUtil.isBlank(exchangeCode)) {
-            throw new ServiceException("兑换码不能为空");
-        }
-        
-        AccountPointUseDetail useDetail = getByExchangeCode(exchangeCode);
+    public boolean useExchangeCode(AccountPointUseDetail detail) {
+        AccountPointUseDetail useDetail = getById(detail.getId());
         if (useDetail == null) {
             throw new ServiceException("兑换码不存在");
         }
-        
         if (useDetail.getIsUsed()) {
             throw new ServiceException("兑换码已被使用");
         }
-        
         LambdaUpdateWrapper<AccountPointUseDetail> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(AccountPointUseDetail::getId, useDetail.getId())
-                    .set(AccountPointUseDetail::getIsUsed, true);
-        
+                    .set(AccountPointUseDetail::getIsUsed, true)
+                .set(AccountPointUseDetail::getVoucherImage, detail.getVoucherImage());
         return update(updateWrapper);
     }
     
@@ -202,7 +194,26 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
         // 生成格式：POINT + 时间戳后8位 + UUID前8位
         String timestamp = String.valueOf(System.currentTimeMillis());
         String uuid = UUID.randomUUID().toString().replace("-", "");
-        return "POINT" + timestamp.substring(timestamp.length() - 8) + uuid.substring(0, 8).toUpperCase();
+        return timestamp.substring(timestamp.length() - 8) + uuid.substring(0, 8).toUpperCase();
     }
+    /**
+     * 根据ID查询积分使用详情（兑换商品）
+     * @param id 积分使用详情ID
+     * @return 积分使用详情
+     */
+    public ExchangePointGoodsDto getInfoById(String id) {
+        AccountPointUseDetail detail = getById(id);
+        ExchangePointGoodsDto res = new ExchangePointGoodsDto();
+        BeanUtils.copyProperties(detail, res);
+        // 查询对应的明细
+        AccountPointDetail pointDetail = accountPointDetailService.getById(detail.getDetailId());
+        if (pointDetail != null) {
+            res.setReason(pointDetail.getChangeReason());
+            res.setRemark(pointDetail.getRemark());
+        }
+        return  res;
+    }
+
+
 }
 

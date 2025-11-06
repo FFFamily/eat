@@ -2,8 +2,11 @@ package com.tutu.api.controller.point;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.point.dto.ExchangePointGoodsDto;
 import com.tutu.point.entity.AccountPointUseDetail;
 import com.tutu.point.service.AccountPointUseDetailService;
+import com.tutu.point.vo.AccountPointUseDetailVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +26,7 @@ public class AccountPointUseDetailController {
      * 创建积分使用详情记录（兑换商品）
      */
     @PostMapping("/create")
-    public BaseResponse<AccountPointUseDetail> create(@RequestBody AccountPointUseDetail useDetail) {
+    public BaseResponse<AccountPointUseDetail> create(@RequestBody ExchangePointGoodsDto useDetail) {
         return BaseResponse.success(accountPointUseDetailService.createUseDetail(useDetail));
     }
     
@@ -32,7 +35,8 @@ public class AccountPointUseDetailController {
      */
     @GetMapping("/{id}")
     public BaseResponse<AccountPointUseDetail> getById(@PathVariable String id) {
-        return BaseResponse.success(accountPointUseDetailService.getById(id));
+
+        return BaseResponse.success(accountPointUseDetailService.getInfoById(id));
     }
     
     /**
@@ -76,10 +80,10 @@ public class AccountPointUseDetailController {
     }
     
     /**
-     * 分页查询积分使用详情
+     * 分页查询积分使用详情（带用户名和商品名称）
      */
     @GetMapping("/page")
-    public BaseResponse<Page<AccountPointUseDetail>> page(
+    public BaseResponse<Page<AccountPointUseDetailVO>> page(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String accountId,
@@ -91,9 +95,9 @@ public class AccountPointUseDetailController {
     /**
      * 使用兑换码（标记为已使用）
      */
-    @PutMapping("/use/{exchangeCode}")
-    public BaseResponse<Boolean> useExchangeCode(@PathVariable String exchangeCode) {
-        return BaseResponse.success(accountPointUseDetailService.useExchangeCode(exchangeCode));
+    @PutMapping("/use")
+    public BaseResponse<Boolean> useExchangeCode(@RequestBody AccountPointUseDetail detail) {
+        return BaseResponse.success(accountPointUseDetailService.useExchangeCode(detail));
     }
     
     /**

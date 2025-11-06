@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.point.mapper.AccountPointUseDetailMapper">
+
+    <!-- 分页查询积分使用详情（带用户名和商品名称） -->
+    <select id="pageDetailWithJoin" resultType="com.tutu.point.vo.AccountPointUseDetailVO">
+        SELECT 
+            d.*,
+            a.nickname as accountName,
+            g.goods_name as goodsName
+        FROM account_point_use_detail d
+        LEFT JOIN account a ON d.account_id = a.id AND (a.is_deleted = 0 OR a.is_deleted IS NULL)
+        LEFT JOIN point_goods g ON d.point_goods_id = g.id AND (g.is_deleted = '0' OR g.is_deleted IS NULL)
+        <where>
+            d.is_deleted = '0'
+            <if test="accountId != null and accountId != ''">
+                AND d.account_id = #{accountId}
+            </if>
+            <if test="pointGoodsId != null and pointGoodsId != ''">
+                AND d.point_goods_id = #{pointGoodsId}
+            </if>
+            <if test="isUsed != null">
+                AND d.is_used = #{isUsed}
+            </if>
+        </where>
+        ORDER BY d.create_time DESC
+    </select>
+
+    <!-- 根据账户ID查询积分使用详情列表（关联查询商品名称） -->
+    <select id="getByAccountIdWithJoin" resultType="com.tutu.point.entity.AccountPointUseDetail">
+        SELECT 
+            d.*,
+            g.goods_name as point_goods_name
+        FROM account_point_use_detail d
+        LEFT JOIN point_goods g ON d.point_goods_id = g.id AND (g.is_deleted = '0' OR g.is_deleted IS NULL)
+        WHERE d.account_id = #{accountId}
+          AND d.is_deleted = '0'
+        ORDER BY d.create_time DESC
+    </select>
+
+</mapper>
+

@@ -28,7 +28,7 @@ public class AccountPointDetailService extends ServiceImpl<AccountPointDetailMap
     private AccountService accountService;
 
     /**
-     * 根据账户ID查询积分详情列表
+     * 根据账户ID查询积分详情列表（带账户名称）
      * @param accountId 账户ID
      * @return 积分详情列表
      */
@@ -36,14 +36,11 @@ public class AccountPointDetailService extends ServiceImpl<AccountPointDetailMap
         if (StrUtil.isBlank(accountId)) {
             throw new ServiceException("账户ID不能为空");
         }
-        LambdaQueryWrapper<AccountPointDetail> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AccountPointDetail::getAccountId, accountId);
-        wrapper.orderByDesc(AccountPointDetail::getCreateTime);
-        return list(wrapper);
+        return baseMapper.getByAccountIdWithJoin(accountId);
     }
     
     /**
-     * 根据账户ID和变更类型查询积分详情
+     * 根据账户ID和变更类型查询积分详情（带账户名称）
      * @param accountId 账户ID
      * @param changeType 变更类型
      * @return 积分详情列表
@@ -52,17 +49,11 @@ public class AccountPointDetailService extends ServiceImpl<AccountPointDetailMap
         if (StrUtil.isBlank(accountId)) {
             throw new ServiceException("账户ID不能为空");
         }
-        LambdaQueryWrapper<AccountPointDetail> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AccountPointDetail::getAccountId, accountId);
-        if (StrUtil.isNotBlank(changeType)) {
-            wrapper.eq(AccountPointDetail::getChangeType, changeType);
-        }
-        wrapper.orderByDesc(AccountPointDetail::getCreateTime);
-        return list(wrapper);
+        return baseMapper.getByAccountIdAndChangeTypeWithJoin(accountId, changeType);
     }
     
     /**
-     * 分页查询积分详情
+     * 分页查询积分详情（带账户名称）
      * @param page 页码
      * @param size 每页条数
      * @param accountId 账户ID（可选）
@@ -71,21 +62,8 @@ public class AccountPointDetailService extends ServiceImpl<AccountPointDetailMap
      * @return 分页结果
      */
     public Page<AccountPointDetail> pageDetail(Integer page, Integer size, String accountId, String changeType, String changeDirection) {
-        LambdaQueryWrapper<AccountPointDetail> wrapper = new LambdaQueryWrapper<>();
-        
-        if (StrUtil.isNotBlank(accountId)) {
-            wrapper.eq(AccountPointDetail::getAccountId, accountId);
-        }
-        if (StrUtil.isNotBlank(changeType)) {
-            wrapper.eq(AccountPointDetail::getChangeType, changeType);
-        }
-        if (StrUtil.isNotBlank(changeDirection)) {
-            wrapper.eq(AccountPointDetail::getChangeDirection, changeDirection);
-        }
-        
-        wrapper.orderByDesc(AccountPointDetail::getCreateTime);
-        
-        return page(new Page<>(page, size), wrapper);
+        Page<AccountPointDetail> pageObj = new Page<>(page, size);
+        return baseMapper.pageDetailWithJoin(pageObj, accountId, changeType, changeDirection);
     }
     
     /**
@@ -109,5 +87,21 @@ public class AccountPointDetailService extends ServiceImpl<AccountPointDetailMap
         }
         return detail;
     }
+    /**
+     * 根据账户ID查询积分
+     * @param accountId 账户ID
+     * @return 积分
+     */
+    public long getPointByAccountId(String accountId) {
+        if (StrUtil.isBlank(accountId)) {
+            throw new ServiceException("账户ID不能为空");
+        }
+        Account account = accountService.getById(accountId);
+        if (account == null) {
+            throw new ServiceException("账户不存在");
+        }
+        return account.getPoint();
+    }
+
 }
 
