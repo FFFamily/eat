@@ -23,8 +23,9 @@ public class AddressController {
      * 新增地址
      */
     @PostMapping("/create")
-    public BaseResponse<Boolean> save(@RequestBody Address address) {
-        return BaseResponse.success(addressService.save(address));
+    public BaseResponse<Void> save(@RequestBody Address address) {
+        addressService.createAddress(address);
+        return BaseResponse.success();
     }
     
     /**

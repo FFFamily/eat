@@ -41,7 +41,7 @@ public class WxAddressController {
     // 获取地址列表
     @GetMapping("/current/list")
     public BaseResponse<List<Address>> list() {
-        Long userId = StpUtil.getLoginIdAsLong();
+        String userId = StpUtil.getLoginIdAsString();
         List<Address> list = addressService.findByAccountId(userId);
         return BaseResponse.success(list);
     }
@@ -66,18 +66,8 @@ public class WxAddressController {
         // 设置当前用户ID
         Long userId = StpUtil.getLoginIdAsLong();
         address.setAccountId(userId.toString());
-        
-        // 如果是第一个地址，自动设为默认地址
-        List<Address> existingAddresses = addressService.findByAccountId(userId);
-        if (existingAddresses.isEmpty()) {
-            address.setIsDefault("1");
-        } else {
-            // 新地址默认设为非默认
-            address.setIsDefault("0");
-        }
-        
-        boolean result = addressService.save(address);
-        return BaseResponse.success(result);
+        addressService.createAddress(address);
+        return BaseResponse.success();
     }
     
     // 设置默认地址

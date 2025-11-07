@@ -2,6 +2,7 @@ package com.tutu.user.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.constant.CommonConstant;
@@ -20,6 +21,36 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class AddressService extends ServiceImpl<AddressMapper, Address> {
+
+    /**
+     * 新增地址
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void createAddress(Address address) {
+        String accountId = address.getAccountId();
+        String isDefault = address.getIsDefault();
+        // 如果是第一个地址，自动设为默认地址
+        List<Address> existingAddresses = findByAccountId(accountId);
+        if (existingAddresses.isEmpty()) {
+            address.setIsDefault(CommonConstant.YES_STR);
+        } else {
+            // 新地址默认设为非默认
+            if (StringUtils.isEmpty(isDefault)) {
+                address.setIsDefault(CommonConstant.NO_STR);
+            }else {
+                address.setIsDefault(isDefault);
+            }
+            if (address.getIsDefault().equals(CommonConstant.YES_STR)) {
+                LambdaUpdateWrapper<Address> updateWrapper = new LambdaUpdateWrapper<>();
+                updateWrapper.eq(Address::getAccountId, address.getAccountId())
+                        .set(Address::getIsDefault, CommonConstant.NO_STR);
+                this.update(updateWrapper);
+            }
+        }
+        address.setRealAddress(address.getProvince() + address.getCity() + address.getDistrict() + address.getDetailAddress());
+        save(address);
+    }
+
     /**
      * 分页查询地址
      * @param page 页码
@@ -42,7 +73,7 @@ public class AddressService extends ServiceImpl<AddressMapper, Address> {
      * @param accountId 账号ID
      * @return
      */ 
-    public List<Address> findByAccountId(Long accountId) {
+    public List<Address> findByAccountId(String accountId) {
         return list(new LambdaQueryWrapper<Address>().eq(Address::getAccountId, accountId));
     }
 
