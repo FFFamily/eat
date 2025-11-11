@@ -8,6 +8,7 @@ import com.tutu.common.DirectedGraph;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.dto.RecycleOrderTracePath;
 import com.tutu.recycle.dto.RecycleOrderTraceResponse;
+import com.tutu.recycle.dto.UserOrderDTO;
 import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.entity.RecycleContractItem;
 import com.tutu.recycle.entity.order.RecycleOrder;
@@ -30,8 +31,9 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 
 import com.tutu.recycle.entity.user.UserOrder;
+import com.tutu.recycle.server.BaseRecycleOrderServer;
+import com.tutu.recycle.utils.CodeUtil;
 import com.tutu.user.entity.Account;
-import com.tutu.user.entity.Processor;
 import com.tutu.user.enums.UserUseTypeEnum;
 import com.tutu.user.service.AccountService;
 import com.tutu.user.service.ProcessorService;
@@ -80,99 +82,53 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     private RecycleOrderTraceService recycleOrderTraceService;
     @Resource
     private ProcessorService processorService;
-    /**
-     * 根据用户订单创建采购类型的回收订单
-     * @param userOrder 用户订单对象
-     * @return 创建的回收订单
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public RecycleOrder createPurchaseOrderFromUserOrder(UserOrder userOrder) {
-        return createRecycleOrderFromUserOrderByStage(userOrder, UserOrderStageEnum.PURCHASE);
-    }
-    
+    @Resource
+    private CodeUtil codeUtil;
+    @Resource
+    private BaseRecycleOrderServer baseRecycleOrderServer;
     /**
      * 根据用户订单和阶段创建对应类型的回收订单
-     * @param userOrder 用户订单对象
-     * @param stage 订单阶段枚举
-     * @return 创建的回收订单
+     *
+     * @param userOrderRequest 用户订单对象
+     * @param order
+     * @param stage     订单阶段枚举
      */
     @Transactional(rollbackFor = Exception.class)
-    public RecycleOrder createRecycleOrderFromUserOrderByStage(UserOrder userOrder, UserOrderStageEnum stage) {
-        if (userOrder == null) {
+    public void createRecycleOrderFromUserOrderByStage(UserOrderDTO userOrderRequest, UserOrder order, UserOrderStageEnum stage) {
+        if (userOrderRequest == null) {
             throw new ServiceException("用户订单不能为空");
         }
         if (stage == null) {
             throw new ServiceException("订单阶段不能为空");
         }
-        
         // 根据阶段获取对应的回收订单类型
         RecycleOrderTypeEnum orderType = getRecycleOrderTypeByStage(stage);
         if (orderType == null) {
             throw new ServiceException("阶段 " + stage.getDescription() + " 没有对应的回收订单类型");
         }
-        
-        return createRecycleOrderFromUserOrderByType(userOrder, orderType);
+        createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType);
     }
     
     /**
      * 根据用户订单和回收订单类型创建回收订单
-     * @param userOrder 用户订单对象
+     *
+     * @param userOrderRequest 用户订单对象
+     * @param order
      * @param orderType 回收订单类型
      * @return 创建的回收订单
      */
     @Transactional(rollbackFor = Exception.class)
-    public RecycleOrder createRecycleOrderFromUserOrderByType(UserOrder userOrder, RecycleOrderTypeEnum orderType) {
-        if (userOrder == null) {
+    public void createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType) {
+        if (userOrderRequest == null) {
             throw new ServiceException("用户订单不能为空");
         }
         if (orderType == null) {
             throw new ServiceException("回收订单类型不能为空");
         }
-        
-        RecycleOrder recycleOrder = new RecycleOrder();
-        
-        // 生成回收订单编号
-        recycleOrder.setNo(IdUtil.simpleUUID());
-        // 设置父订单ID
-        recycleOrder.setParentId(userOrder.getId());
-        // 设置订单类型
-        recycleOrder.setType(orderType.getCode());
-        
-        // 设置订单状态为执行中
-        recycleOrder.setStatus(RecycleOrderStatusEnum.PROCESSING.getCode());
-        
-        // 复制合同相关信息
-        recycleOrder.setContractId(userOrder.getContractId());
-        recycleOrder.setContractNo(userOrder.getContractNo());
-        recycleOrder.setContractName(userOrder.getContractName());
-        recycleOrder.setContractPartner(userOrder.getContractPartner());
-        recycleOrder.setContractPartnerName(userOrder.getContractPartnerName());
-        
-        // 复制甲乙方信息
-        recycleOrder.setPartyA(userOrder.getPartyA());
-        recycleOrder.setPartyAName(userOrder.getPartyAName());
-        recycleOrder.setPartyB(userOrder.getPartyB());
-        recycleOrder.setPartyBName(userOrder.getPartyBName());
-        
-        // 设置订单图片
-        recycleOrder.setOrderNodeImg(userOrder.getImgUrl());
-        
-        // 设置交付地址（使用用户订单的位置信息）
-        recycleOrder.setDeliveryAddress(userOrder.getLocation());
-        
-        // 设置经办人信息
-        if (StrUtil.isNotBlank(userOrder.getProcessorId())) {
-            Processor processor = processorService.getById(userOrder.getProcessorId());
-            if (processor != null) {
-                recycleOrder.setProcessor(processor.getName());
-                recycleOrder.setProcessorPhone(processor.getPhone());
-            }
-        }
-        
+        // 使用BaseRecycleOrderServer创建回收订单
+        RecycleOrderInfo recycleOrder = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType);
         // 保存回收订单
-        save(recycleOrder);
-        
-        return recycleOrder;
+        createOrUpdate(recycleOrder);
     }
     
     /**
@@ -184,21 +140,13 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (stage == null) {
             return null;
         }
-        
-        switch (stage) {
-            case PURCHASE:
-                return RecycleOrderTypeEnum.PURCHASE;
-            case TRANSPORT:
-                return RecycleOrderTypeEnum.TRANSPORT;
-            case PROCESSING:
-                return RecycleOrderTypeEnum.PROCESSING;
-            case WAREHOUSING:
-                return RecycleOrderTypeEnum.STORAGE; // 入库阶段对应仓储订单
-            case COMPLETED:
-                return null; // 完成阶段不需要创建订单
-            default:
-                return null;
-        }
+        return switch (stage) {
+            case PURCHASE -> RecycleOrderTypeEnum.PURCHASE;
+            case TRANSPORT -> RecycleOrderTypeEnum.TRANSPORT;
+            case PROCESSING -> RecycleOrderTypeEnum.PROCESSING;
+            case WAREHOUSING -> RecycleOrderTypeEnum.STORAGE; // 入库阶段对应仓储订单
+            case COMPLETED -> null; // 完成阶段不需要创建订单
+        };
     }
     
     /**
@@ -249,6 +197,82 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }).collect(Collectors.toList()));
         
         return recycleOrderInfo;
+    }
+    
+    /**
+     * 根据父订单ID查询所有子回收订单（包含订单明细）
+     * @param parentId 父订单ID
+     * @return 回收订单信息列表（包含订单明细和追溯信息）
+     */
+    public List<RecycleOrderInfo> getAllByParentId(String parentId) {
+        if (StrUtil.isBlank(parentId)) {
+            throw new ServiceException("父订单ID不能为空");
+        }
+        
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RecycleOrder::getParentId, parentId);
+        
+        List<RecycleOrder> orders = list(wrapper);
+        
+        if (orders == null || orders.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 收集所有经办人ID（processor字段可能存储的是ID）
+        List<String> processorIds = orders.stream()
+                .map(RecycleOrder::getProcessor)
+                .filter(StrUtil::isNotBlank)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 批量查询经办人信息
+        Map<String, String> processorNameMap = new HashMap<>();
+        if (!processorIds.isEmpty()) {
+            List<com.tutu.user.entity.Processor> processors = processorService.listByIds(processorIds);
+            processorNameMap = processors.stream()
+                    .collect(Collectors.toMap(
+                            com.tutu.user.entity.Processor::getId,
+                            com.tutu.user.entity.Processor::getName,
+                            (existing, replacement) -> existing
+                    ));
+        }
+        
+        // 将每个订单转换为 RecycleOrderInfo
+        final Map<String, String> finalProcessorNameMap = processorNameMap;
+        return orders.stream().map(order -> {
+            RecycleOrderInfo recycleOrderInfo = new RecycleOrderInfo();
+            BeanUtil.copyProperties(order, recycleOrderInfo);
+            
+            // 填充经办人名称
+            if (StrUtil.isNotBlank(order.getProcessor())) {
+                String processorName = finalProcessorNameMap.get(order.getProcessor());
+                if (processorName != null) {
+                    recycleOrderInfo.setProcessorName(processorName);
+                } else {
+                    // 如果processor字段存储的是名称而不是ID，则直接使用
+                    recycleOrderInfo.setProcessorName(order.getProcessor());
+                }
+            }
+            
+            // 查询订单明细
+            recycleOrderInfo.setItems(recycleOrderItemService.list(
+                new LambdaQueryWrapper<RecycleOrderItem>().eq(RecycleOrderItem::getRecycleOrderId, order.getId())
+            ));
+            
+            // 查询订单追溯信息
+            List<RecycleOrderTrace> traceList = recycleOrderTraceService.getByOrderId(order.getId());
+            recycleOrderInfo.setSourceCodes(traceList.stream().map(trace -> {
+                SourceCode sourceCode = new SourceCode();
+                sourceCode.setChangeReason(trace.getChangeReason());
+                sourceCode.setIdentifyCode(trace.getParentCode());
+                sourceCode.setOrderId(trace.getParentOrderId());
+                sourceCode.setOrderNo(trace.getParentOrderNo());
+                sourceCode.setOrderType(trace.getParentOrderType());
+                return sourceCode;
+            }).collect(Collectors.toList()));
+            
+            return recycleOrderInfo;
+        }).collect(Collectors.toList());
     }
     
     /**
@@ -310,7 +334,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param request 回收订单信息
      */
     @Transactional(rollbackFor = Exception.class)
-    public RecycleOrder createOrUpdate(CreateRecycleOrderRequest request){
+    public RecycleOrder createOrUpdate(RecycleOrderInfo request){
         String id = request.getId();
         // 保存订单
         RecycleOrder recycleOrder = new RecycleOrder();
@@ -330,7 +354,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             orderItems.stream().filter(item -> !itemIds.contains(item.getId())).forEach(item -> recycleOrderItemService.removeById(item.getId()));
         }
         // 保存订单明细
-        List<RecycleOrderItem> items = request.getItems();
+        List<RecycleOrderItem> items = Optional.ofNullable(request.getItems()).orElse(new ArrayList<>());
         for (RecycleOrderItem item : items) {
             item.setRecycleOrderId(recycleOrder.getId());
             if (StrUtil.isNotBlank(item.getId())) {

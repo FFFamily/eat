@@ -28,7 +28,7 @@ public class RecycleOrderController {
      * @return 添加结果
      */
     @PostMapping("/create")
-    public BaseResponse<RecycleOrder> addRecycleOrder(@RequestBody CreateRecycleOrderRequest recycleOrder) {
+    public BaseResponse<RecycleOrder> addRecycleOrder(@RequestBody RecycleOrderInfo recycleOrder) {
         return BaseResponse.success(recycleOrderService.createOrUpdate(recycleOrder));
     }
 
@@ -38,7 +38,7 @@ public class RecycleOrderController {
      * @return 更新结果
      */
     @PutMapping("/update")
-    public BaseResponse<Void> updateRecycleOrder(@RequestBody CreateRecycleOrderRequest request) {
+    public BaseResponse<Void> updateRecycleOrder(@RequestBody RecycleOrderInfo request) {
         recycleOrderService.createOrUpdate(request);
         return BaseResponse.success();
     }

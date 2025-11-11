@@ -25,28 +25,6 @@ public class WxRecycleOrderController {
     @Resource
     private RecycleOrderService recycleOrderService;
 
-    // 创建订单
-    @PostMapping("/create")
-    public BaseResponse<String> create(@RequestBody RecycleOrder order) {
-        recycleOrderService.createWxOrder(order);
-        return BaseResponse.success();
-    }
-
-    /**
-     * 获取当前登录用户作为合作方的订单列表
-     * @param map 包含status参数的请求体，status可为空或"all"表示查询所有状态
-     * @return 订单列表
-     */
-    @PostMapping("/current/list")
-    public BaseResponse<List<RecycleOrder>> getPartnerOrderList(@RequestBody RecycleOrder order) {
-        // 获取当前登录用户ID
-        String userId = StpUtil.getLoginIdAsString();
-        order.setContractPartner(userId);
-        // 查询合作方订单列表
-        List<RecycleOrder> orderList = recycleOrderService.getOrderList(order);
-        return BaseResponse.success(orderList);
-    }
-
     /**
      * 根据订单识别号查询订单
      * @param request 查询请求

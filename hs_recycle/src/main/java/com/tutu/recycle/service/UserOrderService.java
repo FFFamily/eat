@@ -5,7 +5,18 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.recycle.dto.UserOrderDTO;
+import com.tutu.recycle.dto.UserOrderInfo;
 import com.tutu.recycle.entity.user.UserOrder;
+import com.tutu.recycle.enums.RecycleOrderTypeEnum;
+import com.tutu.recycle.schema.RecycleOrderInfo;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import com.tutu.recycle.enums.UserOrderStageEnum;
 import com.tutu.recycle.enums.UserOrderStatusEnum;
 import com.tutu.recycle.mapper.UserOrderMapper;
@@ -16,10 +27,6 @@ import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 用户订单服务实现类
@@ -32,6 +39,22 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     
     @Resource
     private RecycleOrderService recycleOrderService;
+
+    /**
+     * 获取当前登录用户作为合作方的订单列表
+     * @param order
+     * @return
+     */
+    public List<UserOrder> getUserOrderList(UserOrder order) {
+        LambdaQueryWrapper<UserOrder> wrapper = new LambdaQueryWrapper<>();
+        // 合作方
+        wrapper.eq(UserOrder::getContractPartner, order.getContractPartner());
+        // 阶段
+        Optional.ofNullable(order.getStage()).ifPresent(stage -> wrapper.eq(UserOrder::getStage, stage));
+        wrapper.orderByDesc(UserOrder::getCreateTime);
+        List<UserOrder> list = list(wrapper);
+        return list;
+    }
     
     /**
      * 创建用户订单
@@ -46,13 +69,9 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         userOrder.setNo(UserOrderNoGenerator.generate());
         // 设置初始阶段为采购
         userOrder.setStage(UserOrderStageEnum.PURCHASE.getCode());
-        // 设置初始状态为待运输
-        userOrder.setStatus(UserOrderStatusEnum.WAIT_TRANSPORT.getCode());
         save(userOrder);
-        
         // 同步创建采购类型的回收订单
-        recycleOrderService.createPurchaseOrderFromUserOrder(userOrder);
-        
+        // recycleOrderService.createPurchaseOrderFromUserOrder(userOrder);
         return userOrder;
     }
     
@@ -67,6 +86,68 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             fillProcessorName(userOrder);
         }
         return userOrder;
+    }
+    
+    /**
+     * 查询用户订单信息及其子回收订单
+     * 根据回收订单类型，将订单信息映射到不同的字段
+     * @param id 用户订单ID
+     * @return 用户订单信息（包含子回收订单）
+     */
+    public UserOrderInfo getUserOrderInfo(String id) {
+        if (StrUtil.isBlank(id)) {
+            throw new ServiceException("用户订单ID不能为空");
+        }
+        
+        // 查询用户订单
+        UserOrder userOrder = getById(id);
+        if (userOrder == null) {
+            throw new ServiceException("用户订单不存在");
+        }
+        
+        // 填充经办人名称
+        fillProcessorName(userOrder);
+        
+        // 查询所有子回收订单
+        List<RecycleOrderInfo> recycleOrderInfoList = recycleOrderService.getAllByParentId(id);
+        
+        // 将订单列表转为Map，key为订单类型
+        Map<String, RecycleOrderInfo> orderMap = recycleOrderInfoList.stream()
+                .collect(Collectors.toMap(
+                        RecycleOrderInfo::getType,
+                        Function.identity(),
+                        (existing, replacement) -> {
+                            // 如果存在相同类型的订单，保留第一个
+                            return existing;
+                        }
+                ));
+        
+        // 构建返回对象
+        UserOrderInfo userOrderInfo = new UserOrderInfo();
+        userOrderInfo.setUserOrder(userOrder);
+        
+        // 根据订单类型映射到不同的字段
+        RecycleOrderInfo purchaseOrder = orderMap.get(RecycleOrderTypeEnum.PURCHASE.getCode());
+        if (purchaseOrder != null) {
+            userOrderInfo.setPurchaseOrder(purchaseOrder);
+        }
+        
+        RecycleOrderInfo transportOrder = orderMap.get(RecycleOrderTypeEnum.TRANSPORT.getCode());
+        if (transportOrder != null) {
+            userOrderInfo.setTransportOrder(transportOrder);
+        }
+        
+        RecycleOrderInfo processingOrder = orderMap.get(RecycleOrderTypeEnum.PROCESSING.getCode());
+        if (processingOrder != null) {
+            userOrderInfo.setProcessingOrder(processingOrder);
+        }
+        
+        RecycleOrderInfo storageOrder = orderMap.get(RecycleOrderTypeEnum.STORAGE.getCode());
+        if (storageOrder != null) {
+            userOrderInfo.setStorageOrder(storageOrder);
+        }
+        
+        return userOrderInfo;
     }
     
     /**
@@ -86,6 +167,22 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteUserOrderById(String id) {
+        if (StrUtil.isBlank(id)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        
+        // 检查订单是否存在
+        UserOrder userOrder = getById(id);
+        if (userOrder == null) {
+            throw new ServiceException("用户订单不存在");
+        }
+        
+        // 检查是否存在子订单
+        List<RecycleOrderInfo> childOrders = recycleOrderService.getAllByParentId(id);
+        if (childOrders != null && !childOrders.isEmpty()) {
+            throw new ServiceException("该订单已存在登记信息,无法删除");
+        }
+        
         return removeById(id);
     }
     
@@ -140,23 +237,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         fillProcessorNames(list);
         return list;
     }
-    
-    /**
-     * 根据订单状态查询用户订单列表
-     * @param status 订单状态
-     * @return 用户订单列表
-     */
-    public List<UserOrder> getUserOrdersByStatus(String status) {
-        if (StrUtil.isBlank(status)) {
-            return null;
-        }
-        LambdaQueryWrapper<UserOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserOrder::getStatus, status);
-        wrapper.orderByDesc(UserOrder::getCreateTime);
-        List<UserOrder> list = list(wrapper);
-        fillProcessorNames(list);
-        return list;
-    }
+
     
     /**
      * 根据订单阶段查询用户订单列表
@@ -174,23 +255,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         fillProcessorNames(list);
         return list;
     }
-    
-    /**
-     * 根据经办人ID查询用户订单列表
-     * @param processorId 经办人ID
-     * @return 用户订单列表
-     */
-    public List<UserOrder> getUserOrdersByProcessorId(String processorId) {
-        if (StrUtil.isBlank(processorId)) {
-            return null;
-        }
-        LambdaQueryWrapper<UserOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserOrder::getProcessorId, processorId);
-        wrapper.orderByDesc(UserOrder::getCreateTime);
-        List<UserOrder> list = list(wrapper);
-        fillProcessorNames(list);
-        return list;
-    }
+
     
     /**
      * 分页查询用户订单（支持多条件查询）
@@ -206,9 +271,6 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             if (StrUtil.isNotBlank(userOrder.getNo())) {
                 wrapper.like(UserOrder::getNo, userOrder.getNo());
             }
-            if (StrUtil.isNotBlank(userOrder.getStatus())) {
-                wrapper.eq(UserOrder::getStatus, userOrder.getStatus());
-            }
             if (StrUtil.isNotBlank(userOrder.getStage())) {
                 wrapper.eq(UserOrder::getStage, userOrder.getStage());
             }
@@ -221,12 +283,12 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             if (StrUtil.isNotBlank(userOrder.getContractPartner())) {
                 wrapper.eq(UserOrder::getContractPartner, userOrder.getContractPartner());
             }
-            if (StrUtil.isNotBlank(userOrder.getProcessorId())) {
-                wrapper.eq(UserOrder::getProcessorId, userOrder.getProcessorId());
-            }
-            if (StrUtil.isNotBlank(userOrder.getLocation())) {
-                wrapper.like(UserOrder::getLocation, userOrder.getLocation());
-            }
+//            if (StrUtil.isNotBlank(userOrder.getProcessorId())) {
+//                wrapper.eq(UserOrder::getProcessorId, userOrder.getProcessorId());
+//            }
+//            if (StrUtil.isNotBlank(userOrder.getLocation())) {
+//                wrapper.like(UserOrder::getLocation, userOrder.getLocation());
+//            }
         }
         
         // 按创建时间倒序排列
@@ -264,25 +326,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         }
         return removeByIds(ids);
     }
-    
-    /**
-     * 更新订单状态
-     * @param id 订单ID
-     * @param status 新状态
-     * @return 是否更新成功
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateUserOrderStatus(String id, String status) {
-        if (StrUtil.isBlank(id) || StrUtil.isBlank(status)) {
-            return false;
-        }
-        UserOrder userOrder = getById(id);
-        if (userOrder == null) {
-            return false;
-        }
-        userOrder.setStatus(status);
-        return updateById(userOrder);
-    }
+
     
     /**
      * 更新订单阶段
@@ -342,40 +386,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         
         return updateById(userOrder);
     }
-    
-    /**
-     * 流转到下一个状态
-     * @param id 订单ID
-     * @return 是否流转成功
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public boolean toNextStatus(String id) {
-        if (StrUtil.isBlank(id)) {
-            throw new ServiceException("订单ID不能为空");
-        }
-        
-        UserOrder userOrder = getById(id);
-        if (userOrder == null) {
-            throw new ServiceException("订单不存在");
-        }
-        
-        // 获取当前状态
-        UserOrderStatusEnum currentStatus = UserOrderStatusEnum.getByCode(userOrder.getStatus());
-        if (currentStatus == null) {
-            throw new ServiceException("当前订单状态无效");
-        }
-        
-        // 检查是否已完成
-        if (currentStatus.isCompleted()) {
-            throw new ServiceException("订单已完成，无法继续流转");
-        }
-        
-        // 获取下一个状态
-        UserOrderStatusEnum nextStatus = currentStatus.getNextStatus();
-        userOrder.setStatus(nextStatus.getCode());
-        
-        return updateById(userOrder);
-    }
+
     
     /**
      * 完成订单
@@ -393,17 +404,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (userOrder == null) {
             throw new ServiceException("订单不存在");
         }
-        
-        // 检查当前状态
-        UserOrderStatusEnum currentStatus = UserOrderStatusEnum.getByCode(userOrder.getStatus());
-        if (currentStatus != null && currentStatus.isCompleted()) {
-            throw new ServiceException("订单已经完成");
-        }
-        
         // 设置为完成状态和入库阶段
-        userOrder.setStatus(UserOrderStatusEnum.COMPLETED.getCode());
         userOrder.setStage(UserOrderStageEnum.WAREHOUSING.getCode());
-        
         return updateById(userOrder);
     }
     
@@ -431,36 +433,23 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     /**
      * 结算订单
      * 将订单阶段和状态同时流转到下一个
-     * @param id 订单ID
+     * @param userOrderRequest 订单
      * @return 是否结算成功
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean settleOrder(String id) {
-        if (StrUtil.isBlank(id)) {
+    public boolean settleOrder(UserOrderDTO userOrderRequest) {
+        if (StrUtil.isBlank(userOrderRequest.getId())) {
             throw new ServiceException("订单ID不能为空");
         }
-        
-        UserOrder userOrder = getById(id);
+        UserOrder userOrder = getById(userOrderRequest.getId());
         if (userOrder == null) {
             throw new ServiceException("订单不存在");
         }
-        
         // 获取当前阶段
         UserOrderStageEnum currentStage = UserOrderStageEnum.getByCode(userOrder.getStage());
         if (currentStage == null) {
             throw new ServiceException("当前订单阶段无效");
-        }
-        // 获取当前状态
-        UserOrderStatusEnum currentStatus = UserOrderStatusEnum.getByCode(userOrder.getStatus());
-        if (currentStatus == null) {
-            throw new ServiceException("当前订单状态无效");
-        }
-        
-        // 检查是否已完成
-        if (currentStatus.isCompleted()) {
-            throw new ServiceException("订单已完成，无法继续结算");
-        }
-        
+        }        
         // 检查是否已经是最后一个阶段
         if (currentStage.isLastStage()) {
             throw new ServiceException("订单已经在最后阶段，无法继续结算");
@@ -472,19 +461,16 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (nextStage == null) {
             throw new ServiceException("订单阶段已经是最后阶段，无法继续结算");
         }
-        UserOrderStatusEnum nextStatus = UserOrderStatusEnum.getByCode(nextStage.getNextStatus());
-        if (nextStatus == null) {
-            throw new ServiceException("订单状态已经是最后状态，无法继续结算");
+        // 如果是入库阶段结算， 需要更新结算时间
+        if (currentStage == UserOrderStageEnum.WAREHOUSING) {
+            userOrder.setSettlementTime(new Date());
         }
-        
-        // 同时更新阶段和状态
+        // 同时更新阶段
         userOrder.setStage(nextStage.getCode());
-        userOrder.setStatus(nextStatus.getCode());
         updateById(userOrder);
-        
         // 如果不是完成阶段，则创建对应阶段的回收订单
         if (!nextStage.isLastStage()) {
-            recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrder, nextStage);
+            recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderRequest,userOrder, currentStage);
         }
         
         return true;
@@ -495,12 +481,12 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      * @param userOrder 用户订单
      */
     private void fillProcessorName(UserOrder userOrder) {
-        if (userOrder != null && StrUtil.isNotBlank(userOrder.getProcessorId())) {
-            Processor processor = processorService.getById(userOrder.getProcessorId());
-            if (processor != null) {
-                userOrder.setProcessorName(processor.getName());
-            }
-        }
+//        if (userOrder != null && StrUtil.isNotBlank(userOrder.getProcessorId())) {
+//            Processor processor = processorService.getById(userOrder.getProcessorId());
+//            if (processor != null) {
+//                userOrder.setProcessorName(processor.getName());
+//            }
+//        }
     }
     
     /**
@@ -513,29 +499,29 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         }
         
         // 收集所有经办人ID
-        List<String> processorIds = userOrders.stream()
-                .map(UserOrder::getProcessorId)
-                .filter(StrUtil::isNotBlank)
-                .distinct()
-                .collect(Collectors.toList());
-        
-        if (processorIds.isEmpty()) {
-            return;
-        }
-        
-        // 批量查询经办人信息
-        List<Processor> processors = processorService.listByIds(processorIds);
-        
-        // 构建经办人ID到名称的映射
-        Map<String, String> processorMap = processors.stream()
-                .collect(Collectors.toMap(Processor::getId, Processor::getName));
-        
-        // 填充经办人名称
-        userOrders.forEach(order -> {
-            if (StrUtil.isNotBlank(order.getProcessorId())) {
-                order.setProcessorName(processorMap.get(order.getProcessorId()));
-            }
-        });
+//        List<String> processorIds = userOrders.stream()
+//                .map(UserOrder::getProcessorId)
+//                .filter(StrUtil::isNotBlank)
+//                .distinct()
+//                .collect(Collectors.toList());
+//
+//        if (processorIds.isEmpty()) {
+//            return;
+//        }
+//
+//        // 批量查询经办人信息
+//        List<Processor> processors = processorService.listByIds(processorIds);
+//
+//        // 构建经办人ID到名称的映射
+//        Map<String, String> processorMap = processors.stream()
+//                .collect(Collectors.toMap(Processor::getId, Processor::getName));
+//
+//        // 填充经办人名称
+//        userOrders.forEach(order -> {
+//            if (StrUtil.isNotBlank(order.getProcessorId())) {
+//                order.setProcessorName(processorMap.get(order.getProcessorId()));
+//            }
+//        });
     }
 }
 

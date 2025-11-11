@@ -3,6 +3,8 @@ package com.tutu.api.controller.recycle;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.recycle.dto.UserOrderDTO;
+import com.tutu.recycle.dto.UserOrderInfo;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.service.UserOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +48,22 @@ public class UserOrderController {
     }
     
     /**
+     * 查询用户订单信息及其子回收订单
+     * 根据回收订单类型，将订单信息映射到不同的字段
+     * @param id 用户订单ID
+     * @return 用户订单信息（包含子回收订单）
+     */
+    @GetMapping("/info/{id}")
+    public BaseResponse<UserOrderInfo> getUserOrderInfo(@PathVariable String id) {
+        try {
+            UserOrderInfo userOrderInfo = userOrderService.getUserOrderInfo(id);
+            return BaseResponse.success(userOrderInfo);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
+    }
+    
+    /**
      * 更新用户订单
      * @param userOrder 用户订单对象
      * @return 更新结果
@@ -66,8 +84,12 @@ public class UserOrderController {
      */
     @DeleteMapping("/delete/{id}")
     public BaseResponse<Boolean> deleteUserOrderById(@PathVariable String id) {
-        boolean result = userOrderService.deleteUserOrderById(id);
-        return BaseResponse.success(result);
+        try {
+            boolean result = userOrderService.deleteUserOrderById(id);
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
     }
     
     /**
@@ -105,18 +127,7 @@ public class UserOrderController {
         List<UserOrder> list = userOrderService.getUserOrdersByContractNo(contractNo);
         return BaseResponse.success(list);
     }
-    
-    /**
-     * 根据订单状态查询用户订单列表
-     * @param status 订单状态
-     * @return 用户订单列表
-     */
-    @GetMapping("/status/{status}")
-    public BaseResponse<List<UserOrder>> getUserOrdersByStatus(@PathVariable String status) {
-        List<UserOrder> list = userOrderService.getUserOrdersByStatus(status);
-        return BaseResponse.success(list);
-    }
-    
+
     /**
      * 根据订单阶段查询用户订单列表
      * @param stage 订单阶段
@@ -128,16 +139,6 @@ public class UserOrderController {
         return BaseResponse.success(list);
     }
     
-    /**
-     * 根据经办人ID查询用户订单列表
-     * @param processorId 经办人ID
-     * @return 用户订单列表
-     */
-    @GetMapping("/processor/{processorId}")
-    public BaseResponse<List<UserOrder>> getUserOrdersByProcessorId(@PathVariable String processorId) {
-        List<UserOrder> list = userOrderService.getUserOrdersByProcessorId(processorId);
-        return BaseResponse.success(list);
-    }
     
     /**
      * 分页查询用户订单（支持多条件查询）
@@ -169,13 +170,12 @@ public class UserOrderController {
         Page<UserOrder> page = new Page<>(current, size);
         UserOrder queryCondition = new UserOrder();
         queryCondition.setNo(no);
-        queryCondition.setStatus(status);
         queryCondition.setStage(stage);
         queryCondition.setContractId(contractId);
         queryCondition.setContractNo(contractNo);
         queryCondition.setContractPartner(contractPartner);
-        queryCondition.setProcessorId(processorId);
-        queryCondition.setLocation(location);
+//        queryCondition.setProcessorId(processorId);
+//        queryCondition.setLocation(location);
         
         IPage<UserOrder> result = userOrderService.getUserOrdersPage(page, queryCondition);
         return BaseResponse.success(result);
@@ -189,37 +189,6 @@ public class UserOrderController {
     public BaseResponse<List<UserOrder>> getAllUserOrders() {
         List<UserOrder> list = userOrderService.getAllUserOrders();
         return BaseResponse.success(list);
-    }
-    
-    /**
-     * 批量删除用户订单
-     * @param ids 订单ID集合
-     * @return 删除结果
-     */
-    @DeleteMapping("/batchDelete")
-    public BaseResponse<Boolean> batchDeleteUserOrders(@RequestBody List<String> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return BaseResponse.error("订单ID列表不能为空");
-        }
-        boolean result = userOrderService.batchDeleteUserOrders(ids);
-        return BaseResponse.success(result);
-    }
-    
-    /**
-     * 更新订单状态
-     * @param id 订单ID
-     * @param status 新状态
-     * @return 更新结果
-     */
-    @PutMapping("/updateStatus")
-    public BaseResponse<Boolean> updateUserOrderStatus(
-            @RequestParam String id,
-            @RequestParam String status) {
-        boolean result = userOrderService.updateUserOrderStatus(id, status);
-        if (!result) {
-            return BaseResponse.error("更新失败，订单不存在或参数错误");
-        }
-        return BaseResponse.success(result);
     }
     
     /**
@@ -254,21 +223,7 @@ public class UserOrderController {
         }
     }
     
-    /**
-     * 流转到下一个状态
-     * @param id 订单ID
-     * @return 流转结果
-     */
-    @PutMapping("/toNextStatus")
-    public BaseResponse<Boolean> toNextStatus(@RequestParam String id) {
-        try {
-            boolean result = userOrderService.toNextStatus(id);
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
-    }
-    
+
     /**
      * 完成订单
      * @param id 订单ID
@@ -301,12 +256,12 @@ public class UserOrderController {
     /**
      * 结算订单
      * 将订单阶段和状态同时流转到下一个
-     * @param id 订单ID
+     * @param userOrderDTO 用户订单DTO
      * @return 结算结果
      */
-    @GetMapping("/settle/{id}")
-    public BaseResponse<Boolean> settleOrder(@PathVariable String id) {
-        boolean result = userOrderService.settleOrder(id);
+    @PostMapping("/settle")
+    public BaseResponse<Boolean> settleOrder(@RequestBody UserOrderDTO userOrderDTO) {
+        boolean result = userOrderService.settleOrder(userOrderDTO);
         return BaseResponse.success(result);
     }
 }

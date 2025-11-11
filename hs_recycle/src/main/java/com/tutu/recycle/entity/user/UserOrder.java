@@ -3,10 +3,13 @@ package com.tutu.recycle.entity.user;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tutu.common.entity.BaseEntity;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Date;
 
 
 @Getter
@@ -21,8 +24,6 @@ public class UserOrder extends BaseEntity {
     private String no;
     //订单状态 阶段
     private String stage;
-    // 订单状态
-    private String status;
     // 合同id
     private String contractId;
     // 合同编号
@@ -42,12 +43,17 @@ public class UserOrder extends BaseEntity {
     // 乙方名称
     private String partyBName;
     // 订单图片
-    private String imgUrl;
+    // private String imgUrl;
     // 位置
-    private String location;
-    // 经办人id
-    private String processorId;
-    // 经办人名称
-    @TableField(exist = false)
-    private String processorName;
+    // private String location;
+//    // 经办人id
+//    private String processorId;
+//    // 经办人名称
+//    @TableField(exist = false)
+//    private String processorName;
+    // 结算时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date settlementTime;
+    // 计价方式
+    private String pricingMethod;
 }

@@ -65,7 +65,11 @@ public class RecycleOrder extends BaseEntity {
      */
     @TableField("identify_code")
     private String identifyCode;
-
+    /**
+     * 经办人id
+     */
+    @TableField("processor_id")
+    private String processorId;
     /**
      * 经办人
      */
@@ -121,7 +125,18 @@ public class RecycleOrder extends BaseEntity {
      */
     @TableField("warehouse_address")
     private String warehouseAddress;
-
+    /**
+     * 仓库ID
+     */
+     @TableField("warehouse_id")
+    private String warehouseId;
+     @TableField(exist = false)
+     private  String warehouseName;
+    /**
+     * 拿货地址
+     */
+    @TableField("pickup_address")
+    private String pickupAddress;
     /**
      * 交付地址
      */
@@ -139,6 +154,11 @@ public class RecycleOrder extends BaseEntity {
      */
     @TableField("payment_account")
     private String paymentAccount;
+    /**
+     * 货物重量
+     */
+    @TableField("goods_weight")
+    private BigDecimal goodsWeight;
     //=========金额=========
     // 货物总金额
     private BigDecimal goodsTotalAmount;
