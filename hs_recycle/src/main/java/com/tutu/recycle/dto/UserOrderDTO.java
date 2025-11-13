@@ -1,6 +1,5 @@
 package com.tutu.recycle.dto;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tutu.recycle.entity.order.RecycleOrderItem;
 import com.tutu.recycle.entity.user.UserOrder;
@@ -39,16 +38,6 @@ public class UserOrderDTO extends UserOrder {
      * 流转方向
      */
     private String flowDirection;
-    
-    /**
-     * 订单总金额
-     */
-    private BigDecimal totalAmount;
-    
-    /**
-     * 货物总金额
-     */
-    private BigDecimal goodsTotalAmount;
     
     /**
      * 合同金额

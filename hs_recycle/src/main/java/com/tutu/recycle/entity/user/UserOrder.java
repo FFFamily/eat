@@ -1,7 +1,6 @@
 package com.tutu.recycle.entity.user;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tutu.common.entity.BaseEntity;
@@ -9,6 +8,7 @@ import com.tutu.common.entity.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 
@@ -56,4 +56,12 @@ public class UserOrder extends BaseEntity {
     private Date settlementTime;
     // 计价方式
     private String pricingMethod;
+    // 用户评级系数
+    private BigDecimal accountCoefficient;
+    // 其他调价
+    private BigDecimal otherAdjustAmount;
+    // 订单总金额
+    private BigDecimal totalAmount;
+    // 货物总金额
+    private BigDecimal goodsTotalAmount;
 }

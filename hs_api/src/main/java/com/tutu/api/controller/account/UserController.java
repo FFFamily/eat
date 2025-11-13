@@ -93,7 +93,7 @@ public class UserController {
      * @param id 用户 ID
      * @return 用户实体，若不存在则返回 null
      */
-    @GetMapping("/{id}")
+    @GetMapping("/info/{id}")
     public Account getUserById(@PathVariable String id) {
         return accountService.getById(id);
     }

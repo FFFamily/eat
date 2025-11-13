@@ -25,6 +25,7 @@ public class WxRecycleOrderController {
     @Resource
     private RecycleOrderService recycleOrderService;
 
+    
     /**
      * 根据订单识别号查询订单
      * @param request 查询请求
@@ -62,6 +63,7 @@ public class WxRecycleOrderController {
         RecycleOrder order = recycleOrderService.getOrderByIdWithPermission(request.getId(), userId);
         return BaseResponse.success(order);
     }
+    
 
     /**
      * 运输订单提交
