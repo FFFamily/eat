@@ -94,8 +94,8 @@ public class UserController {
      * @return 用户实体，若不存在则返回 null
      */
     @GetMapping("/info/{id}")
-    public Account getUserById(@PathVariable String id) {
-        return accountService.getById(id);
+    public BaseResponse getUserById(@PathVariable String id) {
+        return BaseResponse.success(accountService.getById(id));
     }
 
     /**

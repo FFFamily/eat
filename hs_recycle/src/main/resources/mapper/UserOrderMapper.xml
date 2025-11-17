@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.recycle.mapper.UserOrderMapper">
+
+    <!-- 查询可抢单的用户订单 -->
+    <select id="selectAvailableTransportOrders" resultType="com.tutu.recycle.response.WxTransportOrderListResponse">
+        SELECT uo.id,
+               uo.contract_partner_name as company,
+               ro.delivery_address,
+               ro.processor,
+               ro.processor_phone,
+               ro.site_name as pickupAddress
+        FROM user_order uo
+                 LEFT JOIN recycle_order ro ON uo.id = ro.parent_id AND ro.type = 'purchase'
+        WHERE uo.stage = 'transport'
+          AND NOT EXISTS (
+            SELECT 1
+            FROM recycle_order ro
+            WHERE ro.parent_id = uo.id
+              AND ro.type = 'transport'
+        )
+        ORDER BY uo.create_time DESC
+    </select>
+
+</mapper>

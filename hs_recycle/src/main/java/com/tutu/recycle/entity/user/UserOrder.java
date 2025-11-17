@@ -42,18 +42,22 @@ public class UserOrder extends BaseEntity {
     private String partyB;
     // 乙方名称
     private String partyBName;
-    // 订单图片
-    // private String imgUrl;
-    // 位置
-    // private String location;
-//    // 经办人id
-//    private String processorId;
-//    // 经办人名称
-//    @TableField(exist = false)
-//    private String processorName;
     // 结算时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date settlementTime;
+    // 交付时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date deliveryTime;
+    // 交付方式
+    private String deliveryMethod;
+    // 交付照片
+    private String deliveryPhoto;
+    // 交付状态
+    private String deliveryStatus;
+    // 客户签名
+    private String partnerSignature;
+    // 经办人签名
+    private String processorSignature;
     // 计价方式
     private String pricingMethod;
     // 用户评级系数

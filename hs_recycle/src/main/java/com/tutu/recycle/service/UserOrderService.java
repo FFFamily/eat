@@ -5,10 +5,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.recycle.dto.DeliveryDTO;
 import com.tutu.recycle.dto.UserOrderDTO;
 import com.tutu.recycle.dto.UserOrderInfo;
 import com.tutu.recycle.entity.user.UserOrder;
+import com.tutu.recycle.enums.DeliveryStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
+import com.tutu.recycle.response.WxTransportOrderListResponse;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 
 import java.math.BigDecimal;
@@ -380,11 +383,11 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (currentStage.isLastStage()) {
             throw new ServiceException("订单已经在最后阶段，无法继续流转");
         }
-        
-        // 获取下一个阶段
-        UserOrderStageEnum nextStage = currentStage.getNextStage();
+
+        // 获取下一个阶段（根据计价方式判断）
+        UserOrderStageEnum nextStage = currentStage.getNextStage(userOrder.getPricingMethod());
         userOrder.setStage(nextStage.getCode());
-        
+
         return updateById(userOrder);
     }
 
@@ -457,40 +460,11 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         }
         
         // 获取下一个阶段和下一个状态（使用枚举类中的方法）
-        UserOrderStageEnum nextStage = currentStage.getNextStage();
+        // 根据计价方式获取下一个阶段
+        UserOrderStageEnum nextStage = currentStage.getNextStage(userOrder.getPricingMethod());
         // 如果下一个阶段或下一个状态为null，说明已经到达最后阶段/状态
         if (nextStage == null) {
             throw new ServiceException("订单阶段已经是最后阶段，无法继续结算");
-        }
-        if (currentStage == UserOrderStageEnum.PROCESSING) {
-            BigDecimal goodsTotalAmount = BigDecimal.ZERO;
-            List<RecycleOrderItem> items = userOrderRequest.getItems();
-            if (items != null) {
-                for (RecycleOrderItem item : items) {
-                    BigDecimal price = Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO);
-                    BigDecimal count = item.getGoodCount() != null ? BigDecimal.valueOf(item.getGoodCount()) : BigDecimal.ZERO;
-                    BigDecimal weight = Optional.ofNullable(item.getGoodWeight()).orElse(BigDecimal.ZERO);
-                    goodsTotalAmount = goodsTotalAmount.add(price.multiply(count).multiply(weight));
-                }
-            }
-            BigDecimal ratingCoefficient = Optional.ofNullable(userOrderRequest.getAccountCoefficient()).orElse(BigDecimal.ZERO);
-            BigDecimal otherAdjustAmount = Optional.ofNullable(userOrderRequest.getOtherAdjustAmount()).orElse(BigDecimal.ZERO);
-            BigDecimal totalAmount = goodsTotalAmount.multiply(BigDecimal.ONE.add(ratingCoefficient)).add(otherAdjustAmount);
-            userOrder.setAccountCoefficient(ratingCoefficient);
-            userOrder.setOtherAdjustAmount(otherAdjustAmount);
-            userOrder.setGoodsTotalAmount(goodsTotalAmount);
-            userOrder.setTotalAmount(totalAmount);
-            userOrderRequest.setGoodsTotalAmount(goodsTotalAmount);
-            userOrderRequest.setTotalAmount(totalAmount);
-        } else {
-            Optional.ofNullable(userOrderRequest.getAccountCoefficient()).ifPresent(userOrder::setAccountCoefficient);
-            Optional.ofNullable(userOrderRequest.getOtherAdjustAmount()).ifPresent(userOrder::setOtherAdjustAmount);
-            Optional.ofNullable(userOrderRequest.getGoodsTotalAmount()).ifPresent(userOrder::setGoodsTotalAmount);
-            Optional.ofNullable(userOrderRequest.getTotalAmount()).ifPresent(userOrder::setTotalAmount);
-        }
-        // 如果是入库阶段结算， 需要更新结算时间
-        if (currentStage == UserOrderStageEnum.WAREHOUSING) {
-            userOrder.setSettlementTime(new Date());
         }
         // 同时更新阶段
         userOrder.setStage(nextStage.getCode());
@@ -499,8 +473,87 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (!nextStage.isLastStage()) {
             recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderRequest,userOrder, currentStage);
         }
-        
+
         return true;
+    }
+
+    /**
+     * 确认结算订单
+     * 将订单从待结算阶段流转到完成阶段，并更新结算时间和调价信息
+     * @param userOrderDTO 用户订单DTO
+     * @return 是否确认成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean confirmSettlement(UserOrderDTO userOrderDTO) {
+        if (StrUtil.isBlank(userOrderDTO.getId())) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        UserOrder userOrder = getById(userOrderDTO.getId());
+        if (userOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        // 验证当前阶段必须是待结算
+        if (!UserOrderStageEnum.PENDING_SETTLEMENT.getCode().equals(userOrder.getStage())) {
+            throw new ServiceException("订单当前阶段不是待结算，无法确认结算");
+        }
+        // 获取入库订单（仓储订单）的货物详情
+        List<RecycleOrderInfo> recycleOrders = recycleOrderService.getAllByParentId(userOrder.getId());
+        RecycleOrderInfo storageOrder = recycleOrders.stream()
+                .filter(order -> RecycleOrderTypeEnum.STORAGE.getCode().equals(order.getType()))
+                .findFirst()
+                .orElseThrow(() -> new ServiceException("未找到入库订单"));
+
+        // 计算金额
+        BigDecimal goodsTotalAmount = BigDecimal.ZERO;
+        List<RecycleOrderItem> items = storageOrder.getItems();
+        if (items != null) {
+            for (RecycleOrderItem item : items) {
+                BigDecimal price = Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO);
+                BigDecimal count = item.getGoodCount() != null ? BigDecimal.valueOf(item.getGoodCount()) : BigDecimal.ZERO;
+                BigDecimal weight = Optional.ofNullable(item.getGoodWeight()).orElse(BigDecimal.ZERO);
+                goodsTotalAmount = goodsTotalAmount.add(price.multiply(count).multiply(weight));
+            }
+        }
+        //   - 货物总金额 = Σ(单价 × 数量 × 重量)
+        //  - 最终总金额 = 货物总金额 × (1 + 评级系数) + 其他调价
+        BigDecimal ratingCoefficient = Optional.ofNullable(userOrderDTO.getAccountCoefficient()).orElse(BigDecimal.ZERO);
+        BigDecimal otherAdjustAmount = Optional.ofNullable(userOrderDTO.getOtherAdjustAmount()).orElse(BigDecimal.ZERO);
+        BigDecimal totalAmount = goodsTotalAmount.multiply(BigDecimal.ONE.add(ratingCoefficient)).add(otherAdjustAmount);
+        // 更新金额和调价信息
+        userOrder.setGoodsTotalAmount(goodsTotalAmount);
+        userOrder.setTotalAmount(totalAmount);
+        // 更新结算时间
+        userOrder.setSettlementTime(new Date());
+        // 流转到完成阶段
+        userOrder.setStage(UserOrderStageEnum.COMPLETED.getCode());
+        return updateById(userOrder);
+    }
+
+    /**
+     * 交付订单
+     * 保存订单的交付信息，并更新交付状态为已交付
+     * @param deliveryDTO 交付信息DTO
+     * @return 是否交付成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean delivery(DeliveryDTO deliveryDTO) {
+        if (StrUtil.isBlank(deliveryDTO.getOrderId())) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        UserOrder userOrder = getById(deliveryDTO.getOrderId());
+        if (userOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        // 更新交付信息
+        Optional.ofNullable(deliveryDTO.getDeliveryTime()).ifPresent(userOrder::setDeliveryTime);
+        Optional.ofNullable(deliveryDTO.getDeliveryMethod()).ifPresent(userOrder::setDeliveryMethod);
+        Optional.ofNullable(deliveryDTO.getDeliveryPhoto()).ifPresent(userOrder::setDeliveryPhoto);
+        // 签名
+        Optional.ofNullable(deliveryDTO.getPartnerSignature()).ifPresent(userOrder::setPartnerSignature);
+        Optional.ofNullable(deliveryDTO.getProcessorSignature()).ifPresent(userOrder::setProcessorSignature);
+        // 更新交付状态为已交付
+        userOrder.setDeliveryStatus(DeliveryStatusEnum.DELIVERED.getCode());
+        return updateById(userOrder);
     }
     
     /**
@@ -549,6 +602,15 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
 //                order.setProcessorName(processorMap.get(order.getProcessorId()));
 //            }
 //        });
+    }
+
+    /**
+     * 获取可抢单的用户订单列表
+     * 条件：当前阶段为运输，且不存在运输子订单
+     * @return 可抢单的用户订单列表
+     */
+    public List<WxTransportOrderListResponse> getAvailableTransportOrders() {
+        return baseMapper.selectAvailableTransportOrders();
     }
 }
 

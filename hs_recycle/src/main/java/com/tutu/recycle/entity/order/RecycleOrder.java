@@ -120,6 +120,9 @@ public class RecycleOrder extends BaseEntity {
     private String partyBName;
     // 合同金额
     private BigDecimal contractPrice;
+    // 站点名词
+    @TableField("site_name")
+    private String siteName;
     /**
      * 仓库地址
      */
@@ -159,6 +162,25 @@ public class RecycleOrder extends BaseEntity {
      */
     @TableField("goods_weight")
     private BigDecimal goodsWeight;
+
+    /**
+     * 运输方式（送货上门/自提等）
+     */
+    @TableField("transport_method")
+    private String transportMethod;
+
+    /**
+     * 运输状态（可接单/交付大厅/运输中/已送达）
+     */
+    @TableField("transport_status")
+    private String transportStatus;
+
+    /**
+     * 分拣状态（待分拣/分拣中/已分拣）
+     */
+    @TableField("sorting_status")
+    private String sortingStatus;
+
     //=========金额=========
     // 货物总金额
     private BigDecimal goodsTotalAmount;
@@ -172,4 +194,7 @@ public class RecycleOrder extends BaseEntity {
     // 申请单PDF URL地址
     @TableField("application_pdf_url")
     private String applicationPdfUrl;
+    // 交付单PDF URL地址
+    @TableField("delivery_note_pdf_url")
+    private String deliveryNotePdfUrl;
 }

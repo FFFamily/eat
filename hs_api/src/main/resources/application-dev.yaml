@@ -113,14 +113,30 @@ sa-token:
   is-log: true
   is-read-cookie: false
   is-read-body: false
-decorator:
-  datasource:
-    p6spy:
-      # 日志格式
-      log-format: "\ntime:%(executionTime) || sql:%(sql)\n"
-      # 自定义日志类
-      logging: custom
-      custom-appender-class: com.tutu.api.config.mybatis.StdoutLogger
+#decorator:
+#  datasource:
+#    p6spy:
+#      # 日志格式
+#      log-format: "\ntime:%(executionTime) || sql:%(sql)\n"
+#      # 自定义日志类
+#      logging: custom
+#      custom-appender-class: com.tutu.api.config.mybatis.StdoutLogger
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+# 日志配置
+logging:
+  level:
+    root: info
+    com.tutu: debug
+    com.tutu.recycle.mapper: debug
+    com.baomidou.mybatisplus: debug
+    org.apache.ibatis: debug
+    org.springframework.web: debug
+    org.springframework.jdbc: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
 # 文件上传配置
 file:
   upload:

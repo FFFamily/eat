@@ -3,6 +3,7 @@ package com.tutu.api.controller.recycle;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.recycle.dto.DeliveryDTO;
 import com.tutu.recycle.dto.UserOrderDTO;
 import com.tutu.recycle.dto.UserOrderInfo;
 import com.tutu.recycle.entity.user.UserOrder;
@@ -263,6 +264,38 @@ public class UserOrderController {
     public BaseResponse<Boolean> settleOrder(@RequestBody UserOrderDTO userOrderDTO) {
         boolean result = userOrderService.settleOrder(userOrderDTO);
         return BaseResponse.success(result);
+    }
+
+    /**
+     * 确认结算订单
+     * 将订单从待结算阶段流转到完成阶段
+     * @param userOrderDTO 用户订单DTO（包含订单ID和调价信息）
+     * @return 确认结算结果
+     */
+    @PostMapping("/confirmSettlement")
+    public BaseResponse<Boolean> confirmSettlement(@RequestBody UserOrderDTO userOrderDTO) {
+        try {
+            boolean result = userOrderService.confirmSettlement(userOrderDTO);
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 交付订单
+     * 保存订单的交付信息，并更新交付状态为已交付
+     * @param deliveryDTO 交付信息DTO
+     * @return 交付结果
+     */
+    @PostMapping("/delivery")
+    public BaseResponse<Boolean> delivery(@RequestBody DeliveryDTO deliveryDTO) {
+        try {
+            boolean result = userOrderService.delivery(deliveryDTO);
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
     }
 }
 

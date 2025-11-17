@@ -65,5 +65,9 @@ public class UserOrderDTO extends UserOrder {
     private String warehouseId;
      // 货物明细
      private List<RecycleOrderItem> items;
+
+     // 采购订单相关=====
+    // 站点
+    private String siteName;
 }
 

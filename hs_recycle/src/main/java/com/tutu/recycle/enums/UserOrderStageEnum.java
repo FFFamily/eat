@@ -28,9 +28,13 @@ public enum UserOrderStageEnum {
     PROCESSING("processing", "加工","wait_warehousing"),
     
     /**
-     * 入库阶段 -> 已完成
+     * 入库阶段 -> 待结算
      */
-    WAREHOUSING("warehousing", "入库","completed"),
+    WAREHOUSING("warehousing", "入库","wait_settlement"),
+    /**
+     * 待结算阶段 -> 已完成
+     */
+    PENDING_SETTLEMENT("pending_settlement", "待结算","completed"),
     /**
      * 已完成 -> 无
      */
@@ -88,6 +92,44 @@ public enum UserOrderStageEnum {
             case PROCESSING:
                 return WAREHOUSING;
             case WAREHOUSING:
+                return PENDING_SETTLEMENT;
+            case PENDING_SETTLEMENT:
+                return COMPLETED;
+            case COMPLETED:
+                return null; // 已经是最后一个阶段
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * 根据计价方式获取下一个阶段
+     * @param pricingMethod 计价方式
+     * @return 下一个阶段，如果是最后一个阶段则返回null
+     */
+    public UserOrderStageEnum getNextStage(String pricingMethod) {
+        // 如果计价方式为空，使用默认流程
+        if (pricingMethod == null) {
+            return getNextStage();
+        }
+
+        PricingMethodEnum pricing = PricingMethodEnum.getByCode(pricingMethod);
+
+        switch (this) {
+            case PURCHASE:
+                // 简单计价跳过运输阶段，直接到加工
+                if (pricing == PricingMethodEnum.SIMPLE) {
+                    return PROCESSING;
+                }
+                // 一般计价正常流转到运输
+                return TRANSPORT;
+            case TRANSPORT:
+                return PROCESSING;
+            case PROCESSING:
+                return WAREHOUSING;
+            case WAREHOUSING:
+                return PENDING_SETTLEMENT;
+            case PENDING_SETTLEMENT:
                 return COMPLETED;
             case COMPLETED:
                 return null; // 已经是最后一个阶段
@@ -110,8 +152,10 @@ public enum UserOrderStageEnum {
                 return TRANSPORT;
             case WAREHOUSING:
                 return PROCESSING;
-            case COMPLETED:
+            case PENDING_SETTLEMENT:
                 return WAREHOUSING;
+            case COMPLETED:
+                return PENDING_SETTLEMENT;
             default:
                 return null;
         }
