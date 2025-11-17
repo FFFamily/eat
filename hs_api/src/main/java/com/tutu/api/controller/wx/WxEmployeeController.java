@@ -3,10 +3,10 @@ package com.tutu.api.controller.wx;
 import cn.hutool.core.bean.BeanUtil;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.dto.TransportOrderDTO;
-import com.tutu.recycle.dto.UserOrderInfo;
 import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.enums.TransportStatusEnum;
+import com.tutu.recycle.request.*;
 import com.tutu.recycle.response.WxTransportOrderListResponse;
 import com.tutu.recycle.service.RecycleOrderService;
 import com.tutu.recycle.service.UserOrderService;
@@ -37,7 +37,7 @@ public class WxEmployeeController {
      * 查询当前阶段为运输，且不存在运输子订单的用户订单
      * @return 可接单的用户订单列表
      */
-    @GetMapping("/available")
+    @PostMapping("/available")
     public BaseResponse<List<WxTransportOrderListResponse>> getAvailableOrders() {
         List<WxTransportOrderListResponse> orders = userOrderService.getAvailableTransportOrders();
         return BaseResponse.success(orders);
@@ -45,20 +45,14 @@ public class WxEmployeeController {
 
     /**
      * 抢单操作
-     * @param orderId 订单ID
-     * @param processorId 经办人ID
-     * @param processorName 经办人姓名
-     * @param processorPhone 经办人电话
+     * @param request 抢单请求（包含主订单ID和经办人ID）
      * @return 抢单结果
      */
     @PostMapping("/grab")
-    public BaseResponse<Boolean> grabOrder(
-            @RequestParam String orderId,
-            @RequestParam String processorId,
-            @RequestParam String processorName,
-            @RequestParam String processorPhone) {
+    public BaseResponse<Boolean> grabOrder(@RequestBody GrabOrderRequest request) {
         try {
-            boolean result = recycleOrderService.grabOrder(orderId, processorId, processorName, processorPhone);
+            // 调用服务层抢单方法，经办人ID由前端传递
+            boolean result = recycleOrderService.grabOrder(request.getOrderId(), request.getProcessorId());
             return BaseResponse.success(result);
         } catch (Exception e) {
             return BaseResponse.error(e.getMessage());
@@ -69,7 +63,7 @@ public class WxEmployeeController {
      * 交付大厅列表
      * @return 交付大厅的运输订单列表
      */
-    @GetMapping("/delivery-hall")
+    @PostMapping("/delivery-hall")
     public BaseResponse<List<TransportOrderDTO>> getDeliveryHallOrders() {
         List<RecycleOrder> orders = recycleOrderService.getTransportOrdersByStatus(TransportStatusEnum.GRABBED.getCode());
         List<TransportOrderDTO> result = convertToDTO(orders);
@@ -78,16 +72,13 @@ public class WxEmployeeController {
 
     /**
      * 去交付操作（从交付大厅到运输中）
-     * @param orderId 订单ID
-     * @param deliveryAddress 送达地址（可选）
+     * @param request 交付请求
      * @return 交付结果
      */
     @PostMapping("/deliver")
-    public BaseResponse<Boolean> deliverOrder(
-            @RequestParam String orderId,
-            @RequestParam(required = false) String deliveryAddress) {
+    public BaseResponse<Boolean> deliverOrder(@RequestBody DeliverOrderRequest request) {
         try {
-            boolean result = recycleOrderService.deliverOrder(orderId, deliveryAddress);
+            boolean result = recycleOrderService.deliverOrder(request.getOrderId(), request.getDeliveryAddress());
             return BaseResponse.success(result);
         } catch (Exception e) {
             return BaseResponse.error(e.getMessage());
@@ -98,7 +89,7 @@ public class WxEmployeeController {
      * 运输中列表
      * @return 运输中的订单列表
      */
-    @GetMapping("/transporting")
+    @PostMapping("/transporting")
     public BaseResponse<List<TransportOrderDTO>> getTransportingOrders() {
         List<RecycleOrder> orders = recycleOrderService.getTransportOrdersByStatus(TransportStatusEnum.TRANSPORTING.getCode());
         List<TransportOrderDTO> result = convertToDTO(orders);
@@ -124,7 +115,7 @@ public class WxEmployeeController {
      * 已送达列表
      * @return 已送达的订单列表
      */
-    @GetMapping("/arrived")
+    @PostMapping("/arrived")
     public BaseResponse<List<TransportOrderDTO>> getArrivedOrders() {
         List<RecycleOrder> orders = recycleOrderService.getTransportOrdersByStatus(TransportStatusEnum.ARRIVED.getCode());
         List<TransportOrderDTO> result = convertToDTO(orders);
@@ -133,13 +124,13 @@ public class WxEmployeeController {
 
     /**
      * 运输单详情
-     * @param orderId 订单ID
+     * @param request 订单ID请求
      * @return 运输单详情
      */
-    @GetMapping("/detail/{orderId}")
-    public BaseResponse<TransportOrderDTO> getTransportOrderDetail(@PathVariable String orderId) {
+    @PostMapping("/detail")
+    public BaseResponse<TransportOrderDTO> getTransportOrderDetail(@RequestBody QueryOrderByIdRequest request) {
         try {
-            RecycleOrder order = recycleOrderService.getById(orderId);
+            RecycleOrder order = recycleOrderService.getById(request.getId());
             if (order == null) {
                 return BaseResponse.error("订单不存在");
             }
@@ -203,13 +194,13 @@ public class WxEmployeeController {
 
     /**
      * 查看交付单（已送达页面-查看-交付单）
-     * @param orderId 订单ID
+     * @param request 订单ID请求
      * @return 交付单PDF URL
      */
-    @GetMapping("/delivery-note/{orderId}")
-    public BaseResponse<String> getDeliveryNotePdfUrl(@PathVariable String orderId) {
+    @PostMapping("/delivery-note")
+    public BaseResponse<String> getDeliveryNotePdfUrl(@RequestBody QueryOrderByIdRequest request) {
         try {
-            String pdfUrl = recycleOrderService.getDeliveryNotePdfUrl(orderId);
+            String pdfUrl = recycleOrderService.getDeliveryNotePdfUrl(request.getId());
             if (pdfUrl == null || pdfUrl.isEmpty()) {
                 return BaseResponse.error("该订单暂无交付单");
             }
@@ -221,16 +212,28 @@ public class WxEmployeeController {
 
     /**
      * 保存交付单PDF URL（签署后保存）
-     * @param orderId 订单ID
-     * @param pdfUrl 交付单PDF URL
+     * @param request 保存交付单PDF请求
      * @return 保存结果
      */
     @PostMapping("/delivery-note/save")
-    public BaseResponse<Boolean> saveDeliveryNotePdf(
-            @RequestParam String orderId,
-            @RequestParam String pdfUrl) {
+    public BaseResponse<Boolean> saveDeliveryNotePdf(@RequestBody SaveDeliveryNotePdfRequest request) {
         try {
-            boolean result = recycleOrderService.saveDeliveryNotePdf(orderId, pdfUrl);
+            boolean result = recycleOrderService.saveDeliveryNotePdf(request.getOrderId(), request.getPdfUrl());
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 校验订单识别码是否属于指定订单
+     * @param request 校验请求
+     * @return true/false
+     */
+    @PostMapping("/validate-identify-code")
+    public BaseResponse<Boolean> validateIdentifyCode(@RequestBody ValidateOrderIdentifyCodeRequest request) {
+        try {
+            boolean result = recycleOrderService.validateOrderIdentifyCode(request.getOrderId(), request.getIdentifyCode());
             return BaseResponse.success(result);
         } catch (Exception e) {
             return BaseResponse.error(e.getMessage());
@@ -241,16 +244,16 @@ public class WxEmployeeController {
 
     /**
      * 分拣中心-交付大厅列表（送货上门的加工订单）
-     * @param current 当前页
-     * @param size 每页大小
+     * @param request 分页请求
      * @return 分页结果
      */
-    @GetMapping("/sorting/delivery-hall")
+    @PostMapping("/sorting/delivery-hall")
     public BaseResponse<com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder>> getSortingDeliveryHall(
-            @RequestParam(defaultValue = "1") int current,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestBody PageRequest request) {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> page =
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(current, size);
+            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                    request.getCurrent() != null ? request.getCurrent() : 1,
+                    request.getSize() != null ? request.getSize() : 10);
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> result =
             recycleOrderService.getDeliveryHallList(page);
         return BaseResponse.success(result);
@@ -258,16 +261,16 @@ public class WxEmployeeController {
 
     /**
      * 分拣中心-开始分拣列表（待分拣的加工订单）
-     * @param current 当前页
-     * @param size 每页大小
+     * @param request 分页请求
      * @return 分页结果
      */
-    @GetMapping("/sorting/start")
+    @PostMapping("/sorting/start")
     public BaseResponse<com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder>> getStartSortingList(
-            @RequestParam(defaultValue = "1") int current,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestBody PageRequest request) {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> page =
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(current, size);
+            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                    request.getCurrent() != null ? request.getCurrent() : 1,
+                    request.getSize() != null ? request.getSize() : 10);
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> result =
             recycleOrderService.getStartSortingList(page);
         return BaseResponse.success(result);
@@ -275,16 +278,16 @@ public class WxEmployeeController {
 
     /**
      * 分拣中心-结果暂存列表（分拣中的加工订单）
-     * @param current 当前页
-     * @param size 每页大小
+     * @param request 分页请求
      * @return 分页结果
      */
-    @GetMapping("/sorting/temp")
+    @PostMapping("/sorting/temp")
     public BaseResponse<com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder>> getSortingTempList(
-            @RequestParam(defaultValue = "1") int current,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestBody PageRequest request) {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> page =
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(current, size);
+            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                    request.getCurrent() != null ? request.getCurrent() : 1,
+                    request.getSize() != null ? request.getSize() : 10);
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> result =
             recycleOrderService.getSortingTempList(page);
         return BaseResponse.success(result);
@@ -292,16 +295,16 @@ public class WxEmployeeController {
 
     /**
      * 分拣中心-已分拣列表（已分拣的加工订单）
-     * @param current 当前页
-     * @param size 每页大小
+     * @param request 分页请求
      * @return 分页结果
      */
-    @GetMapping("/sorting/sorted")
+    @PostMapping("/sorting/sorted")
     public BaseResponse<com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder>> getSortedList(
-            @RequestParam(defaultValue = "1") int current,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestBody PageRequest request) {
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> page =
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(current, size);
+            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                    request.getCurrent() != null ? request.getCurrent() : 1,
+                    request.getSize() != null ? request.getSize() : 10);
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<RecycleOrder> result =
             recycleOrderService.getSortedList(page);
         return BaseResponse.success(result);
@@ -309,13 +312,13 @@ public class WxEmployeeController {
 
     /**
      * 根据识别码获取订单
-     * @param identifyCode 识别码
+     * @param request 识别码请求
      * @return 订单信息
      */
-    @GetMapping("/sorting/by-code/{identifyCode}")
-    public BaseResponse<RecycleOrder> getOrderByIdentifyCode(@PathVariable String identifyCode) {
+    @PostMapping("/sorting/by-code")
+    public BaseResponse<RecycleOrder> getOrderByIdentifyCode(@RequestBody QueryOrderByIdentifyCodeRequest request) {
         try {
-            List<RecycleOrder> orders = recycleOrderService.getByIdentifyCode(identifyCode);
+            List<RecycleOrder> orders = recycleOrderService.getByIdentifyCode(request.getIdentifyCode());
             if (orders.isEmpty()) {
                 return BaseResponse.error("未找到该识别码对应的订单");
             }

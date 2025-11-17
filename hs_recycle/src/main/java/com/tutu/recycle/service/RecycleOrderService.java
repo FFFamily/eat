@@ -19,7 +19,6 @@ import com.tutu.recycle.enums.*;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
 import com.tutu.recycle.request.ProcessingOrderSubmitRequest;
 import com.tutu.recycle.request.RecycleOrderQueryRequest;
-import com.tutu.recycle.request.recycle_order.CreateRecycleOrderRequest;
 import com.tutu.recycle.request.recycle_order.SourceCode;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 
@@ -43,6 +42,8 @@ import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.io.ByteArrayInputStream;
@@ -56,6 +57,7 @@ import jakarta.annotation.Resource;
 
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +87,13 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     private CodeUtil codeUtil;
     @Resource
     private BaseRecycleOrderServer baseRecycleOrderServer;
+    
+    @Resource
+    @Lazy
+    private UserOrderService userOrderService;
+    
+    // 使用ConcurrentHashMap存储订单ID对应的锁，防止并发抢单
+    private final ConcurrentHashMap<String, ReentrantLock> orderLocks = new ConcurrentHashMap<>();
     /**
      * 根据用户订单和阶段创建对应类型的回收订单
      *
@@ -1021,42 +1030,114 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     }
 
     /**
-     * 抢单操作
+     * 获取订单锁
      * @param orderId 订单ID
+     * @return 对应的锁对象
+     */
+    private ReentrantLock getOrderLock(String orderId) {
+        return orderLocks.computeIfAbsent(orderId, k -> new ReentrantLock());
+    }
+    
+    /**
+     * 尝试获取订单锁
+     * @param orderId 订单ID
+     * @return 是否成功获取锁
+     */
+    private boolean tryLock(String orderId) {
+        ReentrantLock lock = getOrderLock(orderId);
+        return lock.tryLock();
+    }
+    
+    /**
+     * 释放订单锁
+     * @param orderId 订单ID
+     */
+    private void releaseLock(String orderId) {
+        ReentrantLock lock = orderLocks.get(orderId);
+        if (lock != null && lock.isHeldByCurrentThread()) {
+            lock.unlock();
+            // 如果锁没有被其他线程持有，则从Map中移除，防止内存泄漏
+            if (!lock.isLocked()) {
+                orderLocks.remove(orderId);
+            }
+        }
+    }
+    
+    /**
+     * 抢单操作
+     * 根据主订单ID（UserOrder）创建运输类型的子订单（RecycleOrder）
+     * @param userOrderId 主订单ID（UserOrder的ID）
      * @param processorId 经办人ID
-     * @param processorName 经办人姓名
-     * @param processorPhone 经办人电话
      * @return 是否抢单成功
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean grabOrder(String orderId, String processorId, String processorName, String processorPhone) {
-        if (StrUtil.isBlank(orderId)) {
+    public boolean grabOrder(String userOrderId, String processorId) {
+        if (StrUtil.isBlank(userOrderId)) {
             throw new ServiceException("订单ID不能为空");
         }
-
-        RecycleOrder order = getById(orderId);
-        if (order == null) {
-            throw new ServiceException("订单不存在");
+        if (StrUtil.isBlank(processorId)) {
+            throw new ServiceException("经办人ID不能为空");
         }
-
-        // 检查订单类型
-        if (!RecycleOrderTypeEnum.TRANSPORT.getCode().equals(order.getType())) {
-            throw new ServiceException("只有运输订单才能抢单");
+        
+        // 尝试获取订单锁，防止并发抢单
+        if (!tryLock(userOrderId)) {
+            throw new ServiceException("当前订单正在被处理，请稍后重试");
         }
-
-        // 检查订单状态
-        if (!TransportStatusEnum.AVAILABLE.getCode().equals(order.getTransportStatus())) {
-            throw new ServiceException("该订单不可抢单");
+        
+        try {
+            // 查询主订单（UserOrder）
+            UserOrder userOrder = userOrderService.getById(userOrderId);
+            if (userOrder == null) {
+                throw new ServiceException("主订单不存在");
+            }
+            
+            // 检查主订单阶段是否为运输阶段
+            if (!UserOrderStageEnum.TRANSPORT.getCode().equals(userOrder.getStage())) {
+                throw new ServiceException("只有运输阶段的订单才能抢单");
+            }
+            
+            // 检查是否已经存在运输类型的子订单
+            List<RecycleOrderInfo> existingOrders = getAllByParentId(userOrderId);
+            boolean hasTransportOrder = existingOrders.stream()
+                    .anyMatch(order -> RecycleOrderTypeEnum.TRANSPORT.getCode().equals(order.getType()));
+            if (hasTransportOrder) {
+                throw new ServiceException("该订单已经被抢单，无法重复抢单");
+            }
+            
+            // 获取经办人信息
+            Processor processor = processorService.getById(processorId);
+            if (processor == null) {
+                throw new ServiceException("经办人不存在");
+            }
+            
+            // 将UserOrder转换为UserOrderDTO
+            UserOrderDTO userOrderDTO = new UserOrderDTO();
+            BeanUtil.copyProperties(userOrder, userOrderDTO);
+            // 设置经办人信息
+            userOrderDTO.setProcessorId(processorId);
+            userOrderDTO.setProcessorName(processor.getName());
+            
+            // 创建运输类型的回收订单
+            RecycleOrderInfo recycleOrderInfo = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(
+                    userOrderDTO, userOrder, RecycleOrderTypeEnum.TRANSPORT);
+            
+            // 设置运输状态为已抢单
+            recycleOrderInfo.setTransportStatus(TransportStatusEnum.GRABBED.getCode());
+            // 设置开始时间（抢单时间）
+            recycleOrderInfo.setStartTime(new Date());
+            // 设置经办人信息
+            recycleOrderInfo.setProcessorId(processorId);
+            recycleOrderInfo.setProcessor(processor.getName());
+            recycleOrderInfo.setProcessorPhone(processor.getPhone());
+            
+            // 保存回收订单
+            createOrUpdate(recycleOrderInfo);
+            
+            return true;
+        } finally {
+            // 释放锁
+            releaseLock(userOrderId);
         }
-
-        // 更新订单信息
-        order.setTransportStatus(TransportStatusEnum.GRABBED.getCode());
-        order.setProcessorId(processorId);
-        order.setProcessor(processorName);
-        order.setProcessorPhone(processorPhone);
-        order.setStartTime(new Date()); // 抢单时间就是开始时间
-
-        return updateById(order);
     }
 
     /**
@@ -1192,6 +1273,28 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }
 
         return order.getDeliveryNotePdfUrl();
+    }
+
+    /**
+     * 校验订单识别码是否属于指定订单
+     * @param orderId 订单ID
+     * @param identifyCode 订单识别码
+     * @return 是否匹配
+     */
+    public boolean validateOrderIdentifyCode(String orderId, String identifyCode) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        if (StrUtil.isBlank(identifyCode)) {
+            throw new ServiceException("订单识别码不能为空");
+        }
+
+        RecycleOrder order = getById(orderId);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
+        }
+
+        return identifyCode.equals(order.getIdentifyCode());
     }
 
     /**
