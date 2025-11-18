@@ -60,6 +60,8 @@ public class UserOrder extends BaseEntity {
     private String processorSignature;
     // 计价方式
     private String pricingMethod;
+    // 运输方式（上门回收/送货上门）
+    private String transportMethod;
     // 用户评级系数
     private BigDecimal accountCoefficient;
     // 其他调价

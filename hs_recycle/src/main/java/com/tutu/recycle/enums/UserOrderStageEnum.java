@@ -1,7 +1,5 @@
 package com.tutu.recycle.enums;
 
-import org.apache.ibatis.javassist.tools.framedump;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -107,22 +105,21 @@ public enum UserOrderStageEnum {
      * @param pricingMethod 计价方式
      * @return 下一个阶段，如果是最后一个阶段则返回null
      */
-    public UserOrderStageEnum getNextStage(String pricingMethod) {
-        // 如果计价方式为空，使用默认流程
-        if (pricingMethod == null) {
+    public UserOrderStageEnum getNextStage(String transportMethod) {
+        // 如果运输方式为空，使用默认流程
+        if (transportMethod == null) {
             return getNextStage();
         }
 
-        PricingMethodEnum pricing = PricingMethodEnum.getByCode(pricingMethod);
+        TransportMethodEnum method = TransportMethodEnum.getByCode(transportMethod);
+
+        if (method == null) {
+            return getNextStage();
+        }
 
         switch (this) {
             case PURCHASE:
-                // 简单计价跳过运输阶段，直接到加工
-                if (pricing == PricingMethodEnum.SIMPLE) {
-                    return PROCESSING;
-                }
-                // 一般计价正常流转到运输
-                return TRANSPORT;
+                return method.isNeedTransportStage() ? TRANSPORT : PROCESSING;
             case TRANSPORT:
                 return PROCESSING;
             case PROCESSING:

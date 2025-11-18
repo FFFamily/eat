@@ -1332,27 +1332,10 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     }
 
     /**
-     * 获取交付大厅列表（送货上门的加工订单）
-     * @param page 分页对象
-     * @return 分页结果
-     */
-    public Page<RecycleOrder> getDeliveryHallList(Page<RecycleOrder> page, String processorId) {
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
-                .eq(RecycleOrder::getTransportMethod, "送货上门")
-                .orderByDesc(RecycleOrder::getCreateTime);
-        if (StrUtil.isNotBlank(processorId)) {
-            wrapper.eq(RecycleOrder::getProcessorId, processorId);
-        }
-        return page(page, wrapper);
-    }
-
-    /**
      * 获取开始分拣列表（待分拣的加工订单）
-     * @param page 分页对象
-     * @return 分页结果
+     * @return 待分拣订单列表
      */
-    public Page<RecycleOrder> getStartSortingList(Page<RecycleOrder> page, String processorId) {
+    public List<RecycleOrder> getStartSortingList(String processorId) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.PENDING.getCode())
@@ -1360,15 +1343,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isNotBlank(processorId)) {
             wrapper.eq(RecycleOrder::getProcessorId, processorId);
         }
-        return page(page, wrapper);
+        return list(wrapper);
     }
 
     /**
      * 获取结果暂存列表（分拣中的加工订单）
-     * @param page 分页对象
-     * @return 分页结果
+     * @return 分拣中的订单列表
      */
-    public Page<RecycleOrder> getSortingTempList(Page<RecycleOrder> page, String processorId) {
+    public List<RecycleOrder> getSortingTempList(String processorId) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.SORTING.getCode())
@@ -1376,15 +1358,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isNotBlank(processorId)) {
             wrapper.eq(RecycleOrder::getProcessorId, processorId);
         }
-        return page(page, wrapper);
+        return list(wrapper);
     }
 
     /**
      * 获取已分拣列表（已分拣的加工订单）
-     * @param page 分页对象
-     * @return 分页结果
+     * @return 已分拣订单列表
      */
-    public Page<RecycleOrder> getSortedList(Page<RecycleOrder> page, String processorId) {
+    public List<RecycleOrder> getSortedList(String processorId) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.SORTED.getCode())
@@ -1392,7 +1373,24 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isNotBlank(processorId)) {
             wrapper.eq(RecycleOrder::getProcessorId, processorId);
         }
-        return page(page, wrapper);
+        return list(wrapper);
+    }
+
+    /**
+     * 根据主订单ID获取加工（分拣）子订单
+     * @param parentId 主订单ID
+     * @return 加工子订单
+     */
+    public RecycleOrder getProcessingOrderByParentId(String parentId) {
+        if (StrUtil.isBlank(parentId)) {
+            throw new ServiceException("主订单ID不能为空");
+        }
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RecycleOrder::getParentId, parentId)
+                .eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
+                .orderByDesc(RecycleOrder::getCreateTime)
+                .last("limit 1");
+        return getOne(wrapper, false);
     }
 
     /**

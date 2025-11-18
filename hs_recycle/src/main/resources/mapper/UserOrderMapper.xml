@@ -22,4 +22,27 @@
         ORDER BY uo.create_time DESC
     </select>
 
+    <!-- 查询分拣交付大厅订单 -->
+    <select id="selectSortingDeliveryHallOrders" resultType="com.tutu.recycle.response.SortingDeliveryHallResponse">
+        SELECT uo.id,
+               uo.no,
+               uo.contract_partner_name AS company,
+               transportOrder.site_name AS pickupAddress,
+               transportOrder.delivery_address AS deliveryAddress,
+               transportOrder.processor AS contactName,
+               transportOrder.processor_phone AS contactPhone
+        FROM user_order uo
+                 LEFT JOIN recycle_order transportOrder
+                           ON transportOrder.parent_id = uo.id
+                               AND transportOrder.type = 'transport'
+        WHERE uo.stage = 'processing'
+          AND NOT EXISTS (
+            SELECT 1
+            FROM recycle_order ro
+            WHERE ro.parent_id = uo.id
+              AND ro.type = 'processing'
+        )
+        ORDER BY uo.create_time DESC
+    </select>
+
 </mapper>

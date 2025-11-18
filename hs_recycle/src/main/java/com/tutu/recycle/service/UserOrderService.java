@@ -8,24 +8,35 @@ import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.dto.DeliveryDTO;
 import com.tutu.recycle.dto.UserOrderDTO;
 import com.tutu.recycle.dto.UserOrderInfo;
+import com.tutu.recycle.entity.RecycleContract;
+import com.tutu.recycle.entity.RecycleContractBeneficiary;
+import com.tutu.recycle.entity.order.RecycleOrderItem;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.enums.DeliveryStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
+import com.tutu.recycle.enums.UserOrderStageEnum;
+import com.tutu.recycle.enums.UserOrderStatusEnum;
+import com.tutu.recycle.mapper.UserOrderMapper;
+import com.tutu.recycle.response.SortingDeliveryHallResponse;
 import com.tutu.recycle.response.WxTransportOrderListResponse;
 import com.tutu.recycle.schema.RecycleOrderInfo;
+import com.tutu.recycle.utils.UserOrderNoGenerator;
+import com.tutu.point.entity.AccountPointDetail;
+import com.tutu.point.entity.PointGlobalConfig;
+import com.tutu.point.enums.PointChangeDirectionEnum;
+import com.tutu.point.enums.PointChangeTypeEnum;
+import com.tutu.point.service.AccountPointDetailService;
+import com.tutu.point.service.PointGlobalConfigService;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import com.tutu.recycle.enums.UserOrderStageEnum;
-import com.tutu.recycle.enums.UserOrderStatusEnum;
-import com.tutu.recycle.mapper.UserOrderMapper;
-import com.tutu.recycle.utils.UserOrderNoGenerator;
-import com.tutu.recycle.entity.order.RecycleOrderItem;
+
 import com.tutu.user.service.ProcessorService;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
@@ -43,6 +54,15 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     
     @Resource
     private RecycleOrderService recycleOrderService;
+    
+    @Resource
+    private RecycleContractService recycleContractService;
+    
+    @Resource
+    private PointGlobalConfigService pointGlobalConfigService;
+    
+    @Resource
+    private AccountPointDetailService accountPointDetailService;
 
     /**
      * 获取当前登录用户作为合作方的订单列表
@@ -385,7 +405,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         }
 
         // 获取下一个阶段（根据计价方式判断）
-        UserOrderStageEnum nextStage = currentStage.getNextStage(userOrder.getPricingMethod());
+        UserOrderStageEnum nextStage = currentStage.getNextStage(userOrder.getTransportMethod());
         userOrder.setStage(nextStage.getCode());
 
         return updateById(userOrder);
@@ -461,7 +481,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         
         // 获取下一个阶段和下一个状态（使用枚举类中的方法）
         // 根据计价方式获取下一个阶段
-        UserOrderStageEnum nextStage = currentStage.getNextStage(userOrder.getPricingMethod());
+        UserOrderStageEnum nextStage = currentStage.getNextStage(userOrder.getTransportMethod());
         // 如果下一个阶段或下一个状态为null，说明已经到达最后阶段/状态
         if (nextStage == null) {
             throw new ServiceException("订单阶段已经是最后阶段，无法继续结算");
@@ -474,6 +494,32 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderRequest,userOrder, currentStage);
         }
 
+        return true;
+    }
+
+    /**
+     * 保存当前阶段的子回收订单
+     * 仅保存数据，不做阶段流转
+     * @param userOrderDTO 用户订单DTO
+     * @return 是否保存成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean saveSubOrder(UserOrderDTO userOrderDTO) {
+        if (StrUtil.isBlank(userOrderDTO.getId())) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        UserOrder userOrder = getById(userOrderDTO.getId());
+        if (userOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        UserOrderStageEnum currentStage = UserOrderStageEnum.getByCode(userOrder.getStage());
+        if (currentStage == null) {
+            throw new ServiceException("当前订单阶段无效");
+        }
+        if (currentStage == UserOrderStageEnum.PENDING_SETTLEMENT || currentStage == UserOrderStageEnum.COMPLETED) {
+            throw new ServiceException("当前阶段无需保存子订单");
+        }
+        recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderDTO, userOrder, currentStage);
         return true;
     }
 
@@ -526,6 +572,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         userOrder.setSettlementTime(new Date());
         // 流转到完成阶段
         userOrder.setStage(UserOrderStageEnum.COMPLETED.getCode());
+        // 根据合同受益人发放积分
+        distributeSettlementPoints(userOrder);
         return updateById(userOrder);
     }
 
@@ -611,6 +659,85 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      */
     public List<WxTransportOrderListResponse> getAvailableTransportOrders() {
         return baseMapper.selectAvailableTransportOrders();
+    }
+
+    /**
+     * 获取分拣交付大厅订单列表
+     * 条件：当前阶段为加工，且不存在加工子订单
+     * @return 分拣交付大厅订单列表
+     */
+    public List<SortingDeliveryHallResponse> getSortingDeliveryHallOrders() {
+        return baseMapper.selectSortingDeliveryHallOrders();
+    }
+
+    /**
+     * 结算后根据合同受益人发放积分
+     * @param userOrder 当前订单
+     */
+    private void distributeSettlementPoints(UserOrder userOrder) {
+        if (userOrder == null || StrUtil.isBlank(userOrder.getContractId())) {
+            return;
+        }
+        BigDecimal totalAmount = Optional.ofNullable(userOrder.getTotalAmount()).orElse(BigDecimal.ZERO);
+        if (totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        RecycleContract contract = recycleContractService.getContractById(userOrder.getContractId());
+        if (contract == null || contract.getBeneficiaries() == null || contract.getBeneficiaries().isEmpty()) {
+            return;
+        }
+        PointGlobalConfig pointGlobalConfig = pointGlobalConfigService.getConfig();
+        BigDecimal pointRatio = Optional.ofNullable(pointGlobalConfig)
+                .map(PointGlobalConfig::getPointRatio)
+                .orElse(BigDecimal.ZERO);
+        if (pointRatio.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        List<RecycleContractBeneficiary> eligibleBeneficiaries = contract.getBeneficiaries().stream()
+                .filter(beneficiary -> StrUtil.isNotBlank(beneficiary.getBeneficiaryId()))
+                .filter(beneficiary -> Optional.ofNullable(beneficiary.getShareRatio()).orElse(BigDecimal.ZERO)
+                        .compareTo(BigDecimal.ZERO) > 0)
+                .collect(Collectors.toList());
+        if (eligibleBeneficiaries.isEmpty()) {
+            return;
+        }
+        BigDecimal totalPointAmount = totalAmount.multiply(pointRatio);
+        long totalPoints = totalPointAmount.setScale(0, RoundingMode.DOWN).longValue();
+        if (totalPoints <= 0) {
+            return;
+        }
+        BigDecimal totalPointsDecimal = BigDecimal.valueOf(totalPoints);
+        long distributedPoints = 0L;
+        for (int i = 0; i < eligibleBeneficiaries.size(); i++) {
+            RecycleContractBeneficiary beneficiary = eligibleBeneficiaries.get(i);
+            long remainingPoints = totalPoints - distributedPoints;
+            if (remainingPoints <= 0) {
+                break;
+            }
+            BigDecimal shareRatio = beneficiary.getShareRatio();
+            long sharePoints;
+            if (i == eligibleBeneficiaries.size() - 1) {
+                sharePoints = remainingPoints;
+            } else {
+                BigDecimal sharePointDecimal = totalPointsDecimal.multiply(shareRatio);
+                sharePoints = sharePointDecimal.setScale(0, RoundingMode.DOWN).longValue();
+                if (sharePoints > remainingPoints) {
+                    sharePoints = remainingPoints;
+                }
+            }
+            if (sharePoints <= 0) {
+                continue;
+            }
+            distributedPoints += sharePoints;
+            AccountPointDetail pointDetail = new AccountPointDetail();
+            pointDetail.setAccountId(beneficiary.getBeneficiaryId());
+            pointDetail.setChangeDirection(PointChangeDirectionEnum.ADD.getValue());
+            pointDetail.setChangePoint(sharePoints);
+            pointDetail.setChangeType(PointChangeTypeEnum.SYSTEM_REWARD.getType());
+            pointDetail.setChangeReason(StrUtil.format("订单{}结算积分奖励", Optional.ofNullable(userOrder.getNo()).orElse(userOrder.getId())));
+            pointDetail.setRemark(StrUtil.format("总金额:{}, 积分比例:{}, 受益人分成:{}", totalAmount, pointRatio, shareRatio));
+            accountPointDetailService.createDetail(pointDetail);
+        }
     }
 }
 

@@ -267,6 +267,22 @@ public class UserOrderController {
     }
 
     /**
+     * 保存当前阶段的子回收订单
+     * 不进行阶段流转，仅持久化子订单数据
+     * @param userOrderDTO 用户订单DTO
+     * @return 保存结果
+     */
+    @PostMapping("/save")
+    public BaseResponse<Boolean> saveSubOrder(@RequestBody UserOrderDTO userOrderDTO) {
+        try {
+            boolean result = userOrderService.saveSubOrder(userOrderDTO);
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
+    }
+
+    /**
      * 确认结算订单
      * 将订单从待结算阶段流转到完成阶段
      * @param userOrderDTO 用户订单DTO（包含订单ID和调价信息）
