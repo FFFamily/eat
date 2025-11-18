@@ -2,6 +2,7 @@ package com.tutu.recycle.service;
 
 import cn.binarywang.wx.miniapp.api.WxMaService;
 
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -17,6 +18,7 @@ import com.tutu.recycle.entity.order.RecycleOrderItem;
 import com.tutu.recycle.entity.order.RecycleOrderTrace;
 import com.tutu.recycle.enums.*;
 import com.tutu.recycle.mapper.RecycleOrderMapper;
+import com.tutu.recycle.request.DeliverOrderRequest;
 import com.tutu.recycle.request.ProcessingOrderSubmitRequest;
 import com.tutu.recycle.request.RecycleOrderQueryRequest;
 import com.tutu.recycle.request.recycle_order.SourceCode;
@@ -135,8 +137,13 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }
         // 使用BaseRecycleOrderServer创建回收订单
         RecycleOrderInfo recycleOrder = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType);
+        // 查询对应阶段是否有已存在订单
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RecycleOrder::getParentId, recycleOrder.getParentId());
+        RecycleOrderInfo existingOrder = Optional.ofNullable(getByParentId(recycleOrder.getParentId(),orderType.getCode())).orElse(new RecycleOrderInfo());
+        BeanUtil.copyProperties(recycleOrder, existingOrder, CopyOptions.create().setIgnoreNullValue(true));
         // 保存回收订单
-        createOrUpdate(recycleOrder);
+        createOrUpdate(existingOrder);
     }
     
     /**
@@ -164,13 +171,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param parentId 父订单ID
      * @return 回收订单信息（包含订单明细和追溯信息）
      */
-    public RecycleOrderInfo getByParentId(String parentId) {
+    public RecycleOrderInfo getByParentId(String parentId,String orderType) {
         if (StrUtil.isBlank(parentId)) {
             throw new ServiceException("父订单ID不能为空");
         }
         
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getParentId, parentId);
+        wrapper.eq(RecycleOrder::getType, orderType);
         
         List<RecycleOrder> orders = list(wrapper);
         
@@ -1019,11 +1027,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param transportStatus 运输状态
      * @return 运输订单列表
      */
-    public List<RecycleOrder> getTransportOrdersByStatus(String transportStatus) {
+    public List<RecycleOrder> getTransportOrdersByStatus(String transportStatus, String processorId) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.TRANSPORT.getCode());
         if (StrUtil.isNotBlank(transportStatus)) {
             wrapper.eq(RecycleOrder::getTransportStatus, transportStatus);
+        }
+        if (StrUtil.isNotBlank(processorId)) {
+            wrapper.eq(RecycleOrder::getProcessorId, processorId);
         }
         wrapper.orderByDesc(RecycleOrder::getCreateTime);
         return list(wrapper);
@@ -1173,43 +1184,44 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     }
 
     /**
-     * 批量确认送达
-     * @param orderIds 订单ID列表
-     * @return 是否全部确认成功
+     * 确认送达（单个订单）
+     * @param orderId 订单ID
+     * @return 是否确认成功
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean batchConfirmArrival(List<String> orderIds) {
-        if (CollUtil.isEmpty(orderIds)) {
-            throw new ServiceException("订单ID列表不能为空");
+    public boolean confirmArrival(String orderId) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
         }
 
-        List<RecycleOrder> orders = listByIds(orderIds);
-        if (CollUtil.isEmpty(orders) || orders.size() != orderIds.size()) {
-            throw new ServiceException("部分订单不存在");
+        RecycleOrder order = getById(orderId);
+        if (order == null) {
+            throw new ServiceException("订单不存在");
         }
 
-        Date now = new Date();
-        for (RecycleOrder order : orders) {
-            // 检查订单状态
-            if (!TransportStatusEnum.TRANSPORTING.getCode().equals(order.getTransportStatus())) {
-                throw new ServiceException("订单【" + order.getNo() + "】不在运输中状态，无法确认送达");
-            }
-
-            order.setTransportStatus(TransportStatusEnum.ARRIVED.getCode());
-            order.setEndTime(now); // 送达时间
+        if (!TransportStatusEnum.TRANSPORTING.getCode().equals(order.getTransportStatus())) {
+            throw new ServiceException("订单【" + order.getNo() + "】不在运输中状态，无法确认送达");
         }
 
-        return updateBatchById(orders);
+        order.setTransportStatus(TransportStatusEnum.ARRIVED.getCode());
+        order.setEndTime(new Date());
+        UserOrderDTO dto = new UserOrderDTO();
+        dto.setId(order.getParentId());
+        userOrderService.settleOrder(dto);
+        return updateById(order);
     }
 
     /**
      * 交付订单（从交付大厅到运输中）
-     * @param orderId 订单ID
-     * @param deliveryAddress 送达地址
+     * @param request 交付请求
      * @return 是否交付成功
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean deliverOrder(String orderId, String deliveryAddress) {
+    public boolean deliverOrder(DeliverOrderRequest request) {
+        if (request == null) {
+            throw new ServiceException("交付请求不能为空");
+        }
+        String orderId = StrUtil.isNotBlank(request.getOrderId()) ? request.getOrderId() : request.getId();
         if (StrUtil.isBlank(orderId)) {
             throw new ServiceException("订单ID不能为空");
         }
@@ -1226,11 +1238,33 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
 
         // 更新状态为运输中
         order.setTransportStatus(TransportStatusEnum.TRANSPORTING.getCode());
-        if (StrUtil.isNotBlank(deliveryAddress)) {
-            order.setDeliveryAddress(deliveryAddress);
+        boolean orderUpdated = updateById(order);
+        boolean userOrderUpdated = updateUserOrderDeliveryInfo(order, request);
+        return orderUpdated && userOrderUpdated;
+    }
+
+    /**
+     * 同步更新主订单的交付信息
+     */
+    private boolean updateUserOrderDeliveryInfo(RecycleOrder recycleOrder, DeliverOrderRequest request) {
+        String parentId = recycleOrder.getParentId();
+        if (StrUtil.isBlank(parentId)) {
+            return true;
+        }
+        UserOrder userOrder = userOrderService.getById(parentId);
+        if (userOrder == null) {
+            throw new ServiceException("关联的主订单不存在");
         }
 
-        return updateById(order);
+        userOrder.setDeliveryMethod("线上交付");
+        userOrder.setDeliveryTime(new Date());
+        if (StrUtil.isNotBlank(request.getCustomerSignature())) {
+            userOrder.setPartnerSignature(request.getCustomerSignature());
+        }
+        if (StrUtil.isNotBlank(request.getDriverSignature())) {
+            userOrder.setProcessorSignature(request.getDriverSignature());
+        }
+        return userOrderService.updateById(userOrder);
     }
 
     /**
@@ -1302,11 +1336,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param page 分页对象
      * @return 分页结果
      */
-    public Page<RecycleOrder> getDeliveryHallList(Page<RecycleOrder> page) {
+    public Page<RecycleOrder> getDeliveryHallList(Page<RecycleOrder> page, String processorId) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getTransportMethod, "送货上门")
                 .orderByDesc(RecycleOrder::getCreateTime);
+        if (StrUtil.isNotBlank(processorId)) {
+            wrapper.eq(RecycleOrder::getProcessorId, processorId);
+        }
         return page(page, wrapper);
     }
 
@@ -1315,11 +1352,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param page 分页对象
      * @return 分页结果
      */
-    public Page<RecycleOrder> getStartSortingList(Page<RecycleOrder> page) {
+    public Page<RecycleOrder> getStartSortingList(Page<RecycleOrder> page, String processorId) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.PENDING.getCode())
                 .orderByDesc(RecycleOrder::getCreateTime);
+        if (StrUtil.isNotBlank(processorId)) {
+            wrapper.eq(RecycleOrder::getProcessorId, processorId);
+        }
         return page(page, wrapper);
     }
 
@@ -1328,11 +1368,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param page 分页对象
      * @return 分页结果
      */
-    public Page<RecycleOrder> getSortingTempList(Page<RecycleOrder> page) {
+    public Page<RecycleOrder> getSortingTempList(Page<RecycleOrder> page, String processorId) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.SORTING.getCode())
                 .orderByDesc(RecycleOrder::getCreateTime);
+        if (StrUtil.isNotBlank(processorId)) {
+            wrapper.eq(RecycleOrder::getProcessorId, processorId);
+        }
         return page(page, wrapper);
     }
 
@@ -1341,11 +1384,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param page 分页对象
      * @return 分页结果
      */
-    public Page<RecycleOrder> getSortedList(Page<RecycleOrder> page) {
+    public Page<RecycleOrder> getSortedList(Page<RecycleOrder> page, String processorId) {
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.SORTED.getCode())
                 .orderByDesc(RecycleOrder::getCreateTime);
+        if (StrUtil.isNotBlank(processorId)) {
+            wrapper.eq(RecycleOrder::getProcessorId, processorId);
+        }
         return page(page, wrapper);
     }
 

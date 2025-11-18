@@ -13,5 +13,5 @@ public class QueryOrderByIdRequest {
     /**
      * 订单ID
      */
-    private String id;
+    private String orderId;
 }

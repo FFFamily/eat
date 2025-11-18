@@ -127,7 +127,7 @@ public class RecycleOrderController {
      */
     @GetMapping("/parent/{parentId}")
     public BaseResponse<RecycleOrderInfo> getRecycleOrderByParentId(@PathVariable String parentId) {
-        RecycleOrderInfo recycleOrderInfo = recycleOrderService.getByParentId(parentId);
+        RecycleOrderInfo recycleOrderInfo = recycleOrderService.getByParentId(parentId,null);
         if (recycleOrderInfo == null) {
             return BaseResponse.error("未找到对应的回收订单");
         }

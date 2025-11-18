@@ -52,7 +52,7 @@ public class WxRecycleOrderController {
      */
     @PostMapping("/getById")
     public BaseResponse<RecycleOrder> getOrderById(@RequestBody QueryOrderByIdRequest request) {
-        if (request.getId() == null || request.getId().trim().isEmpty()) {
+        if (request.getOrderId() == null || request.getOrderId().trim().isEmpty()) {
             return BaseResponse.error("订单ID不能为空");
         }
         
@@ -60,7 +60,7 @@ public class WxRecycleOrderController {
         String userId = StpUtil.getLoginIdAsString();
         
         // 根据订单ID获取订单详情
-        RecycleOrder order = recycleOrderService.getOrderByIdWithPermission(request.getId(), userId);
+        RecycleOrder order = recycleOrderService.getOrderByIdWithPermission(request.getOrderId(), userId);
         return BaseResponse.success(order);
     }
     

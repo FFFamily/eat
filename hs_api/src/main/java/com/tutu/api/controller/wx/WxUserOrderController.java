@@ -36,18 +36,18 @@ public class WxUserOrderController {
      /**
      * 查询用户订单信息及其子回收订单
      * 根据回收订单类型，将订单信息映射到不同的字段
-     * @param id 用户订单ID
+     * @param orderId 用户订单ID
      * @return 用户订单信息（包含子回收订单）
      */
     @PostMapping("/getById")
     public BaseResponse<UserOrderInfo> getUserOrderInfo(@RequestBody QueryOrderByIdRequest request) {
-        UserOrderInfo userOrderInfo = userOrderService.getUserOrderInfo(request.getId());
+        UserOrderInfo userOrderInfo = userOrderService.getUserOrderInfo(request.getOrderId());
         return BaseResponse.success(userOrderInfo);
     }
 
        /**
      * 获取当前登录用户作为合作方的订单列表
-     * @param map 包含status参数的请求体，status可为空或"all"表示查询所有状态
+     * @param order 包含status参数的请求体，status可为空或"all"表示查询所有状态
      * @return 订单列表
      */
     @PostMapping("/current/list")
