@@ -27,21 +27,41 @@
         SELECT uo.id,
                uo.no,
                uo.contract_partner_name AS company,
-               transportOrder.site_name AS pickupAddress,
-               transportOrder.delivery_address AS deliveryAddress,
-               transportOrder.processor AS contactName,
-               transportOrder.processor_phone AS contactPhone
+               ro.site_name AS pickupAddress,
+               ro.delivery_address AS deliveryAddress,
+               ro.processor AS contactName,
+               ro.processor_phone AS contactPhone
         FROM user_order uo
-                 LEFT JOIN recycle_order transportOrder
-                           ON transportOrder.parent_id = uo.id
-                               AND transportOrder.type = 'transport'
+            LEFT JOIN recycle_order ro
+                           ON ro.parent_id = uo.id
         WHERE uo.stage = 'processing'
           AND NOT EXISTS (
             SELECT 1
             FROM recycle_order ro
             WHERE ro.parent_id = uo.id
-              AND ro.type = 'processing'
+              AND ro.type = 'process'
         )
+        ORDER BY uo.create_time DESC
+    </select>
+
+    <!-- 查询送货上门的分拣交付大厅订单 -->
+    <select id="selectSortingHomeDeliveryHallOrders" resultType="com.tutu.recycle.response.SortingDeliveryHallResponse">
+        SELECT uo.id,
+               uo.no,
+               uo.contract_partner_name AS company,
+        ro.site_name AS pickupAddress,
+        ro.delivery_address AS deliveryAddress,
+        ro.processor AS contactName,
+        ro.processor_phone AS contactPhone
+        FROM user_order uo
+                 LEFT JOIN recycle_order ro
+                           ON ro.parent_id = uo.id
+        WHERE uo.stage = 'processing'
+          AND uo.transport_method = 'home_delivery'
+        AND ro.type = 'process'
+        <if test="processorId != null and processorId != ''">
+          AND ro.processor_id = #{processorId}
+        </if>
         ORDER BY uo.create_time DESC
     </select>
 

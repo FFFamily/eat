@@ -3,7 +3,6 @@ package com.tutu.api.controller.wx;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.recycle.dto.SortingOrderDTO;
 import com.tutu.recycle.dto.TransportOrderDTO;
 import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.entity.user.UserOrder;
@@ -179,7 +178,7 @@ public class WxEmployeeController {
 //            if (order == null) {
 //                return BaseResponse.error("该订单暂无分拣信息");
 //            }
-            SortingOrderDTO dto = new SortingOrderDTO();
+//            SortingOrderDTO dto = new SortingOrderDTO();
 //            BeanUtil.copyProperties(order, dto);
 
 //            dto.setParentId(userOrder.getId());
@@ -285,7 +284,7 @@ public class WxEmployeeController {
     // ==================== 分拣中心接口 ====================
 
     /**
-     * 分拣中心-交付大厅列表
+     * 分拣中心
      * 条件：用户订单处于加工阶段，且暂无加工子订单
      * @return 可分拣的订单列表
      */
@@ -293,6 +292,34 @@ public class WxEmployeeController {
     public BaseResponse<List<SortingDeliveryHallResponse>> getSortingDeliveryHall() {
         List<SortingDeliveryHallResponse> orders = userOrderService.getSortingDeliveryHallOrders();
         return BaseResponse.success(orders);
+    }
+
+    /**
+     * 我的交付大厅
+     * @param request 查询条件（包含经办人ID）
+     * @return 可分拣的订单列表
+     */
+    @PostMapping("/sorting/delivery-center")
+    public BaseResponse<List<SortingDeliveryHallResponse>> getSortingDeliveryCenter(
+            @RequestBody SortingOrderPageRequest request) {
+        String processorId = request != null ? request.getProcessorId() : null;
+        List<SortingDeliveryHallResponse> orders = userOrderService.getSortingHomeDeliveryHallOrders(processorId);
+        return BaseResponse.success(orders);
+    }
+
+    /**
+     * 分拣中心-抢单
+     * @param request 抢单请求
+     * @return 抢单结果
+     */
+    @PostMapping("/sorting/grab")
+    public BaseResponse<Boolean> grabSortingOrder(@RequestBody GrabOrderRequest request) {
+        try {
+            boolean result = recycleOrderService.grabSortingOrder(request.getOrderId(), request.getProcessorId());
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
     }
 
     

@@ -3,7 +3,6 @@ package com.tutu.recycle.server;
 import cn.hutool.core.util.IdUtil;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.dto.UserOrderDTO;
-import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.enums.RecycleOrderStatusEnum;
 import com.tutu.recycle.enums.RecycleOrderTypeEnum;
@@ -75,10 +74,11 @@ public class BaseRecycleOrderServer {
      *
      * @param userOrderRequest 用户订单对象
      * @param order
-     * @param orderType 回收订单类型
+     * @param orderType        回收订单类型
+     * @param isNeedSettle
      * @return 创建的回收订单
      */
-    public RecycleOrderInfo createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType) {
+    public RecycleOrderInfo createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType, Boolean isNeedSettle) {
         if (userOrderRequest == null) {
             throw new ServiceException("用户订单不能为空");
         }
@@ -93,7 +93,7 @@ public class BaseRecycleOrderServer {
         RecycleOrderInfo recycleOrder = new RecycleOrderInfo();
         
         // 填充基础属性（所有订单类型共有的属性）
-        fillBaseProperties(recycleOrder, userOrderRequest,order, orderType);
+        fillBaseProperties(recycleOrder, userOrderRequest,order, orderType, isNeedSettle);
         
         // 获取对应类型的Server并填充特定属性
         if (orderServerMap != null) {
@@ -109,7 +109,7 @@ public class BaseRecycleOrderServer {
     /**
      * 填充基础属性（所有订单类型共有的属性）
      */
-    private void fillBaseProperties(RecycleOrderInfo recycleOrder, UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType) {
+    private void fillBaseProperties(RecycleOrderInfo recycleOrder, UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType, Boolean isNeedSettle) {
         // 生成回收订单编号
         recycleOrder.setNo(IdUtil.simpleUUID());
         // 生成订单识别码
@@ -119,8 +119,7 @@ public class BaseRecycleOrderServer {
         // 设置订单类型
         recycleOrder.setType(orderType.getCode());
         
-        // 设置订单状态为已完成（根据原代码逻辑）
-        recycleOrder.setStatus(RecycleOrderStatusEnum.COMPLETED.getCode());
+
         
         // 复制合同相关信息
         recycleOrder.setContractId(order.getContractId());
@@ -140,9 +139,15 @@ public class BaseRecycleOrderServer {
         
         // 设置交付地址（使用用户订单的位置信息）
 //        recycleOrder.setDeliveryAddress(userOrderDTO.getLocation());
-        
-        // 结算时间
-        recycleOrder.setSettlementTime(new Date());
+        if (isNeedSettle) {
+            // 设置订单状态为已完成（根据原代码逻辑）
+            recycleOrder.setStatus(RecycleOrderStatusEnum.COMPLETED.getCode());
+            // 结算时间
+            recycleOrder.setSettlementTime(new Date());
+        }else {
+            recycleOrder.setStatus(RecycleOrderStatusEnum.PROCESSING.getCode());
+        }
+
         // 设置经办人信息
         if (userOrderRequest.getProcessorId() != null && !userOrderRequest.getProcessorId().isEmpty()) {
             Processor processor = processorService.getById(userOrderRequest.getProcessorId());

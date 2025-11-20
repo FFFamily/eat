@@ -461,7 +461,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      * @return 是否结算成功
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean settleOrder(UserOrderDTO userOrderRequest) {
+    public boolean settleOrder(UserOrderDTO userOrderRequest,Boolean isCreateNextOrder) {
         if (StrUtil.isBlank(userOrderRequest.getId())) {
             throw new ServiceException("订单ID不能为空");
         }
@@ -491,7 +491,11 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         updateById(userOrder);
         // 如果不是完成阶段，则创建对应阶段的回收订单
         if (!nextStage.isLastStage()) {
-            recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderRequest,userOrder, currentStage);
+            recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderRequest,userOrder, currentStage,true);
+            if (isCreateNextOrder) {
+                // 创建下一个阶段的订单
+                recycleOrderService.createRecycleOrderFromUserOrderByStage(new UserOrderDTO(), userOrder, nextStage,false);
+            }
         }
 
         return true;
@@ -519,7 +523,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (currentStage == UserOrderStageEnum.PENDING_SETTLEMENT || currentStage == UserOrderStageEnum.COMPLETED) {
             throw new ServiceException("当前阶段无需保存子订单");
         }
-        recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderDTO, userOrder, currentStage);
+        recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderDTO, userOrder, currentStage,false);
         return true;
     }
 
@@ -668,6 +672,15 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      */
     public List<SortingDeliveryHallResponse> getSortingDeliveryHallOrders() {
         return baseMapper.selectSortingDeliveryHallOrders();
+    }
+
+    /**
+     * 获取送货上门的分拣交付大厅订单列表
+     * 在原有条件基础上筛选 transport_method=home_delivery，并过滤经办人ID
+     * @param processorId 经办人ID
+     */
+    public List<SortingDeliveryHallResponse> getSortingHomeDeliveryHallOrders(String processorId) {
+        return baseMapper.selectSortingHomeDeliveryHallOrders(processorId);
     }
 
     /**

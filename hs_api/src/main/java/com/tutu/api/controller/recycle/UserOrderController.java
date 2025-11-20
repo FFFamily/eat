@@ -262,7 +262,7 @@ public class UserOrderController {
      */
     @PostMapping("/settle")
     public BaseResponse<Boolean> settleOrder(@RequestBody UserOrderDTO userOrderDTO) {
-        boolean result = userOrderService.settleOrder(userOrderDTO);
+        boolean result = userOrderService.settleOrder(userOrderDTO,false);
         return BaseResponse.success(result);
     }
 

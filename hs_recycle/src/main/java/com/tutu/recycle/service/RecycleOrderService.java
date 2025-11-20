@@ -104,7 +104,10 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param stage     订单阶段枚举
      */
     @Transactional(rollbackFor = Exception.class)
-    public void createRecycleOrderFromUserOrderByStage(UserOrderDTO userOrderRequest, UserOrder order, UserOrderStageEnum stage) {
+    public void createRecycleOrderFromUserOrderByStage(UserOrderDTO userOrderRequest,
+                                                       UserOrder order,
+                                                       UserOrderStageEnum stage,
+                                                       Boolean isNeedSettle) {
         if (userOrderRequest == null) {
             throw new ServiceException("用户订单不能为空");
         }
@@ -116,7 +119,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (orderType == null) {
             throw new ServiceException("阶段 " + stage.getDescription() + " 没有对应的回收订单类型");
         }
-        createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType);
+        createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType,isNeedSettle);
     }
     
     /**
@@ -124,11 +127,12 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      *
      * @param userOrderRequest 用户订单对象
      * @param order
-     * @param orderType 回收订单类型
+     * @param orderType        回收订单类型
+     * @param isNeedSettle
      * @return 创建的回收订单
      */
     @Transactional(rollbackFor = Exception.class)
-    public void createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType) {
+    public void createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType, Boolean isNeedSettle) {
         if (userOrderRequest == null) {
             throw new ServiceException("用户订单不能为空");
         }
@@ -136,7 +140,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             throw new ServiceException("回收订单类型不能为空");
         }
         // 使用BaseRecycleOrderServer创建回收订单
-        RecycleOrderInfo recycleOrder = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType);
+        RecycleOrderInfo recycleOrder = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType,isNeedSettle);
         // 查询对应阶段是否有已存在订单
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getParentId, recycleOrder.getParentId());
@@ -1130,7 +1134,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             
             // 创建运输类型的回收订单
             RecycleOrderInfo recycleOrderInfo = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(
-                    userOrderDTO, userOrder, RecycleOrderTypeEnum.TRANSPORT);
+                    userOrderDTO, userOrder, RecycleOrderTypeEnum.TRANSPORT, false);
             
             // 设置运输状态为已抢单
             recycleOrderInfo.setTransportStatus(TransportStatusEnum.GRABBED.getCode());
@@ -1147,6 +1151,67 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             return true;
         } finally {
             // 释放锁
+            releaseLock(userOrderId);
+        }
+    }
+
+    /**
+     * 分拣接单
+     * 根据主订单ID创建加工类型的子订单
+     * @param userOrderId 主订单ID
+     * @param processorId 经办人ID
+     * @return 是否接单成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean grabSortingOrder(String userOrderId, String processorId) {
+        if (StrUtil.isBlank(userOrderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        if (StrUtil.isBlank(processorId)) {
+            throw new ServiceException("经办人ID不能为空");
+        }
+
+        if (!tryLock(userOrderId)) {
+            throw new ServiceException("当前订单正在被处理，请稍后重试");
+        }
+
+        try {
+            UserOrder userOrder = userOrderService.getById(userOrderId);
+            if (userOrder == null) {
+                throw new ServiceException("主订单不存在");
+            }
+
+            if (!UserOrderStageEnum.PROCESSING.getCode().equals(userOrder.getStage())) {
+                throw new ServiceException("只有加工阶段的订单才能接单");
+            }
+
+            List<RecycleOrderInfo> existingOrders = getAllByParentId(userOrderId);
+            boolean hasProcessingOrder = existingOrders.stream()
+                    .anyMatch(order -> RecycleOrderTypeEnum.PROCESSING.getCode().equals(order.getType()));
+            if (hasProcessingOrder) {
+                throw new ServiceException("该订单已经存在分拣子订单，无法重复接单");
+            }
+
+            Processor processor = processorService.getById(processorId);
+            if (processor == null) {
+                throw new ServiceException("经办人不存在");
+            }
+
+            UserOrderDTO userOrderDTO = new UserOrderDTO();
+            BeanUtil.copyProperties(userOrder, userOrderDTO);
+            userOrderDTO.setProcessorId(processorId);
+            userOrderDTO.setProcessorName(processor.getName());
+
+            RecycleOrderInfo recycleOrderInfo = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(
+                    userOrderDTO, userOrder, RecycleOrderTypeEnum.PROCESSING, false);
+            recycleOrderInfo.setSortingStatus(SortingStatusEnum.PENDING.getCode());
+            recycleOrderInfo.setProcessor(processor.getName());
+            recycleOrderInfo.setProcessorId(processor.getId());
+            recycleOrderInfo.setProcessorPhone(processor.getPhone());
+
+            createOrUpdate(recycleOrderInfo);
+            return true;
+        } finally {
             releaseLock(userOrderId);
         }
     }
@@ -1207,7 +1272,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         order.setEndTime(new Date());
         UserOrderDTO dto = new UserOrderDTO();
         dto.setId(order.getParentId());
-        userOrderService.settleOrder(dto);
+        userOrderService.settleOrder(dto,false);
         return updateById(order);
     }
 
