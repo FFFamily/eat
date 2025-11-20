@@ -1297,12 +1297,18 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }
 
         // 检查订单状态
-        if (!TransportStatusEnum.GRABBED.getCode().equals(order.getTransportStatus())) {
-            throw new ServiceException("只有交付大厅的订单才能交付");
+
+        String orderType = order.getType();
+        if (orderType.equals(RecycleOrderTypeEnum.TRANSPORT.getCode())) {
+            if (!TransportStatusEnum.GRABBED.getCode().equals(order.getTransportStatus())) {
+                throw new ServiceException("只有交付大厅的订单才能交付");
+            }
+            // 更新状态为运输中
+            order.setTransportStatus(TransportStatusEnum.TRANSPORTING.getCode());
+        }else if (orderType.equals(RecycleOrderTypeEnum.PROCESSING.getCode())) {
+            order.setSortingStatus(SortingStatusEnum.SORTING.getCode());
         }
 
-        // 更新状态为运输中
-        order.setTransportStatus(TransportStatusEnum.TRANSPORTING.getCode());
         boolean orderUpdated = updateById(order);
         boolean userOrderUpdated = updateUserOrderDeliveryInfo(order, request);
         return orderUpdated && userOrderUpdated;
@@ -1321,13 +1327,13 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             throw new ServiceException("关联的主订单不存在");
         }
 
-        userOrder.setDeliveryMethod("线上交付");
+        userOrder.setDeliveryMethod(OrderDeliveryMethodEnum.ONLINE.getCode());
         userOrder.setDeliveryTime(new Date());
         if (StrUtil.isNotBlank(request.getCustomerSignature())) {
             userOrder.setPartnerSignature(request.getCustomerSignature());
         }
-        if (StrUtil.isNotBlank(request.getDriverSignature())) {
-            userOrder.setProcessorSignature(request.getDriverSignature());
+        if (StrUtil.isNotBlank(request.getProcessorSignature())) {
+            userOrder.setProcessorSignature(request.getProcessorSignature());
         }
         return userOrderService.updateById(userOrder);
     }
@@ -1442,6 +1448,23 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     }
 
     /**
+     * 获取我的分拣列表（指定经办人的未分拣订单）
+     * @param processorId 经办人ID（必填）
+     * @return 未分拣订单列表
+     */
+    public List<RecycleOrder> getMyPendingSortingList(String processorId) {
+        if (StrUtil.isBlank(processorId)) {
+            throw new ServiceException("经办人ID不能为空");
+        }
+        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
+                .eq(RecycleOrder::getProcessorId, processorId)
+//                .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.PENDING.getCode())
+                .orderByDesc(RecycleOrder::getCreateTime);
+        return list(wrapper);
+    }
+
+    /**
      * 根据主订单ID获取加工（分拣）子订单
      * @param parentId 主订单ID
      * @return 加工子订单
@@ -1456,6 +1479,45 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
                 .orderByDesc(RecycleOrder::getCreateTime)
                 .last("limit 1");
         return getOne(wrapper, false);
+    }
+
+    /**
+     * 判断能否分拣
+     * 检查主订单的交付状态是否为已交付
+     * @param orderId 子订单ID
+     * @return 判断结果，true表示可以分拣，false表示不能分拣
+     * @throws ServiceException 如果订单不存在或主订单未交付，抛出异常
+     */
+    public boolean canSort(String orderId) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        
+        // 查询子订单
+        RecycleOrder recycleOrder = getById(orderId);
+        if (recycleOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        
+        // 获取主订单ID
+        String parentId = recycleOrder.getParentId();
+        if (StrUtil.isBlank(parentId)) {
+            throw new ServiceException("该订单没有关联的主订单");
+        }
+        
+        // 查询主订单
+        UserOrder userOrder = userOrderService.getById(parentId);
+        if (userOrder == null) {
+            throw new ServiceException("主订单不存在");
+        }
+        
+        // 检查交付状态
+        String deliveryStatus = userOrder.getDeliveryStatus();
+        if (!DeliveryStatusEnum.DELIVERED.getCode().equals(deliveryStatus)) {
+            throw new ServiceException("需要先交付才能分拣");
+        }
+        
+        return true;
     }
 
     /**

@@ -1,9 +1,14 @@
 package com.tutu.recycle.server;
 
 import com.tutu.recycle.dto.UserOrderDTO;
+import com.tutu.recycle.entity.Site;
 import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.schema.RecycleOrderInfo;
+import com.tutu.recycle.service.SiteService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * 采购订单Server
@@ -11,15 +16,22 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PurchaseOrderServer implements RecycleOrderServer {
+    @Resource
+    private SiteService siteService;
     
     @Override
     public void fillOrderProperties(RecycleOrderInfo recycleOrder, UserOrderDTO userOrderDTO) {
         recycleOrder.setOrderNodeImg(userOrderDTO.getOrderNodeImg());
+        List<Site> siteList = siteService.list();
+        if (!siteList.isEmpty()) {
+            recycleOrder.setSiteName(siteList.getFirst().getName());
+            recycleOrder.setDeliveryAddress(siteList.getFirst().getAddress());
+        }
         // 设置交付地址（使用用户订单的位置信息）
-        recycleOrder.setDeliveryAddress(userOrderDTO.getDeliveryAddress());
+        recycleOrder.setPickupAddress(userOrderDTO.getPickupAddress());
         // 走款账号
         recycleOrder.setPaymentAccount(userOrderDTO.getPaymentAccount());
-        recycleOrder.setSiteName(userOrderDTO.getSiteName());
+
     }
 }
 

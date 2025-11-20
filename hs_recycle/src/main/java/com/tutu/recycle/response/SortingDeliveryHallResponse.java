@@ -41,6 +41,9 @@ public class SortingDeliveryHallResponse {
      * 联系人手机号
      */
     private String contactPhone;
+
+    // 订单识别码
+    private String identifyCode;
 }
 
 

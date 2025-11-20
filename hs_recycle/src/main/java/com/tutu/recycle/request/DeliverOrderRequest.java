@@ -33,6 +33,6 @@ public class DeliverOrderRequest {
     /**
      * 司机签名
      */
-    private String driverSignature;
+    private String processorSignature;
 }
 

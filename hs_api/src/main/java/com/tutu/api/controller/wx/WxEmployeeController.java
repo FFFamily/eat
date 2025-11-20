@@ -3,6 +3,7 @@ package com.tutu.api.controller.wx;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.recycle.dto.SortingOrderDTO;
 import com.tutu.recycle.dto.TransportOrderDTO;
 import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.entity.user.UserOrder;
@@ -159,39 +160,7 @@ public class WxEmployeeController {
         }
     }
 
-    /**
-     * 分拣单详情
-     * @param request 订单ID请求
-     * @return 分拣单详情
-     */
-    @PostMapping("/sorting/detail")
-    public BaseResponse<UserOrder> getSortingOrderDetail(@RequestBody QueryOrderByIdRequest request) {
-        try {
-            if (request == null || StrUtil.isBlank(request.getOrderId())) {
-                return BaseResponse.error("主订单ID不能为空");
-            }
-            UserOrder userOrder = userOrderService.getById(request.getOrderId());
-            if (userOrder == null) {
-                return BaseResponse.error("主订单不存在");
-            }
-//            RecycleOrder order = recycleOrderService.getProcessingOrderByParentId(request.getOrderId());
-//            if (order == null) {
-//                return BaseResponse.error("该订单暂无分拣信息");
-//            }
-//            SortingOrderDTO dto = new SortingOrderDTO();
-//            BeanUtil.copyProperties(order, dto);
 
-//            dto.setParentId(userOrder.getId());
-//            dto.setDeliveryTime(userOrder.getDeliveryTime());
-//            if (StrUtil.isBlank(dto.getContractPartnerName())) {
-//                dto.setContractPartnerName(userOrder.getContractPartnerName());
-//            }
-
-            return BaseResponse.success(userOrder);
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
-    }
 
     /**
      * 转换为 DTO 列表
@@ -281,134 +250,6 @@ public class WxEmployeeController {
         }
     }
 
-    // ==================== 分拣中心接口 ====================
 
-    /**
-     * 分拣中心
-     * 条件：用户订单处于加工阶段，且暂无加工子订单
-     * @return 可分拣的订单列表
-     */
-    @PostMapping("/sorting/delivery-hall")
-    public BaseResponse<List<SortingDeliveryHallResponse>> getSortingDeliveryHall() {
-        List<SortingDeliveryHallResponse> orders = userOrderService.getSortingDeliveryHallOrders();
-        return BaseResponse.success(orders);
-    }
-
-    /**
-     * 我的交付大厅
-     * @param request 查询条件（包含经办人ID）
-     * @return 可分拣的订单列表
-     */
-    @PostMapping("/sorting/delivery-center")
-    public BaseResponse<List<SortingDeliveryHallResponse>> getSortingDeliveryCenter(
-            @RequestBody SortingOrderPageRequest request) {
-        String processorId = request != null ? request.getProcessorId() : null;
-        List<SortingDeliveryHallResponse> orders = userOrderService.getSortingHomeDeliveryHallOrders(processorId);
-        return BaseResponse.success(orders);
-    }
-
-    /**
-     * 分拣中心-抢单
-     * @param request 抢单请求
-     * @return 抢单结果
-     */
-    @PostMapping("/sorting/grab")
-    public BaseResponse<Boolean> grabSortingOrder(@RequestBody GrabOrderRequest request) {
-        try {
-            boolean result = recycleOrderService.grabSortingOrder(request.getOrderId(), request.getProcessorId());
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
-    }
-
-    
-
-    /**
-     * 分拣中心-开始分拣列表（待分拣的加工订单）
-     * @param request 查询条件
-     * @return 待分拣列表
-     */
-    @PostMapping("/sorting/start")
-    public BaseResponse<List<RecycleOrder>> getStartSortingList(
-            @RequestBody SortingOrderPageRequest request) {
-        String processorId = request != null ? request.getProcessorId() : null;
-        List<RecycleOrder> result = recycleOrderService.getStartSortingList(processorId);
-        return BaseResponse.success(result);
-    }
-
-    /**
-     * 分拣中心-结果暂存列表（分拣中的加工订单）
-     * @param request 查询条件
-     * @return 分拣中列表
-     */
-    @PostMapping("/sorting/temp")
-    public BaseResponse<List<RecycleOrder>> getSortingTempList(
-            @RequestBody SortingOrderPageRequest request) {
-        String processorId = request != null ? request.getProcessorId() : null;
-        List<RecycleOrder> result = recycleOrderService.getSortingTempList(processorId);
-        return BaseResponse.success(result);
-    }
-
-    /**
-     * 分拣中心-已分拣列表（已分拣的加工订单）
-     * @param request 查询条件
-     * @return 已分拣列表
-     */
-    @PostMapping("/sorting/sorted")
-    public BaseResponse<List<RecycleOrder>> getSortedList(
-            @RequestBody SortingOrderPageRequest request) {
-        String processorId = request != null ? request.getProcessorId() : null;
-        List<RecycleOrder> result = recycleOrderService.getSortedList(processorId);
-        return BaseResponse.success(result);
-    }
-
-    /**
-     * 根据识别码获取订单
-     * @param request 识别码请求
-     * @return 订单信息
-     */
-    @PostMapping("/sorting/by-code")
-    public BaseResponse<RecycleOrder> getOrderByIdentifyCode(@RequestBody QueryOrderByIdentifyCodeRequest request) {
-        try {
-            List<RecycleOrder> orders = recycleOrderService.getByIdentifyCode(request.getIdentifyCode());
-            if (orders.isEmpty()) {
-                return BaseResponse.error("未找到该识别码对应的订单");
-            }
-            return BaseResponse.success(orders.getFirst());
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
-    }
-
-    /**
-     * 保存分拣结果（暂存）
-     * @param request 分拣请求
-     * @return 保存结果
-     */
-    @PostMapping("/sorting/save")
-    public BaseResponse<Boolean> saveSortingResult(@RequestBody com.tutu.recycle.request.ProcessingOrderSubmitRequest request) {
-        try {
-            boolean result = recycleOrderService.saveSortingResult(request);
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
-    }
-
-    /**
-     * 提交分拣结果（完成分拣）
-     * @param request 分拣请求
-     * @return 提交结果
-     */
-    @PostMapping("/sorting/submit")
-    public BaseResponse<Boolean> submitSortingResult(@RequestBody com.tutu.recycle.request.ProcessingOrderSubmitRequest request) {
-        try {
-            boolean result = recycleOrderService.submitSortingResult(request);
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
-    }
 }
 

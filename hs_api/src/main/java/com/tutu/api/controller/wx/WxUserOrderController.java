@@ -1,5 +1,6 @@
 package com.tutu.api.controller.wx;
 
+import com.tutu.recycle.request.WxUserCreateOrderRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,8 +30,8 @@ public class WxUserOrderController {
 
     // 创建订单
     @PostMapping("/create")
-    public BaseResponse<String> create(@RequestBody UserOrder order) {
-        userOrderService.createUserOrder(order);
+    public BaseResponse<String> create(@RequestBody WxUserCreateOrderRequest order) {
+        userOrderService.createWxUserOrder(order);
         return BaseResponse.success();
     }
      /**

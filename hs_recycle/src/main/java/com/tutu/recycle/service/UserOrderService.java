@@ -1,5 +1,6 @@
 package com.tutu.recycle.service;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -17,6 +18,7 @@ import com.tutu.recycle.enums.RecycleOrderTypeEnum;
 import com.tutu.recycle.enums.UserOrderStageEnum;
 import com.tutu.recycle.enums.UserOrderStatusEnum;
 import com.tutu.recycle.mapper.UserOrderMapper;
+import com.tutu.recycle.request.WxUserCreateOrderRequest;
 import com.tutu.recycle.response.SortingDeliveryHallResponse;
 import com.tutu.recycle.response.WxTransportOrderListResponse;
 import com.tutu.recycle.schema.RecycleOrderInfo;
@@ -40,6 +42,7 @@ import java.util.stream.Collectors;
 import com.tutu.user.service.ProcessorService;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +66,10 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     
     @Resource
     private AccountPointDetailService accountPointDetailService;
+    /**
+     * 填充经办人名称
+     * @param userOrder
+     */
 
     /**
      * 获取当前登录用户作为合作方的订单列表
@@ -94,9 +101,32 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 设置初始阶段为采购
         userOrder.setStage(UserOrderStageEnum.PURCHASE.getCode());
         save(userOrder);
-        // 同步创建采购类型的回收订单
-        // recycleOrderService.createPurchaseOrderFromUserOrder(userOrder);
         return userOrder;
+    }
+
+    /**
+     * 微信创建用户订单
+     * @param request
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void createWxUserOrder(WxUserCreateOrderRequest request) {
+        UserOrder userOrder = new UserOrder();
+        BeanUtil.copyProperties(request, userOrder);
+        // 自动生成订单编号
+        userOrder.setNo(UserOrderNoGenerator.generate());
+        // 设置初始阶段为采购
+        userOrder.setStage(UserOrderStageEnum.PURCHASE.getCode());
+        // 查询合同信息
+        RecycleContract contract = recycleContractService.getById(request.getContractId());
+        if (contract == null) {
+            throw new ServiceException("合同不存在");
+        }
+
+        createUserOrder(userOrder);
+        // 结算采购订单
+        UserOrderDTO userOrderDTO = new UserOrderDTO();
+        BeanUtil.copyProperties(userOrder, userOrderDTO);
+        settleOrder(userOrderDTO,false);
     }
     
     /**
