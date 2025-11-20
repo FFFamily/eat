@@ -1,10 +1,13 @@
 package com.tutu.recycle.server;
 
+import cn.hutool.core.util.StrUtil;
 import com.tutu.recycle.dto.UserOrderDTO;
 import com.tutu.recycle.entity.order.RecycleOrder;
+import com.tutu.recycle.enums.TransportStatusEnum;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -27,6 +30,9 @@ public class TransportOrderServer implements RecycleOrderServer {
         Optional.ofNullable(userOrderDTO.getEndTime()).ifPresent(recycleOrder::setEndTime);
         // 货物重量
         Optional.ofNullable(userOrderDTO.getGoodsWeight()).ifPresent(recycleOrder::setGoodsWeight);
+        // 运输状态
+        recycleOrder.setTransportStatus(TransportStatusEnum.ARRIVED.getCode());
+        recycleOrder.setEndTime(new Date());
     }
 }
 

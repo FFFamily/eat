@@ -34,5 +34,9 @@ public class DeliverOrderRequest {
      * 司机签名
      */
     private String processorSignature;
+    /**
+     * 交付照片
+     */
+    private String deliveryPhoto;
 }
 

@@ -92,26 +92,26 @@ public class WxRecycleOrderController {
         return BaseResponse.success("运输订单提交成功");
     }
 
-    /**
-     * 加工订单提交
-     * @param request 加工订单提交请求
-     * @return 提交结果
-     */
-    @PostMapping("/submitProcessing")
-    public BaseResponse<String> submitProcessingOrder(@RequestBody ProcessingOrderSubmitRequest request) {
-        if (request.getOrderId() == null || request.getOrderId().trim().isEmpty()) {
-            return BaseResponse.error("订单ID不能为空");
-        }
-        
-        if (request.getOrderNodeImg() == null || request.getOrderNodeImg().trim().isEmpty()) {
-            return BaseResponse.error("订单图片不能为空");
-        }
-        
-        // 获取当前登录用户ID
-        String userId = StpUtil.getLoginIdAsString();
-        
-        // 提交加工订单
-        recycleOrderService.submitProcessingOrder(request.getOrderId(), request.getOrderNodeImg(), request.getItems(), userId);
-        return BaseResponse.success("加工订单提交成功");
-    }
+//    /**
+//     * 加工订单提交
+//     * @param request 加工订单提交请求
+//     * @return 提交结果
+//     */
+//    @PostMapping("/submitProcessing")
+//    public BaseResponse<String> submitProcessingOrder(@RequestBody ProcessingOrderSubmitRequest request) {
+//        if (request.getOrderId() == null || request.getOrderId().trim().isEmpty()) {
+//            return BaseResponse.error("订单ID不能为空");
+//        }
+//
+//        if (request.getOrderNodeImg() == null || request.getOrderNodeImg().trim().isEmpty()) {
+//            return BaseResponse.error("订单图片不能为空");
+//        }
+//
+//        // 获取当前登录用户ID
+//        String userId = StpUtil.getLoginIdAsString();
+//
+//        // 提交加工订单
+//        recycleOrderService.submitProcessingOrder(request.getOrderId(), request.getOrderNodeImg(), request.getItems(), userId);
+//        return BaseResponse.success("加工订单提交成功");
+//    }
 }

@@ -78,7 +78,8 @@ public class BaseRecycleOrderServer {
      * @param isNeedSettle
      * @return 创建的回收订单
      */
-    public RecycleOrderInfo createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType, Boolean isNeedSettle) {
+    public RecycleOrderInfo createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order,
+                                                                  RecycleOrderTypeEnum orderType, Boolean isNeedSettle) {
         if (userOrderRequest == null) {
             throw new ServiceException("用户订单不能为空");
         }

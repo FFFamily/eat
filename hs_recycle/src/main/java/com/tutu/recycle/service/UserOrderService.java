@@ -13,10 +13,7 @@ import com.tutu.recycle.entity.RecycleContract;
 import com.tutu.recycle.entity.RecycleContractBeneficiary;
 import com.tutu.recycle.entity.order.RecycleOrderItem;
 import com.tutu.recycle.entity.user.UserOrder;
-import com.tutu.recycle.enums.DeliveryStatusEnum;
-import com.tutu.recycle.enums.RecycleOrderTypeEnum;
-import com.tutu.recycle.enums.UserOrderStageEnum;
-import com.tutu.recycle.enums.UserOrderStatusEnum;
+import com.tutu.recycle.enums.*;
 import com.tutu.recycle.mapper.UserOrderMapper;
 import com.tutu.recycle.request.WxUserCreateOrderRequest;
 import com.tutu.recycle.response.SortingDeliveryHallResponse;
@@ -39,6 +36,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.tutu.user.entity.Account;
+import com.tutu.user.service.AccountService;
 import com.tutu.user.service.ProcessorService;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
@@ -51,10 +50,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
-    
-    @Resource
-    private ProcessorService processorService;
-    
     @Resource
     private RecycleOrderService recycleOrderService;
     
@@ -66,6 +61,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     
     @Resource
     private AccountPointDetailService accountPointDetailService;
+    @Resource
+    private AccountService accountService;
     /**
      * 填充经办人名称
      * @param userOrder
@@ -100,6 +97,18 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         userOrder.setNo(UserOrderNoGenerator.generate());
         // 设置初始阶段为采购
         userOrder.setStage(UserOrderStageEnum.PURCHASE.getCode());
+        if (StrUtil.isBlank(userOrder.getPricingMethod())) {
+            // 默认一般计价方式
+            userOrder.setPricingMethod(PricingMethodEnum.GENERAL.getCode());
+        }
+        // 用户系数
+        if (StrUtil.isBlank(userOrder.getContractPartner())) {
+            Account account = accountService.getById(userOrder.getContractPartner());
+            if (account == null) {
+                throw new ServiceException("合作方不存在");
+            }
+            userOrder.setAccountCoefficient(new BigDecimal(account.getScoreFactor()));
+        }
         save(userOrder);
         return userOrder;
     }
@@ -110,6 +119,9 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      */
     @Transactional(rollbackFor = Exception.class)
     public void createWxUserOrder(WxUserCreateOrderRequest request) {
+        if (StrUtil.isBlank(request.getTransportMethod())){
+            throw new ServiceException("运输方式不能为空");
+        }
         UserOrder userOrder = new UserOrder();
         BeanUtil.copyProperties(request, userOrder);
         // 自动生成订单编号
@@ -121,6 +133,17 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (contract == null) {
             throw new ServiceException("合同不存在");
         }
+        userOrder.setContractNo(contract.getNo());
+        userOrder.setContractName(contract.getName());
+        // 合作方
+        userOrder.setContractPartner(contract.getPartner());
+        userOrder.setContractPartnerName(contract.getPartnerName());
+        // 甲方
+        userOrder.setPartyA(contract.getPartyA());
+        userOrder.setPartyAName(contract.getPartyAName());
+        // 乙方
+        userOrder.setPartyB(contract.getPartyB());
+        userOrder.setPartyBName(contract.getPartyBName());
 
         createUserOrder(userOrder);
         // 结算采购订单

@@ -729,68 +729,68 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param items 订单明细列表
      * @param userId 用户ID
      */
-    @Transactional(rollbackFor = Exception.class)
-    public void submitProcessingOrder(String orderId, String orderNodeImg, List<ProcessingOrderSubmitRequest.OrderItemUpdateRequest> items, String userId) {
-        if (StrUtil.isBlank(orderId)) {
-            throw new ServiceException("订单ID不能为空");
-        }
-        
-        // 获取用户信息
-        Account account = accountService.getById(userId);
-        if (account == null) {
-            throw new ServiceException("用户不存在");
-        }
-        
-        // 验证用户身份
-        if (!UserUseTypeEnum.SORTING.getCode().equals(account.getUseType())) {
-            throw new ServiceException("只有分拣用户才能提交加工订单");
-        }
-        
-        // 根据订单ID查询订单
-        RecycleOrder order = getById(orderId);
-        if (order == null) {
-            throw new ServiceException("订单不存在");
-        }
-        
-        // 验证订单类型
-        if (!RecycleOrderTypeEnum.PROCESSING.getCode().equals(order.getType())) {
-            throw new ServiceException("只能提交加工订单");
-        }
-        
-        // 验证订单状态，已上传的订单不能重复提交
-        if (RecycleOrderStatusEnum.UPLOADED.getCode().equals(order.getStatus())) {
-            throw new ServiceException("订单已上传，无法重复提交");
-        }
-        
-        // 更新订单信息
-        order.setOrderNodeImg(orderNodeImg);
-        order.setUploadTime(new Date());
-        order.setStatus(RecycleOrderStatusEnum.UPLOADED.getCode());
-        
-        // 保存订单
-        updateById(order);
-        
-        // 添加订单明细
-        if (items != null && !items.isEmpty()) {
-            for (ProcessingOrderSubmitRequest.OrderItemUpdateRequest itemRequest : items) {
-                // 创建新的订单明细
-                RecycleOrderItem orderItem = new RecycleOrderItem();
-                orderItem.setRecycleOrderId(orderId);
-                orderItem.setGoodNo(itemRequest.getGoodNo());
-                orderItem.setGoodType(itemRequest.getGoodType());
-                orderItem.setGoodName(itemRequest.getGoodName());
-                orderItem.setGoodModel(itemRequest.getGoodModel());
-                orderItem.setGoodCount(itemRequest.getGoodCount());
-                orderItem.setGoodWeight(itemRequest.getGoodWeight());
-                orderItem.setGoodPrice(itemRequest.getGoodPrice());
-                orderItem.setGoodTotalPrice(itemRequest.getGoodTotalPrice());
-                orderItem.setGoodRemark(itemRequest.getGoodRemark());
-                
-                // 保存新的明细
-                recycleOrderItemService.save(orderItem);
-            }
-        }
-    }
+//    @Transactional(rollbackFor = Exception.class)
+//    public void submitProcessingOrder(String orderId, String orderNodeImg, List<ProcessingOrderSubmitRequest.OrderItemUpdateRequest> items, String userId) {
+//        if (StrUtil.isBlank(orderId)) {
+//            throw new ServiceException("订单ID不能为空");
+//        }
+//
+//        // 获取用户信息
+//        Account account = accountService.getById(userId);
+//        if (account == null) {
+//            throw new ServiceException("用户不存在");
+//        }
+//
+//        // 验证用户身份
+//        if (!UserUseTypeEnum.SORTING.getCode().equals(account.getUseType())) {
+//            throw new ServiceException("只有分拣用户才能提交加工订单");
+//        }
+//
+//        // 根据订单ID查询订单
+//        RecycleOrder order = getById(orderId);
+//        if (order == null) {
+//            throw new ServiceException("订单不存在");
+//        }
+//
+//        // 验证订单类型
+//        if (!RecycleOrderTypeEnum.PROCESSING.getCode().equals(order.getType())) {
+//            throw new ServiceException("只能提交加工订单");
+//        }
+//
+//        // 验证订单状态，已上传的订单不能重复提交
+//        if (RecycleOrderStatusEnum.UPLOADED.getCode().equals(order.getStatus())) {
+//            throw new ServiceException("订单已上传，无法重复提交");
+//        }
+//
+//        // 更新订单信息
+//        order.setOrderNodeImg(orderNodeImg);
+//        order.setUploadTime(new Date());
+//        order.setStatus(RecycleOrderStatusEnum.UPLOADED.getCode());
+//
+//        // 保存订单
+//        updateById(order);
+//
+//        // 添加订单明细
+//        if (items != null && !items.isEmpty()) {
+//            for (ProcessingOrderSubmitRequest.OrderItemUpdateRequest itemRequest : items) {
+//                // 创建新的订单明细
+//                RecycleOrderItem orderItem = new RecycleOrderItem();
+//                orderItem.setRecycleOrderId(orderId);
+//                orderItem.setGoodNo(itemRequest.getGoodNo());
+//                orderItem.setGoodType(itemRequest.getGoodType());
+//                orderItem.setGoodName(itemRequest.getGoodName());
+//                orderItem.setGoodModel(itemRequest.getGoodModel());
+//                orderItem.setGoodCount(itemRequest.getGoodCount());
+//                orderItem.setGoodWeight(itemRequest.getGoodWeight());
+//                orderItem.setGoodPrice(itemRequest.getGoodPrice());
+//                orderItem.setGoodTotalPrice(itemRequest.getGoodTotalPrice());
+//                orderItem.setGoodRemark(itemRequest.getGoodRemark());
+//
+//                // 保存新的明细
+//                recycleOrderItemService.save(orderItem);
+//            }
+//        }
+//    }
 
     /**
      * 订单结算
@@ -1269,7 +1269,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }
 
         order.setTransportStatus(TransportStatusEnum.ARRIVED.getCode());
-        order.setEndTime(new Date());
+
         UserOrderDTO dto = new UserOrderDTO();
         dto.setId(order.getParentId());
         userOrderService.settleOrder(dto,false);
@@ -1308,7 +1308,6 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }else if (orderType.equals(RecycleOrderTypeEnum.PROCESSING.getCode())) {
             order.setSortingStatus(SortingStatusEnum.SORTING.getCode());
         }
-
         boolean orderUpdated = updateById(order);
         boolean userOrderUpdated = updateUserOrderDeliveryInfo(order, request);
         return orderUpdated && userOrderUpdated;
@@ -1326,7 +1325,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (userOrder == null) {
             throw new ServiceException("关联的主订单不存在");
         }
-
+        userOrder.setDeliveryStatus(DeliveryStatusEnum.DELIVERED.getCode());
         userOrder.setDeliveryMethod(OrderDeliveryMethodEnum.ONLINE.getCode());
         userOrder.setDeliveryTime(new Date());
         if (StrUtil.isNotBlank(request.getCustomerSignature())) {
@@ -1335,6 +1334,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isNotBlank(request.getProcessorSignature())) {
             userOrder.setProcessorSignature(request.getProcessorSignature());
         }
+        userOrder.setDeliveryPhoto(request.getDeliveryPhoto());
         return userOrderService.updateById(userOrder);
     }
 
@@ -1459,7 +1459,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getProcessorId, processorId)
-//                .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.PENDING.getCode())
+                .ne(RecycleOrder::getSortingStatus, SortingStatusEnum.SORTED.getCode())
                 .orderByDesc(RecycleOrder::getCreateTime);
         return list(wrapper);
     }
@@ -1551,29 +1551,24 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @return 是否成功
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean submitSortingResult(ProcessingOrderSubmitRequest request) {
-        RecycleOrder order = getById(request.getOrderId());
+    public void submitSortingResult(ProcessingOrderSubmitRequest request) {
+        String orderId = request.getOrderId();
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        RecycleOrder order = getById(orderId);
         if (order == null) {
             throw new ServiceException("订单不存在");
         }
-        if (!RecycleOrderTypeEnum.PROCESSING.getCode().equals(order.getType())) {
-            throw new ServiceException("只有加工订单才能进行分拣");
-        }
-        // 更新分拣状态为已分拣
-        order.setSortingStatus(SortingStatusEnum.SORTED.getCode());
-        updateById(order);
-        // 保存分拣明细
-        if (request.getItems() != null && !request.getItems().isEmpty()) {
-            List<RecycleOrderItem> items = convertToRecycleOrderItems(request.getOrderId(), request.getItems());
-            recycleOrderItemService.saveOrUpdateBatch(items);
-        }
-        return true;
+        UserOrderDTO dto = new UserOrderDTO();
+        dto.setId(order.getParentId());
+        userOrderService.settleOrder(dto,false);
     }
 
     /**
      * 转换为 RecycleOrderItem 列表
      */
-    private List<RecycleOrderItem> convertToRecycleOrderItems(String orderId, List<ProcessingOrderSubmitRequest.OrderItemUpdateRequest> requests) {
+    private List<RecycleOrderItem> convertToRecycleOrderItems(String orderId, List<RecycleOrderItem> requests) {
         return requests.stream().map(req -> {
             RecycleOrderItem item = new RecycleOrderItem();
             item.setRecycleOrderId(orderId);

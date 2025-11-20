@@ -55,8 +55,9 @@
         ro.processor_phone AS contactPhone,
         ro.identify_code
         FROM recycle_order ro LEFT JOIN user_order uo ON ro.parent_id = uo.id
-        AND uo.transport_method = 'home_delivery'
+        WHERE uo.transport_method = 'home_delivery'
         AND ro.type = 'process'
+          AND uo.delivery_status != 'delivered'
         <if test="processorId != null and processorId != ''">
           AND ro.processor_id = #{processorId}
         </if>

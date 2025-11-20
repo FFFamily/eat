@@ -2,6 +2,7 @@ package com.tutu.recycle.server;
 
 import com.tutu.recycle.dto.UserOrderDTO;
 import com.tutu.recycle.entity.order.RecycleOrder;
+import com.tutu.recycle.enums.SortingStatusEnum;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ public class ProcessingOrderServer implements RecycleOrderServer {
         if (userOrderDTO.getItems() != null) {
             recycleOrder.setItems(userOrderDTO.getItems());
         }
+        recycleOrder.setSortingStatus(SortingStatusEnum.SORTED.getCode());
     }
 }
 
