@@ -57,7 +57,7 @@ public class WxUserOrderController {
         String userId = StpUtil.getLoginIdAsString();
         order.setContractPartner(userId);
         // 查询合作方订单列表
-        List<UserOrder> orderList = userOrderService.getUserOrderList(order);
+        List<UserOrder> orderList = userOrderService.getWxUserOrderList(order);
         return BaseResponse.success(orderList);
     }
 }

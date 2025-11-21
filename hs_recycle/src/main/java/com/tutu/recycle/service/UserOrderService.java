@@ -1,6 +1,7 @@
 package com.tutu.recycle.service;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -73,12 +74,25 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      * @param order
      * @return
      */
-    public List<UserOrder> getUserOrderList(UserOrder order) {
+    public List<UserOrder> getWxUserOrderList(UserOrder order) {
         LambdaQueryWrapper<UserOrder> wrapper = new LambdaQueryWrapper<>();
         // 合作方
         wrapper.eq(UserOrder::getContractPartner, order.getContractPartner());
         // 阶段
-        Optional.ofNullable(order.getStage()).ifPresent(stage -> wrapper.eq(UserOrder::getStage, stage));
+        Optional.ofNullable(order.getStage()).ifPresent(stage -> {
+            // 移动端特殊要求
+            if (stage.equals("doing")){
+                // 执行中
+                wrapper.in(UserOrder::getStage, UserOrderStageEnum.PURCHASE.getCode(),
+                        UserOrderStageEnum.TRANSPORT.getCode(),
+                        UserOrderStageEnum.PROCESSING.getCode(),
+                        UserOrderStageEnum.WAREHOUSING.getCode()
+                );
+            }else {
+                wrapper.eq(UserOrder::getStage, stage);
+            }
+
+        });
         wrapper.orderByDesc(UserOrder::getCreateTime);
         List<UserOrder> list = list(wrapper);
         return list;
@@ -148,7 +162,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         createUserOrder(userOrder);
         // 结算采购订单
         UserOrderDTO userOrderDTO = new UserOrderDTO();
-        BeanUtil.copyProperties(userOrder, userOrderDTO);
+        BeanUtil.copyProperties(userOrder,userOrderDTO,CopyOptions.create().ignoreNullValue());
+        BeanUtil.copyProperties(request,userOrderDTO,CopyOptions.create().ignoreNullValue());
         settleOrder(userOrderDTO,false);
     }
     
