@@ -183,8 +183,4 @@ file:
     date-folder: true
     # 是否保留原文件名
     keep-original-name: false
-wx:
-  miniapp:
-    configs:
-      - appid: wxd34af2ddd3fc15ea
-        secret: 9d0cb24e551b012ac1e8e76f9e8a31cc
+

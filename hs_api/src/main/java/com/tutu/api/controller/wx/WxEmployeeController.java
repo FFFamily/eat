@@ -64,11 +64,15 @@ public class WxEmployeeController {
 
     /**
      * 交付大厅列表
+     * @param request 运输订单查询请求（包含经办人ID）
      * @return 交付大厅的运输订单列表
      */
     @PostMapping("/transport/delivery-hall")
-    public BaseResponse<List<TransportOrderDTO>> getDeliveryHallOrders() {
-        List<RecycleOrder> orders = recycleOrderService.getTransportOrdersByStatus(TransportStatusEnum.GRABBED.getCode(), null);
+    public BaseResponse<List<TransportOrderDTO>> getDeliveryHallOrders(@RequestBody TransportOrderListRequest request) {
+        if (request == null || StrUtil.isBlank(request.getProcessorId())) {
+            return BaseResponse.error("经办人ID不能为空");
+        }
+        List<RecycleOrder> orders = recycleOrderService.getTransportOrdersByStatus(TransportStatusEnum.GRABBED.getCode(), request.getProcessorId());
         List<TransportOrderDTO> result = convertToDTO(orders);
         return BaseResponse.success(result);
     }

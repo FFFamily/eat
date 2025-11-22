@@ -31,8 +31,11 @@ public class TransportOrderServer implements RecycleOrderServer {
         // 货物重量
         Optional.ofNullable(userOrderDTO.getGoodsWeight()).ifPresent(recycleOrder::setGoodsWeight);
         // 运输状态
-        recycleOrder.setTransportStatus(TransportStatusEnum.ARRIVED.getCode());
-        recycleOrder.setEndTime(new Date());
+        if (StrUtil.isBlank(userOrderDTO.getTransportStatus())){
+            recycleOrder.setTransportStatus(TransportStatusEnum.AVAILABLE.getCode());
+        } else {
+            recycleOrder.setTransportStatus(userOrderDTO.getTransportStatus());
+        }
     }
 }
 

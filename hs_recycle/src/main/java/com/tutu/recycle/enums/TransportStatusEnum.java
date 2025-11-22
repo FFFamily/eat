@@ -16,12 +16,12 @@ public enum TransportStatusEnum {
     AVAILABLE("available", "可接单"),
 
     /**
-     * 交付大厅（已抢单，待交付）
+     * 已抢单，待交付
      */
-    GRABBED("grabbed", "交付大厅"),
+    GRABBED("grabbed", "已抢单，待交付"),
 
     /**
-     * 运输中（已交付，运输中）
+     * 运输中
      */
     TRANSPORTING("transporting", "运输中"),
 

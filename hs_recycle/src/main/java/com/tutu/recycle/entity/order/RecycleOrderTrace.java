@@ -1,6 +1,5 @@
 package com.tutu.recycle.entity.order;
 
-import org.bouncycastle.cms.PasswordRecipient.PRF;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

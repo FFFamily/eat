@@ -9,7 +9,7 @@
                ro.delivery_address,
                ro.processor,
                ro.processor_phone,
-               ro.site_name as pickupAddress
+               ro.pickup_address
         FROM user_order uo
                  LEFT JOIN recycle_order ro ON uo.id = ro.parent_id AND ro.type = 'purchase'
         WHERE uo.stage = 'transport'

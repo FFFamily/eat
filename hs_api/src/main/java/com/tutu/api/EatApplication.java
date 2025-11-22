@@ -5,11 +5,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 @SpringBootApplication(scanBasePackages = {"com.tutu"})
 @MapperScan("com.tutu.*.mapper")
 @EnableCaching
 @EnableConfigurationProperties
+@EnableAspectJAutoProxy(exposeProxy = true)
 public class EatApplication {
     public static void main(String[] args) {
         SpringApplication.run(EatApplication.class, args);

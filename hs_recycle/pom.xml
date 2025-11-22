@@ -23,10 +23,10 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.binarywang</groupId>
-            <artifactId>weixin-java-miniapp</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.github.binarywang</groupId>-->
+<!--            <artifactId>weixin-java-miniapp</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.tutu</groupId>
             <artifactId>hs_system</artifactId>

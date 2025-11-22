@@ -68,10 +68,10 @@ public class RecycleOrderController {
      * 获取订单二维码
      * @param orderId 订单ID
      */
-    @GetMapping("/qrcode/{orderId}")
-    public BaseResponse<String> getOrderQrcode(@PathVariable String orderId) {
-        return BaseResponse.success(recycleOrderService.createOrderQrcode(orderId));
-    }
+//    @GetMapping("/qrcode/{orderId}")
+//    public BaseResponse<String> getOrderQrcode(@PathVariable String orderId) {
+//        return BaseResponse.success(recycleOrderService.createOrderQrcode(orderId));
+//    }
 
     /**
      * 给订单分配专人

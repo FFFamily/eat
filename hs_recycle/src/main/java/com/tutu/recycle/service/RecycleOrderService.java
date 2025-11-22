@@ -1,12 +1,13 @@
 package com.tutu.recycle.service;
 
-import cn.binarywang.wx.miniapp.api.WxMaService;
+
 
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.DirectedGraph;
+import com.tutu.common.enums.BaseEnum;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.dto.RecycleOrderTracePath;
 import com.tutu.recycle.dto.RecycleOrderTraceResponse;
@@ -32,6 +33,7 @@ import cn.hutool.core.util.StrUtil;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.server.BaseRecycleOrderServer;
 import com.tutu.recycle.utils.CodeUtil;
+import com.tutu.recycle.utils.RecycleOrderNoGenerator;
 import com.tutu.user.entity.Account;
 import com.tutu.user.entity.Processor;
 import com.tutu.user.enums.UserUseTypeEnum;
@@ -57,7 +59,8 @@ import com.tutu.system.utils.MessageUtil;
 
 import jakarta.annotation.Resource;
 
-import me.chanjar.weixin.common.error.WxErrorException;
+
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -67,8 +70,8 @@ import java.io.File;
 
 @Service
 public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, RecycleOrder> {
-    @Resource
-    private WxMaService wxMaService;
+//    @Resource
+//    private WxMaService wxMaService;
     @Autowired
     private SysFileService sysFileService;
     @Resource
@@ -119,7 +122,8 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (orderType == null) {
             throw new ServiceException("阶段 " + stage.getDescription() + " 没有对应的回收订单类型");
         }
-        createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType,isNeedSettle);
+        // 使用代理对象调用，确保事务生效
+        ((RecycleOrderService) AopContext.currentProxy()).createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType,isNeedSettle);
     }
     
     /**
@@ -362,7 +366,8 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         BeanUtil.copyProperties(request, recycleOrder);
         if (StrUtil.isBlank(id)) {
             // 生成订单编号
-            recycleOrder.setNo(IdUtil.simpleUUID());
+            String type = recycleOrder.getType();
+            recycleOrder.setNo(RecycleOrderNoGenerator.generate(BaseEnum.getByCode(RecycleOrderTypeEnum.class, type)));
             save(recycleOrder);
         }else{
             updateById(recycleOrder);
@@ -371,8 +376,9 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         List<RecycleOrderItem> orderItems = recycleOrderItemService.list(new LambdaQueryWrapper<RecycleOrderItem>().eq(RecycleOrderItem::getRecycleOrderId, recycleOrder.getId()));
         if (CollUtil.isNotEmpty(orderItems)) {
             // 和传递过来的订单项进行对比，删除不存在的订单项
-            List<String> itemIds = request.getItems().stream().map(RecycleOrderItem::getId).collect(Collectors.toList());
-            orderItems.stream().filter(item -> !itemIds.contains(item.getId())).forEach(item -> recycleOrderItemService.removeById(item.getId()));
+            List<String> itemIds = request.getItems().stream().map(RecycleOrderItem::getId).toList();
+            orderItems.stream().filter(item -> !itemIds.contains(item.getId()))
+                    .forEach(item -> recycleOrderItemService.removeById(item.getId()));
         }
         // 保存订单明细
         List<RecycleOrderItem> items = Optional.ofNullable(request.getItems()).orElse(new ArrayList<>());
@@ -410,37 +416,37 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param orderId 订单ID
      * @return 二维码图片URL
      */
-    public String createOrderQrcode(String orderId){
-        try {
-            File wxaCode = wxMaService.getQrcodeService().createWxaCode("/pages/home/home?orderId=" + orderId);
-            
-            // 将File转换为字节数组
-            try (FileInputStream fis = new FileInputStream(wxaCode);
-                 ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-                byte[] buffer = new byte[1024];
-                int len;
-                while ((len = fis.read(buffer)) != -1) {
-                    bos.write(buffer, 0, len);
-                }
-                byte[] bytes = bos.toByteArray();
-                
-                // 创建自定义MultipartFile实现
-                MultipartFile multipartFile = new CustomMultipartFile(
-                    "file",
-                    "order_qrcode.png",
-                    "image/png",
-                    bytes
-                );
-                
-                // 上传文件到服务器
-                FileUploadVO fileUploadVO = sysFileService.uploadFile(multipartFile, null, null);
-                
-                return fileUploadVO.getFileUrl();
-            }
-        } catch (WxErrorException | IOException e) {
-            throw new RuntimeException("生成订单二维码失败", e);
-        }
-    }
+//    public String createOrderQrcode(String orderId){
+//        try {
+//            File wxaCode = wxMaService.getQrcodeService().createWxaCode("/pages/home/home?orderId=" + orderId);
+//
+//            // 将File转换为字节数组
+//            try (FileInputStream fis = new FileInputStream(wxaCode);
+//                 ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+//                byte[] buffer = new byte[1024];
+//                int len;
+//                while ((len = fis.read(buffer)) != -1) {
+//                    bos.write(buffer, 0, len);
+//                }
+//                byte[] bytes = bos.toByteArray();
+//
+//                // 创建自定义MultipartFile实现
+//                MultipartFile multipartFile = new CustomMultipartFile(
+//                    "file",
+//                    "order_qrcode.png",
+//                    "image/png",
+//                    bytes
+//                );
+//
+//                // 上传文件到服务器
+//                FileUploadVO fileUploadVO = sysFileService.uploadFile(multipartFile, null, null);
+//
+//                return fileUploadVO.getFileUrl();
+//            }
+//        } catch (WxErrorException | IOException e) {
+//            throw new RuntimeException("生成订单二维码失败", e);
+//        }
+//    }
     
     /**
      * 自定义MultipartFile实现类，避免依赖外部库
@@ -1093,24 +1099,20 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isBlank(processorId)) {
             throw new ServiceException("经办人ID不能为空");
         }
-        
         // 尝试获取订单锁，防止并发抢单
         if (!tryLock(userOrderId)) {
             throw new ServiceException("当前订单正在被处理，请稍后重试");
         }
-        
         try {
             // 查询主订单（UserOrder）
             UserOrder userOrder = userOrderService.getById(userOrderId);
             if (userOrder == null) {
                 throw new ServiceException("主订单不存在");
             }
-            
             // 检查主订单阶段是否为运输阶段
             if (!UserOrderStageEnum.TRANSPORT.getCode().equals(userOrder.getStage())) {
                 throw new ServiceException("只有运输阶段的订单才能抢单");
             }
-            
             // 检查是否已经存在运输类型的子订单
             List<RecycleOrderInfo> existingOrders = getAllByParentId(userOrderId);
             boolean hasTransportOrder = existingOrders.stream()
@@ -1118,36 +1120,32 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             if (hasTransportOrder) {
                 throw new ServiceException("该订单已经被抢单，无法重复抢单");
             }
-            
             // 获取经办人信息
             Processor processor = processorService.getById(processorId);
             if (processor == null) {
                 throw new ServiceException("经办人不存在");
             }
-            
+            // 查询对应的采购订单
+            RecycleOrderInfo purchaseOrder = existingOrders.stream()
+                    .filter(order -> RecycleOrderTypeEnum.PURCHASE.getCode().equals(order.getType()))
+                    .findFirst()
+                    .orElseThrow(() -> new ServiceException("未找到对应的采购订单"));
+
             // 将UserOrder转换为UserOrderDTO
             UserOrderDTO userOrderDTO = new UserOrderDTO();
-            BeanUtil.copyProperties(userOrder, userOrderDTO);
             // 设置经办人信息
             userOrderDTO.setProcessorId(processorId);
             userOrderDTO.setProcessorName(processor.getName());
-            
-            // 创建运输类型的回收订单
-            RecycleOrderInfo recycleOrderInfo = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(
-                    userOrderDTO, userOrder, RecycleOrderTypeEnum.TRANSPORT, false);
-            
+            userOrderDTO.setPickupAddress(purchaseOrder.getPickupAddress());
+            userOrderDTO.setDeliveryAddress(purchaseOrder.getDeliveryAddress());
             // 设置运输状态为已抢单
-            recycleOrderInfo.setTransportStatus(TransportStatusEnum.GRABBED.getCode());
+            userOrderDTO.setTransportStatus(TransportStatusEnum.GRABBED.getCode());
             // 设置开始时间（抢单时间）
-            recycleOrderInfo.setStartTime(new Date());
-            // 设置经办人信息
-            recycleOrderInfo.setProcessorId(processorId);
-            recycleOrderInfo.setProcessor(processor.getName());
-            recycleOrderInfo.setProcessorPhone(processor.getPhone());
-            
-            // 保存回收订单
-            createOrUpdate(recycleOrderInfo);
-            
+            userOrderDTO.setStartTime(new Date());
+            // 创建运输类型的回收订单
+            // 使用代理对象调用，确保事务生效
+            ((RecycleOrderService) AopContext.currentProxy()).createRecycleOrderFromUserOrderByType(
+                    userOrderDTO, userOrder, RecycleOrderTypeEnum.TRANSPORT, false);
             return true;
         } finally {
             // 释放锁

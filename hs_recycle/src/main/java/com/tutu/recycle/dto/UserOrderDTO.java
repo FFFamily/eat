@@ -32,13 +32,6 @@ public class UserOrderDTO extends UserOrder {
      * 仓库地址
      */
     private String warehouseAddress;
-
-    
-    /**
-     * 流转方向
-     */
-    private String flowDirection;
-    
     /**
      * 合同金额
      */
@@ -54,6 +47,8 @@ public class UserOrderDTO extends UserOrder {
      // 运输结束时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date endTime;
+    // 运输状态
+    private String transportStatus;
     // 运输起点
     private String pickupAddress;
     // 运输终点/采购的采购地址
