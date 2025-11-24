@@ -57,6 +57,8 @@ public class UserOrderDTO extends UserOrder {
      private BigDecimal goodsWeight;
 
      //仓库相关=====
+    // 分拣状态
+    private String sortingStatus;
     private String warehouseId;
      // 货物明细
      private List<RecycleOrderItem> items;

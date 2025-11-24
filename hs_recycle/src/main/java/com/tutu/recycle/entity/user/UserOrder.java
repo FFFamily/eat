@@ -48,12 +48,7 @@ public class UserOrder extends BaseEntity {
     // 交付时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date deliveryTime;
-    // 交付方式
-    private String deliveryMethod;
-    // 交付照片
-    private String deliveryPhoto;
-    // 交付状态
-    private String deliveryStatus;
+
     // 客户签名
     private String partnerSignature;
     // 经办人签名
@@ -70,4 +65,14 @@ public class UserOrder extends BaseEntity {
     private BigDecimal totalAmount;
     // 货物总金额
     private BigDecimal goodsTotalAmount;
+    // 交付方式
+    private String deliveryMethod;
+    // 交付照片
+    private String deliveryPhoto;
+    // 交付状态
+    private String deliveryStatus;
+    // 交付备注
+    private String deliveryRemark;
+    // 交付重量
+    private BigDecimal deliveryWeight;
 }

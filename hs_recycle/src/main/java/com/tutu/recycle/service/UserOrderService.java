@@ -115,6 +115,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             // 默认一般计价方式
             userOrder.setPricingMethod(PricingMethodEnum.GENERAL.getCode());
         }
+        // 初始为 未交付
+        userOrder.setDeliveryStatus(DeliveryStatusEnum.NOT_DELIVERED.getCode());
         // 用户系数
         if (StrUtil.isBlank(userOrder.getContractPartner())) {
             Account account = accountService.getById(userOrder.getContractPartner());
@@ -739,6 +741,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      * @return 分拣交付大厅订单列表
      */
     public List<SortingDeliveryHallResponse> getSortingDeliveryHallOrders() {
+//        return list(new LambdaQueryWrapper<UserOrder>()
+//                .eq(UserOrder::getStage, UserOrderStageEnum.PROCESSING.getCode()));
         return baseMapper.selectSortingDeliveryHallOrders();
     }
 

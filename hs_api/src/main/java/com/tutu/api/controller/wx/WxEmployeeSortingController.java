@@ -26,6 +26,52 @@ public class WxEmployeeSortingController {
 
     @Autowired
     private UserOrderService userOrderService;
+
+    /**
+     * 分拣中心
+     * 条件：用户订单处于加工阶段，且暂无加工子订单
+     * @return 可分拣的订单列表
+     */
+    @PostMapping("/sorting/delivery-hall")
+    public BaseResponse<List<SortingDeliveryHallResponse>> getSortingDeliveryHall() {
+        List<SortingDeliveryHallResponse> orders = userOrderService.getSortingDeliveryHallOrders();
+        return BaseResponse.success(orders);
+    }
+
+
+    /**
+     * 分拣中心-抢单
+     * @param request 抢单请求
+     * @return 抢单结果
+     */
+    @PostMapping("/sorting/grab")
+    public BaseResponse<Boolean> grabSortingOrder(@RequestBody GrabOrderRequest request) {
+        try {
+            boolean result = recycleOrderService.grabSortingOrder(request.getOrderId(), request.getProcessorId());
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 我的交付大厅
+     * @param request 查询条件（包含经办人ID）
+     * @return 可分拣的订单列表
+     */
+    @PostMapping("/sorting/delivery-center")
+    public BaseResponse<List<SortingDeliveryHallResponse>> getSortingDeliveryCenter(
+            @RequestBody SortingOrderPageRequest request) {
+        List<SortingDeliveryHallResponse> orders = null;
+        if (request != null) {
+            if (request.getProcessorId() == null){
+                return BaseResponse.error("未能检测到经办人");
+            }
+            orders = userOrderService.getSortingHomeDeliveryHallOrders(request.getProcessorId());
+        }
+        return BaseResponse.success(orders);
+    }
+
     /**
      * 分拣单详情
      * @param request 订单ID请求
@@ -55,36 +101,6 @@ public class WxEmployeeSortingController {
             return BaseResponse.error(e.getMessage());
         }
     }
-
-    /**
-     * 分拣中心
-     * 条件：用户订单处于加工阶段，且暂无加工子订单
-     * @return 可分拣的订单列表
-     */
-    @PostMapping("/sorting/delivery-hall")
-    public BaseResponse<List<SortingDeliveryHallResponse>> getSortingDeliveryHall() {
-        List<SortingDeliveryHallResponse> orders = userOrderService.getSortingDeliveryHallOrders();
-        return BaseResponse.success(orders);
-    }
-
-    /**
-     * 我的交付大厅
-     * @param request 查询条件（包含经办人ID）
-     * @return 可分拣的订单列表
-     */
-    @PostMapping("/sorting/delivery-center")
-    public BaseResponse<List<SortingDeliveryHallResponse>> getSortingDeliveryCenter(
-            @RequestBody SortingOrderPageRequest request) {
-        List<SortingDeliveryHallResponse> orders = null;
-        if (request != null) {
-            if (request.getProcessorId() == null){
-                return BaseResponse.error("未能检测到经办人");
-            }
-            orders = userOrderService.getSortingHomeDeliveryHallOrders(request.getProcessorId());
-        }
-        return BaseResponse.success(orders);
-    }
-
     /**
      * 我的分拣列表（指定经办人的未分拣订单）
      * @param request 查询条件（包含经办人ID）
@@ -104,20 +120,6 @@ public class WxEmployeeSortingController {
         }
     }
 
-    /**
-     * 分拣中心-抢单
-     * @param request 抢单请求
-     * @return 抢单结果
-     */
-    @PostMapping("/sorting/grab")
-    public BaseResponse<Boolean> grabSortingOrder(@RequestBody GrabOrderRequest request) {
-        try {
-            boolean result = recycleOrderService.grabSortingOrder(request.getOrderId(), request.getProcessorId());
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
-    }
     /**
      * 分拣中心-已分拣列表（已分拣的加工订单）
      * @param request 查询条件

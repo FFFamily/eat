@@ -26,20 +26,29 @@
     <select id="selectSortingDeliveryHallOrders" resultType="com.tutu.recycle.response.SortingDeliveryHallResponse">
         SELECT uo.id,
                uo.no,
+               uo.transport_method,
                uo.contract_partner_name AS company,
-               ro.site_name AS pickupAddress,
-               ro.delivery_address AS deliveryAddress,
-               ro.processor AS contactName,
-               ro.processor_phone AS contactPhone
+               ro.pickup_address,
+               ro.delivery_address,
+               ro.processor,
+               ro.processor_phone,
+               ro.identify_code,
+               ro.goods_weight,
+               ro.end_time
         FROM user_order uo
-            LEFT JOIN recycle_order ro
-                           ON ro.parent_id = uo.id
+                 LEFT JOIN recycle_order ro ON uo.id = ro.parent_id
         WHERE uo.stage = 'processing'
+          AND (
+            CASE
+                WHEN uo.transport_method = 'home_delivery' THEN (ro.type = 'purchase')
+                ELSE ro.type = 'transport'
+                END
+            )
           AND NOT EXISTS (
             SELECT 1
-            FROM recycle_order ro
-            WHERE ro.parent_id = uo.id
-              AND ro.type = 'process'
+            FROM recycle_order ro2
+            WHERE ro2.parent_id = uo.id
+              AND ro2.type = 'process'
         )
         ORDER BY uo.create_time DESC
     </select>
@@ -49,11 +58,11 @@
         SELECT ro.id,
                uo.no,
                uo.contract_partner_name AS company,
-        ro.site_name AS pickupAddress,
-        ro.delivery_address AS deliveryAddress,
-        ro.processor AS contactName,
-        ro.processor_phone AS contactPhone,
-        ro.identify_code
+               ro.pickup_address AS pickupAddress,
+               ro.delivery_address AS deliveryAddress,
+               ro.processor AS contactName,
+               ro.processor_phone AS contactPhone,
+               ro.identify_code
         FROM recycle_order ro LEFT JOIN user_order uo ON ro.parent_id = uo.id
         WHERE uo.transport_method = 'home_delivery'
         AND ro.type = 'process'

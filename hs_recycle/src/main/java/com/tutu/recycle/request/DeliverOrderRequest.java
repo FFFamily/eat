@@ -3,6 +3,8 @@ package com.tutu.recycle.request;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 /**
  * 交付订单请求
  */
@@ -38,5 +40,13 @@ public class DeliverOrderRequest {
      * 交付照片
      */
     private String deliveryPhoto;
+    /**
+     * 备注
+     */
+    private String remark;
+    /**
+     * 重量
+     */
+    private BigDecimal weight;
 }
 

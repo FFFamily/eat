@@ -1199,15 +1199,8 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             BeanUtil.copyProperties(userOrder, userOrderDTO);
             userOrderDTO.setProcessorId(processorId);
             userOrderDTO.setProcessorName(processor.getName());
-
-            RecycleOrderInfo recycleOrderInfo = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(
-                    userOrderDTO, userOrder, RecycleOrderTypeEnum.PROCESSING, false);
-            recycleOrderInfo.setSortingStatus(SortingStatusEnum.PENDING.getCode());
-            recycleOrderInfo.setProcessor(processor.getName());
-            recycleOrderInfo.setProcessorId(processor.getId());
-            recycleOrderInfo.setProcessorPhone(processor.getPhone());
-
-            createOrUpdate(recycleOrderInfo);
+            userOrderDTO.setSortingStatus(SortingStatusEnum.PENDING.getCode());
+            createRecycleOrderFromUserOrderByType(userOrderDTO, userOrder, RecycleOrderTypeEnum.PROCESSING, false);
             return true;
         } finally {
             releaseLock(userOrderId);
@@ -1267,9 +1260,10 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }
 
         order.setTransportStatus(TransportStatusEnum.ARRIVED.getCode());
-
+        order.setEndTime(new Date());
         UserOrderDTO dto = new UserOrderDTO();
         dto.setId(order.getParentId());
+        dto.setEndTime(order.getEndTime());
         userOrderService.settleOrder(dto,false);
         return updateById(order);
     }
@@ -1288,14 +1282,11 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isBlank(orderId)) {
             throw new ServiceException("订单ID不能为空");
         }
-
         RecycleOrder order = getById(orderId);
         if (order == null) {
             throw new ServiceException("订单不存在");
         }
-
         // 检查订单状态
-
         String orderType = order.getType();
         if (orderType.equals(RecycleOrderTypeEnum.TRANSPORT.getCode())) {
             if (!TransportStatusEnum.GRABBED.getCode().equals(order.getTransportStatus())) {
@@ -1305,6 +1296,9 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             order.setTransportStatus(TransportStatusEnum.TRANSPORTING.getCode());
         }else if (orderType.equals(RecycleOrderTypeEnum.PROCESSING.getCode())) {
             order.setSortingStatus(SortingStatusEnum.SORTING.getCode());
+        }
+        if (request.getWeight() != null) {
+            order.setGoodsWeight(request.getWeight());
         }
         boolean orderUpdated = updateById(order);
         boolean userOrderUpdated = updateUserOrderDeliveryInfo(order, request);
@@ -1332,6 +1326,10 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isNotBlank(request.getProcessorSignature())) {
             userOrder.setProcessorSignature(request.getProcessorSignature());
         }
+        if (StrUtil.isNotBlank(request.getRemark())) {
+            userOrder.setDeliveryRemark(request.getRemark());
+        }
+
         userOrder.setDeliveryPhoto(request.getDeliveryPhoto());
         return userOrderService.updateById(userOrder);
     }

@@ -2,6 +2,8 @@ package com.tutu.recycle.response;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 /**
  * 分拣交付大厅订单响应
  */
@@ -11,7 +13,10 @@ public class SortingDeliveryHallResponse {
      * 用户订单ID
      */
     private String id;
-
+    /**
+     * 运输方式
+     */
+    private String transportMethod;
     /**
      * 用户订单编号
      */
@@ -35,15 +40,19 @@ public class SortingDeliveryHallResponse {
     /**
      * 联系人
      */
-    private String contactName;
+    private String processor;
 
     /**
      * 联系人手机号
      */
-    private String contactPhone;
+    private String processorPhone;
 
     // 订单识别码
     private String identifyCode;
+    // 重量
+    private BigDecimal goodsWeight;
+    // 结束时间
+    private String endTime;
 }
 
 
