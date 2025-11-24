@@ -42,13 +42,6 @@ public class UserOrder extends BaseEntity {
     private String partyB;
     // 乙方名称
     private String partyBName;
-    // 结算时间
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date settlementTime;
-    // 交付时间
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date deliveryTime;
-
     // 客户签名
     private String partnerSignature;
     // 经办人签名
@@ -75,4 +68,20 @@ public class UserOrder extends BaseEntity {
     private String deliveryRemark;
     // 交付重量
     private BigDecimal deliveryWeight;
+    // 确认状态(待确认/已确认/超时自动确认)
+    private String confirmStatus;
+    // 确认备注
+    private String confirmRemark;
+    // 结算时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date settlementTime;
+    // 交付时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date deliveryTime;
+    // 完成时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date completeTime;
+    // 客户确认时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date confirmTime;
 }

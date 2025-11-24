@@ -21,18 +21,17 @@ public enum UserOrderStageEnum {
     TRANSPORT("transport", "运输","wait_sorting"),
     
     /**
-     * 加工阶段 -> 待分拣
-     */
-    PROCESSING("processing", "加工","wait_warehousing"),
-    
-    /**
      * 入库阶段 -> 待结算
      */
-    WAREHOUSING("warehousing", "入库","wait_settlement"),
+    PROCESSING("processing", "入库","wait_settlement"),
     /**
-     * 待结算阶段 -> 已完成
+     * 待结算阶段 -> 待客户确认
      */
-    PENDING_SETTLEMENT("pending_settlement", "待结算","completed"),
+    PENDING_SETTLEMENT("pending_settlement", "待结算","wait_customer_confirm"),
+    /**
+     * 待客户确认阶段 -> 已完成
+     */
+    PENDING_CUSTOMER_CONFIRMATION("pending_customer_confirmation", "待客户确认","completed"),
     /**
      * 已完成 -> 无
      */
@@ -88,10 +87,10 @@ public enum UserOrderStageEnum {
             case TRANSPORT:
                 return PROCESSING;
             case PROCESSING:
-                return WAREHOUSING;
-            case WAREHOUSING:
                 return PENDING_SETTLEMENT;
             case PENDING_SETTLEMENT:
+                return PENDING_CUSTOMER_CONFIRMATION;
+            case PENDING_CUSTOMER_CONFIRMATION:
                 return COMPLETED;
             case COMPLETED:
                 return null; // 已经是最后一个阶段
@@ -123,10 +122,10 @@ public enum UserOrderStageEnum {
             case TRANSPORT:
                 return PROCESSING;
             case PROCESSING:
-                return WAREHOUSING;
-            case WAREHOUSING:
                 return PENDING_SETTLEMENT;
             case PENDING_SETTLEMENT:
+                return PENDING_CUSTOMER_CONFIRMATION;
+            case PENDING_CUSTOMER_CONFIRMATION:
                 return COMPLETED;
             case COMPLETED:
                 return null; // 已经是最后一个阶段
@@ -147,12 +146,12 @@ public enum UserOrderStageEnum {
                 return PURCHASE;
             case PROCESSING:
                 return TRANSPORT;
-            case WAREHOUSING:
-                return PROCESSING;
             case PENDING_SETTLEMENT:
-                return WAREHOUSING;
-            case COMPLETED:
+                return PROCESSING;
+            case PENDING_CUSTOMER_CONFIRMATION:
                 return PENDING_SETTLEMENT;
+            case COMPLETED:
+                return PENDING_CUSTOMER_CONFIRMATION;
             default:
                 return null;
         }

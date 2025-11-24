@@ -17,6 +17,10 @@ public class ProcessingOrderSubmitRequest {
      */
     private String orderId;
     /**
+     * 当前经办人ID
+     */
+    private String processorId;
+    /**
      * 订单明细列表
      */
     private List<RecycleOrderItem> items;

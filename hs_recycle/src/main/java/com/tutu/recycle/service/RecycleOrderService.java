@@ -1558,6 +1558,8 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         }
         UserOrderDTO dto = new UserOrderDTO();
         dto.setId(order.getParentId());
+        dto.setItems(request.getItems());
+        dto.setProcessorId(request.getProcessorId());
         userOrderService.settleOrder(dto,false);
     }
 

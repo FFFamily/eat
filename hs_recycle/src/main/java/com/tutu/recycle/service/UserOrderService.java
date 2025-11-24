@@ -85,8 +85,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                 // 执行中
                 wrapper.in(UserOrder::getStage, UserOrderStageEnum.PURCHASE.getCode(),
                         UserOrderStageEnum.TRANSPORT.getCode(),
-                        UserOrderStageEnum.PROCESSING.getCode(),
-                        UserOrderStageEnum.WAREHOUSING.getCode()
+                        UserOrderStageEnum.PROCESSING.getCode()
                 );
             }else {
                 wrapper.eq(UserOrder::getStage, stage);
@@ -94,8 +93,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
 
         });
         wrapper.orderByDesc(UserOrder::getCreateTime);
-        List<UserOrder> list = list(wrapper);
-        return list;
+        return list(wrapper);
     }
     
     /**
@@ -482,27 +480,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     }
 
     
-    /**
-     * 完成订单
-     * 将订单状态设置为已完成，阶段设置为入库
-     * @param id 订单ID
-     * @return 是否完成成功
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public boolean completeOrder(String id) {
-        if (StrUtil.isBlank(id)) {
-            throw new ServiceException("订单ID不能为空");
-        }
-        
-        UserOrder userOrder = getById(id);
-        if (userOrder == null) {
-            throw new ServiceException("订单不存在");
-        }
-        // 设置为完成状态和入库阶段
-        userOrder.setStage(UserOrderStageEnum.WAREHOUSING.getCode());
-        return updateById(userOrder);
-    }
-    
+
     /**
      * 验证订单状态流转是否合法
      * @param currentStatus 当前状态
