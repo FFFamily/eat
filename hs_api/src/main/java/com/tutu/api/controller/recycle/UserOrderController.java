@@ -7,6 +7,7 @@ import com.tutu.recycle.dto.DeliveryDTO;
 import com.tutu.recycle.dto.UserOrderDTO;
 import com.tutu.recycle.dto.UserOrderInfo;
 import com.tutu.recycle.entity.user.UserOrder;
+import com.tutu.recycle.request.SaveSupplementMaterialRequest;
 import com.tutu.recycle.service.UserOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -225,20 +226,6 @@ public class UserOrderController {
     }
     
 
-    /**
-     * 完成订单
-     * @param id 订单ID
-     * @return 完成结果
-     */
-    @PutMapping("/complete")
-    public BaseResponse<Boolean> completeOrder(@RequestParam String id) {
-        try {
-            boolean result = userOrderService.completeOrder(id);
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
-    }
     
     /**
      * 验证订单状态流转是否合法
@@ -308,6 +295,21 @@ public class UserOrderController {
     public BaseResponse<Boolean> delivery(@RequestBody DeliveryDTO deliveryDTO) {
         try {
             boolean result = userOrderService.delivery(deliveryDTO);
+            return BaseResponse.success(result);
+        } catch (Exception e) {
+            return BaseResponse.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 保存订单补充材料PDF
+     * @param request 补充材料请求
+     * @return 保存结果
+     */
+    @PostMapping("/materials")
+    public BaseResponse<Boolean> saveSupplementMaterials(@RequestBody SaveSupplementMaterialRequest request) {
+        try {
+            boolean result = userOrderService.saveSupplementMaterials(request);
             return BaseResponse.success(result);
         } catch (Exception e) {
             return BaseResponse.error(e.getMessage());

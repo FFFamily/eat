@@ -16,6 +16,7 @@ import com.tutu.recycle.entity.order.RecycleOrderItem;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.enums.*;
 import com.tutu.recycle.mapper.UserOrderMapper;
+import com.tutu.recycle.request.SaveSupplementMaterialRequest;
 import com.tutu.recycle.request.WxUserCreateOrderRequest;
 import com.tutu.recycle.response.SortingDeliveryHallResponse;
 import com.tutu.recycle.response.WxTransportOrderListResponse;
@@ -39,10 +40,8 @@ import java.util.stream.Collectors;
 
 import com.tutu.user.entity.Account;
 import com.tutu.user.service.AccountService;
-import com.tutu.user.service.ProcessorService;
 import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.Resource;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -116,7 +115,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 初始为 未交付
         userOrder.setDeliveryStatus(DeliveryStatusEnum.NOT_DELIVERED.getCode());
         // 用户系数
-        if (StrUtil.isBlank(userOrder.getContractPartner())) {
+        if (StrUtil.isNotBlank(userOrder.getContractPartner())) {
             Account account = accountService.getById(userOrder.getContractPartner());
             if (account == null) {
                 throw new ServiceException("合作方不存在");
@@ -626,6 +625,26 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         userOrder.setStage(UserOrderStageEnum.COMPLETED.getCode());
         // 根据合同受益人发放积分
         distributeSettlementPoints(userOrder);
+        return updateById(userOrder);
+    }
+
+    /**
+     * 保存订单补充材料PDF
+     * @param request 补充材料请求
+     * @return 是否保存成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean saveSupplementMaterials(SaveSupplementMaterialRequest request) {
+        if (request == null || StrUtil.isBlank(request.getOrderId())) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        UserOrder userOrder = getById(request.getOrderId());
+        if (userOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        Optional.ofNullable(request.getDeliveryPdf()).ifPresent(userOrder::setDeliveryPdf);
+        Optional.ofNullable(request.getSettlementPdf()).ifPresent(userOrder::setSettlementPdf);
+        Optional.ofNullable(request.getApplicationPdf()).ifPresent(userOrder::setApplicationPdf);
         return updateById(userOrder);
     }
 

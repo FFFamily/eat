@@ -1,6 +1,7 @@
 package com.tutu.recycle.entity.user;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tutu.common.entity.BaseEntity;
@@ -84,4 +85,14 @@ public class UserOrder extends BaseEntity {
     // 客户确认时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date confirmTime;
+
+    // 结算单PDF URL
+    @TableField("settlement_pdf")
+    private String settlementPdf;
+    // 交付单PDF URL
+    @TableField("delivery_pdf")
+    private String deliveryPdf;
+    // 申请单PDF URL
+    @TableField("application_pdf")
+    private String applicationPdf;
 }

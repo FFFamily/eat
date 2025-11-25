@@ -166,10 +166,8 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         return switch (stage) {
             case PURCHASE -> RecycleOrderTypeEnum.PURCHASE;
             case TRANSPORT -> RecycleOrderTypeEnum.TRANSPORT;
-            case PROCESSING -> RecycleOrderTypeEnum.PROCESSING;
-            case WAREHOUSING -> RecycleOrderTypeEnum.STORAGE; // 入库阶段对应仓储订单
-            case PENDING_SETTLEMENT -> null;
-            case COMPLETED -> null; // 完成阶段不需要创建订单
+            case PROCESSING -> RecycleOrderTypeEnum.STORAGE;// 分拣阶段对应仓储订单
+            default -> null;
         };
     }
     
@@ -1295,7 +1293,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             // 更新状态为运输中
             order.setTransportStatus(TransportStatusEnum.TRANSPORTING.getCode());
         }else if (orderType.equals(RecycleOrderTypeEnum.PROCESSING.getCode())) {
-            order.setSortingStatus(SortingStatusEnum.SORTING.getCode());
+            order.setSortingStatus(SortingStatusEnum.PENDING.getCode());
         }
         if (request.getWeight() != null) {
             order.setGoodsWeight(request.getWeight());
@@ -1413,20 +1411,6 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         return list(wrapper);
     }
 
-    /**
-     * 获取结果暂存列表（分拣中的加工订单）
-     * @return 分拣中的订单列表
-     */
-    public List<RecycleOrder> getSortingTempList(String processorId) {
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
-                .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.SORTING.getCode())
-                .orderByDesc(RecycleOrder::getCreateTime);
-        if (StrUtil.isNotBlank(processorId)) {
-            wrapper.eq(RecycleOrder::getProcessorId, processorId);
-        }
-        return list(wrapper);
-    }
 
     /**
      * 获取已分拣列表（已分拣的加工订单）
@@ -1455,7 +1439,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
                 .eq(RecycleOrder::getProcessorId, processorId)
-                .ne(RecycleOrder::getSortingStatus, SortingStatusEnum.SORTED.getCode())
+                .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.PENDING.getCode())
                 .orderByDesc(RecycleOrder::getCreateTime);
         return list(wrapper);
     }
@@ -1515,32 +1499,6 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         
         return true;
     }
-
-    /**
-     * 保存分拣结果（暂存）
-     * @param request 分拣请求
-     * @return 是否成功
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public boolean saveSortingResult(ProcessingOrderSubmitRequest request) {
-        RecycleOrder order = getById(request.getOrderId());
-        if (order == null) {
-            throw new ServiceException("订单不存在");
-        }
-        if (!RecycleOrderTypeEnum.PROCESSING.getCode().equals(order.getType())) {
-            throw new ServiceException("只有加工订单才能进行分拣");
-        }
-        // 更新分拣状态为分拣中
-        order.setSortingStatus(SortingStatusEnum.SORTING.getCode());
-        updateById(order);
-        // 保存分拣明细
-        if (request.getItems() != null && !request.getItems().isEmpty()) {
-            List<RecycleOrderItem> items = convertToRecycleOrderItems(request.getOrderId(), request.getItems());
-            recycleOrderItemService.saveOrUpdateBatch(items);
-        }
-        return true;
-    }
-
     /**
      * 提交分拣结果（完成分拣）
      * @param request 分拣请求

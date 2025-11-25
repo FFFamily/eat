@@ -14,12 +14,6 @@ public enum SortingStatusEnum {
      * 待分拣
      */
     PENDING("pending", "待分拣"),
-
-    /**
-     * 分拣中（暂存）
-     */
-    SORTING("sorting", "分拣中"),
-
     /**
      * 已分拣
      */
