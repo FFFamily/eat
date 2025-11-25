@@ -1,34 +1,15 @@
 package com.tutu.recycle.request;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.baomidou.mybatisplus.annotation.TableField;
+import lombok.Data;
 
-/**
- * 补充材料保存请求
- */
-@Getter
-@Setter
+@Data
 public class SaveSupplementMaterialRequest {
-
-    /**
-     * 用户订单ID
-     */
     private String orderId;
-
-    /**
-     * 交付单PDF地址
-     */
-    private String deliveryPdf;
-
-    /**
-     * 结算单PDF地址
-     */
+    // 结算单PDF URL
     private String settlementPdf;
-
-    /**
-     * 申请单PDF地址
-     */
+    // 交付单PDF URL
+    private String deliveryPdf;
+    // 申请单PDF URL
     private String applicationPdf;
 }
-
-

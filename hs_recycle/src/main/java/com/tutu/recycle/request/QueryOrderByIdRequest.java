@@ -14,4 +14,6 @@ public class QueryOrderByIdRequest {
      * 订单ID
      */
     private String orderId;
+    // 确认备注
+    private String confirmRemark;
 }

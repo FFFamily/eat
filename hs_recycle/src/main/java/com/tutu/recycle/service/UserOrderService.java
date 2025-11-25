@@ -16,6 +16,7 @@ import com.tutu.recycle.entity.order.RecycleOrderItem;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.enums.*;
 import com.tutu.recycle.mapper.UserOrderMapper;
+import com.tutu.recycle.request.QueryOrderByIdRequest;
 import com.tutu.recycle.request.SaveSupplementMaterialRequest;
 import com.tutu.recycle.request.WxUserCreateOrderRequest;
 import com.tutu.recycle.response.SortingDeliveryHallResponse;
@@ -86,7 +87,11 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                         UserOrderStageEnum.TRANSPORT.getCode(),
                         UserOrderStageEnum.PROCESSING.getCode()
                 );
-            }else {
+            } else if (stage.equals("pending")) {
+                wrapper.in(UserOrder::getStage, UserOrderStageEnum.PENDING_SETTLEMENT.getCode(),
+                        UserOrderStageEnum.PENDING_CUSTOMER_CONFIRMATION.getCode()
+                );
+            } else {
                 wrapper.eq(UserOrder::getStage, stage);
             }
 
@@ -122,6 +127,9 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             }
             userOrder.setAccountCoefficient(new BigDecimal(account.getScoreFactor()));
         }
+        // 初始状态
+        userOrder.setSettlementStatus(SettlementStatusEnum.NOT_SETTLED.getCode());
+        userOrder.setDeliveryStatus(DeliveryStatusEnum.NOT_DELIVERED.getCode());
         save(userOrder);
         return userOrder;
     }
@@ -607,11 +615,11 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             for (RecycleOrderItem item : items) {
                 BigDecimal price = Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO);
                 BigDecimal count = item.getGoodCount() != null ? BigDecimal.valueOf(item.getGoodCount()) : BigDecimal.ZERO;
-                BigDecimal weight = Optional.ofNullable(item.getGoodWeight()).orElse(BigDecimal.ZERO);
-                goodsTotalAmount = goodsTotalAmount.add(price.multiply(count).multiply(weight));
+//                BigDecimal weight = Optional.ofNullable(item.getGoodWeight()).orElse(BigDecimal.ZERO);
+                goodsTotalAmount = goodsTotalAmount.add(price.multiply(count));
             }
         }
-        //   - 货物总金额 = Σ(单价 × 数量 × 重量)
+        //   - 货物总金额 = Σ(单价 × 数量 )
         //  - 最终总金额 = 货物总金额 × (1 + 评级系数) + 其他调价
         BigDecimal ratingCoefficient = Optional.ofNullable(userOrderDTO.getAccountCoefficient()).orElse(BigDecimal.ZERO);
         BigDecimal otherAdjustAmount = Optional.ofNullable(userOrderDTO.getOtherAdjustAmount()).orElse(BigDecimal.ZERO);
@@ -622,10 +630,67 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 更新结算时间
         userOrder.setSettlementTime(new Date());
         // 流转到完成阶段
-        userOrder.setStage(UserOrderStageEnum.COMPLETED.getCode());
+        userOrder.setStage(UserOrderStageEnum.PENDING_CUSTOMER_CONFIRMATION.getCode());
+        userOrder.setSettlementStatus(SettlementStatusEnum.WAITING_CONFIRMATION.getCode());
         // 根据合同受益人发放积分
         distributeSettlementPoints(userOrder);
         return updateById(userOrder);
+    }
+
+    /**
+     * 确认结算结果
+     * 只有待客户确认的订单才可以确认结算
+     * 更新阶段、结算确认时间和结算状态为已结算
+     * @param orderId 订单ID
+     * @return 是否确认成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void confirmSettlementResult(String orderId) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        UserOrder userOrder = getById(orderId);
+        if (userOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        // 验证当前阶段必须是待客户确认
+        if (!UserOrderStageEnum.PENDING_CUSTOMER_CONFIRMATION.getCode().equals(userOrder.getStage())) {
+            throw new ServiceException("只有待客户确认的订单才可以确认结算");
+        }
+        // 更新阶段为已完成
+        userOrder.setStage(UserOrderStageEnum.COMPLETED.getCode());
+        // 更新结算确认时间
+        userOrder.setConfirmTime(new Date());
+        // 更新结算状态为已结算
+        userOrder.setSettlementStatus(SettlementStatusEnum.SETTLED.getCode());
+        updateById(userOrder);
+    }
+
+    /**
+     * 否定结算
+     * 只有待客户确认的订单才可以否定结算
+     * 更新结算状态为已驳回
+     * @param orderId 订单ID
+     * @return 是否否定成功
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void rejectSettlement(QueryOrderByIdRequest request) {
+        String orderId = request.getOrderId();
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        UserOrder userOrder = getById(orderId);
+        if (userOrder == null) {
+            throw new ServiceException("订单不存在");
+        }
+        // 验证当前阶段必须是待客户确认
+        if (!UserOrderStageEnum.PENDING_CUSTOMER_CONFIRMATION.getCode().equals(userOrder.getStage())) {
+            throw new ServiceException("只有待客户确认的订单才可以否定结算");
+        }
+        // 更新结算状态为已驳回
+        userOrder.setSettlementStatus(SettlementStatusEnum.REJECTED.getCode());
+        userOrder.setConfirmRemark(request.getConfirmRemark());
+        updateById(userOrder);
     }
 
     /**

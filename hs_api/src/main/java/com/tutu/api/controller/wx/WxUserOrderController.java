@@ -1,8 +1,6 @@
 package com.tutu.api.controller.wx;
 
 import com.tutu.recycle.request.WxUserCreateOrderRequest;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.dto.UserOrderInfo;
-import com.tutu.recycle.entity.order.RecycleOrder;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.request.QueryOrderByIdRequest;
 import com.tutu.recycle.service.UserOrderService;
@@ -59,5 +56,31 @@ public class WxUserOrderController {
         // 查询合作方订单列表
         List<UserOrder> orderList = userOrderService.getWxUserOrderList(order);
         return BaseResponse.success(orderList);
+    }
+
+    /**
+     * 确认结算结果
+     * 只有待客户确认的订单才可以确认结算
+     * 更新阶段、结算确认时间和结算状态为已结算
+     * @param request 订单ID请求
+     * @return 操作结果
+     */
+    @PostMapping("/confirmSettlement")
+    public BaseResponse<String> confirmSettlement(@RequestBody QueryOrderByIdRequest request) {
+        userOrderService.confirmSettlementResult(request.getOrderId());
+        return BaseResponse.success();
+    }
+
+    /**
+     * 否定结算
+     * 只有待客户确认的订单才可以否定结算
+     * 更新结算状态为已驳回
+     * @param request 订单ID请求
+     * @return 操作结果
+     */
+    @PostMapping("/rejectSettlement")
+    public BaseResponse<String> rejectSettlement(@RequestBody QueryOrderByIdRequest request) {
+        userOrderService.rejectSettlement(request);
+        return BaseResponse.success();
     }
 }
