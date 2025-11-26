@@ -31,7 +31,15 @@ public class UserController {
         accountService.create(account);
         return BaseResponse.success();
     }
-    
+
+    /**
+     * 变更账户业务类型
+     */
+    @PostMapping("/changeAccountBusinessType")
+    public BaseResponse<Void> changeAccountBusinessType(@RequestBody Account account) {
+        accountService.changeAccountBusinessType(account);
+        return BaseResponse.success();
+    }
     /**
      * 根据用户类型生成对应的用户账号
      * @param accountType 用户类型

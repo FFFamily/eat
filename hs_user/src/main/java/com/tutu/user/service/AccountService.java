@@ -3,6 +3,7 @@ package com.tutu.user.service;
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tutu.common.util.PasswordUtil;
+import com.tutu.user.enums.AccountBusinessTypeEnum;
 import jakarta.annotation.Resource;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -131,6 +132,7 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
         }
         account.setPassword(PasswordUtil.encode(account.getPassword()));
         account.setStatus(UserStatusEnum.USE.getCode());
+        account.setBusinessType(AccountBusinessTypeEnum.SUPPLIER.getCode());
         save(account);
     }
 
@@ -159,5 +161,25 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
         // 加密密码
         account.setPassword(PasswordUtil.encode(account.getPassword()));
         updateById(account);
+    }
+
+    /**
+     * 变更账户业务类型
+     * @param accountRequest 用户实体
+     */
+    public void changeAccountBusinessType(Account accountRequest) {
+        Account account = getById(accountRequest.getId());
+        account.setBusinessType(accountRequest.getBusinessType());
+        updateById(account);
+    }
+
+    /**
+     * 查询业务类型为服务商的账户列表
+     * @return 服务商账户列表
+     */
+    public List<Account> getServiceProviderList() {
+        LambdaQueryWrapper<Account> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Account::getBusinessType, AccountBusinessTypeEnum.SERVICE_PROVIDER.getCode());
+        return list(queryWrapper);
     }
 }

@@ -18,6 +18,8 @@ public class Account extends BaseUserEntity {
     private String type;
     // 用户类型
     private String accountTypeId;
+    // 业务类型(供货商、服务商)
+    private String businessType;
     // 头像
     private String avatar;
     // 身份

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.user.mapper.AccountServiceScopeMapper">
+
+    <!-- 根据账户ID查询服务范围列表（带账户名称） -->
+    <select id="selectByAccountIdWithAccount" resultType="com.tutu.user.entity.AccountServiceScope">
+        SELECT 
+            s.*,
+            a.nickname as accountName
+        FROM account_service_scope s
+        LEFT JOIN account a ON s.account_id = a.id
+        WHERE s.account_id = #{accountId} AND s.is_deleted = '0'
+        ORDER BY s.create_time DESC
+    </select>
+
+</mapper>
+
