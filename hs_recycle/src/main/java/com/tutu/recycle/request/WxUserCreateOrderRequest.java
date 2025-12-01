@@ -25,4 +25,11 @@ public class WxUserCreateOrderRequest extends UserOrder {
     private String deliveryAddress;
     // 运输方式（送货上门/自提等）
     private String transportMethod;
+    // === 地址信息 ===
+    // 拿货省
+    private String pickupProvince;
+    // 拿货市
+    private String pickupCity;
+    // 拿货区
+    private String pickupDistrict;
 }

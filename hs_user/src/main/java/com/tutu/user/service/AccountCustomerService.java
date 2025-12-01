@@ -142,5 +142,18 @@ public class AccountCustomerService extends ServiceImpl<AccountCustomerMapper, A
         queryWrapper.eq(AccountCustomer::getCustomerAccountId, customerAccountId);
         remove(queryWrapper);
     }
+
+    /**
+     * 查询客户属于哪个服务商
+     * @param userId
+     * @return
+     */
+    public AccountCustomer getByCustomerAccountId(String userId) {
+        List<AccountCustomer> list = list(new LambdaQueryWrapper<AccountCustomer>().eq(AccountCustomer::getCustomerAccountId, userId));
+        if (list.size() > 1){
+            throw new ServiceException("检测到当前用户归属多个服务商，请联系管理员");
+        }
+        return list.getFirst();
+    }
 }
 

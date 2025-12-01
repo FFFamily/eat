@@ -25,6 +25,14 @@ public class WxUserOrderController {
     @Autowired
     private UserOrderService userOrderService;
 
+    // 检查是否具备创建订单的能力
+    @PostMapping("/check")
+    public BaseResponse<Boolean> checkPermission(@RequestBody WxUserCreateOrderRequest order) {
+        String userId = StpUtil.getLoginIdAsString();
+        // 检查用户是否具备创建订单的权限
+        Boolean flag =  userOrderService.checkCreateOrderPermission(userId,order);
+        return BaseResponse.success(flag);
+    }
     // 创建订单
     @PostMapping("/create")
     public BaseResponse<String> create(@RequestBody WxUserCreateOrderRequest order) {

@@ -32,16 +32,17 @@ import com.tutu.point.service.PointGlobalConfigService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.tutu.user.entity.Account;
+import com.tutu.user.entity.AccountCustomer;
+import com.tutu.user.entity.AccountServiceScope;
+import com.tutu.user.service.AccountCustomerService;
 import com.tutu.user.service.AccountService;
 import cn.hutool.core.util.StrUtil;
+import com.tutu.user.service.AccountServiceScopeService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,10 +65,10 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     private AccountPointDetailService accountPointDetailService;
     @Resource
     private AccountService accountService;
-    /**
-     * 填充经办人名称
-     * @param userOrder
-     */
+    @Resource
+    private AccountCustomerService accountCustomerService;
+    @Resource
+    private AccountServiceScopeService accountServiceScopeService;
 
     /**
      * 获取当前登录用户作为合作方的订单列表
@@ -670,7 +671,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      * 否定结算
      * 只有待客户确认的订单才可以否定结算
      * 更新结算状态为已驳回
-     * @param orderId 订单ID
+     * @param request 订单ID
      * @return 是否否定成功
      */
     @Transactional(rollbackFor = Exception.class)
@@ -885,6 +886,44 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             pointDetail.setRemark(StrUtil.format("总金额:{}, 积分比例:{}, 受益人分成:{}", totalAmount, pointRatio, shareRatio));
             accountPointDetailService.createDetail(pointDetail);
         }
+    }
+
+
+    /**
+     * 检查用户是否具备创建订单的权限
+     * TODO 后续要更新
+     * @param userId
+     * @param order
+     * @return
+     */
+    public Boolean checkCreateOrderPermission(String userId, WxUserCreateOrderRequest order) {
+        AccountCustomer accountCustomer =  accountCustomerService.getByCustomerAccountId(userId);
+        if (accountCustomer == null){
+            return false;
+        }
+        // 查询其服务范围
+        List<AccountServiceScope> accountServiceScopes = accountServiceScopeService.listByAccountId(accountCustomer.getAccountId());
+        // 省
+        Set<String> provinceList = new HashSet<>();
+        // 市
+        Set<String> cityList = new HashSet<>();
+        // 区
+        Set<String> districtList = new HashSet<>();
+        for (AccountServiceScope accountServiceScope : accountServiceScopes) {
+            provinceList.add(accountServiceScope.getProvince());
+            cityList.add(accountServiceScope.getCity());
+            districtList.add(accountServiceScope.getDistrict());
+        }
+        if (!provinceList.contains(order.getPickupProvince())){
+            return false;
+        }
+        if (!cityList.contains(order.getPickupCity())){
+            return false;
+        }
+        if (!districtList.contains(order.getPickupDistrict())){
+            return false;
+        }
+        return true;
     }
 }
 
