@@ -1,5 +1,6 @@
 package com.tutu.api.controller.account;
 
+import com.tutu.api.request.account.UpdateServiceScopeRequest;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.user.entity.Account;
 import com.tutu.user.entity.AccountServiceScope;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/wx/service-provider")
+@RequestMapping("/account/service-provider")
 public class ServiceProviderController {
     @Autowired
     private AccountService accountService;
@@ -41,20 +42,15 @@ public class ServiceProviderController {
     /**
      * 更新账户的服务范围（省、市、区）
      * 先删除该账户的所有服务范围，然后批量保存新的服务范围
-     * @param accountServiceScopeList 服务范围列表，每个对象需包含 accountId、province、city、district
+     * @param request 更新请求，包含 accountId 和 serviceScopeList
      * @return 更新成功返回成功响应
      */
     @PutMapping("/updateServiceScope")
-    public BaseResponse<Void> updateServiceScope(@RequestBody List<AccountServiceScope> accountServiceScopeList) {
-        if (accountServiceScopeList == null || accountServiceScopeList.isEmpty()) {
+    public BaseResponse<Void> updateServiceScope(@RequestBody UpdateServiceScopeRequest request) {
+        if (request == null || request.getAccountId() == null) {
             return BaseResponse.success();
         }
-        // 获取第一个账户ID（假设所有服务范围都属于同一个账户）
-        String accountId = accountServiceScopeList.get(0).getAccountId();
-        // 删除该账户的所有服务范围
-        accountServiceScopeService.deleteByAccountId(accountId);
-        // 批量保存新的服务范围
-        accountServiceScopeService.saveBatch(accountServiceScopeList);
+        accountServiceScopeService.updateServiceScope(request.getAccountId(), request.getServiceScopeList());
         return BaseResponse.success();
     }
 }

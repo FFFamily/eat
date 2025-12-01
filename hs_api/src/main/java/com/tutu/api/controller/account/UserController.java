@@ -35,8 +35,8 @@ public class UserController {
     /**
      * 变更账户业务类型
      */
-    @PostMapping("/changeAccountBusinessType")
-    public BaseResponse<Void> changeAccountBusinessType(@RequestBody Account account) {
+    @PutMapping("/changeAccountBusinessType")
+    public BaseResponse<Void> changeAccountBusinessType(Account account) {
         accountService.changeAccountBusinessType(account);
         return BaseResponse.success();
     }
@@ -83,6 +83,7 @@ public class UserController {
         Page<Account> result = accountService.page(page,new LambdaQueryWrapper<Account>()
                 .like(StrUtil.isNotBlank(account.getUsername()), Account::getUsername,"%"+account.getUsername()+"%")
                 .like(StrUtil.isNotBlank(account.getNickname()), Account::getNickname,"%"+account.getNickname()+"%")
+                        .eq(StrUtil.isNotBlank(account.getBusinessType()), Account::getBusinessType,account.getBusinessType())
                 );
         if(!isFilterPass){
             result.getRecords().forEach(item -> {
