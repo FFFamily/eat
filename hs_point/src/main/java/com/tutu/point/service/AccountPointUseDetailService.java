@@ -213,7 +213,5 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
         }
         return  res;
     }
-
-
 }
 

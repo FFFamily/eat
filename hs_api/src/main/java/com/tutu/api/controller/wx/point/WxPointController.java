@@ -92,4 +92,29 @@ public class WxPointController {
         return BaseResponse.success();
     }
 
+    /**
+     * 消耗积分，和商品无关逻辑
+     * @param useDetail
+     * @return
+     */
+    @PostMapping("/exchange")
+    public BaseResponse<Void> exchange(@RequestBody AccountPointDetail useDetail) {
+        String accountId = StpUtil.getLoginIdAsString();
+        useDetail.setAccountId(accountId);
+        accountPointService.exchangePoint(useDetail);
+        return BaseResponse.success();
+    }
+
+    /**
+     * 获取对应活动的消耗积分
+     * @return
+     */
+    @PostMapping("/getAccountActivityPoint")
+    public BaseResponse<Long> getActivityPoint(@RequestBody AccountPointDetail useDetail) {
+        String accountId = StpUtil.getLoginIdAsString();
+        return BaseResponse.success( accountPointService.getAccountActivityPoint(accountId,useDetail.getMark()));
+    }
+
+
+
 }

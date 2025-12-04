@@ -7,7 +7,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.point.constant.UserPointLockConstant;
 import com.tutu.point.entity.AccountPointDetail;
+import com.tutu.point.entity.AccountPointUseDetail;
 import com.tutu.point.enums.PointChangeDirectionEnum;
+import com.tutu.point.enums.PointChangeTypeEnum;
 import com.tutu.point.mapper.AccountPointDetailMapper;
 import com.tutu.user.entity.Account;
 import com.tutu.user.service.AccountService;
@@ -103,5 +105,28 @@ public class AccountPointDetailService extends ServiceImpl<AccountPointDetailMap
         return account.getPoint();
     }
 
+    /**
+     * 消耗积分
+     * 和商品无关
+     * @param useDetail 消耗积分详情
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void exchangePoint(AccountPointDetail useDetail) {
+        useDetail.setChangeDirection(PointChangeDirectionEnum.SUB.getValue());
+        createDetail(useDetail);
+    }
+
+    /**
+     * 获取对应活动的消耗积分
+     * @param accountId
+     * @param mark
+     * @return
+     */
+    public Long getAccountActivityPoint(String accountId, String mark) {
+        List<AccountPointDetail> list = list(new LambdaQueryWrapper<AccountPointDetail>()
+                .eq(AccountPointDetail::getAccountId, accountId)
+                .eq(AccountPointDetail::getMark, mark));
+        return list.stream().mapToLong(AccountPointDetail::getChangePoint).sum();
+    }
 }
 

@@ -30,6 +30,8 @@ public class AccountPointDetail extends BaseEntity {
     private Long changePoint;
     // 变更类型
     private String changeType;
+    // 积分来源
+    private String mark;
     // 备注
     private String remark;
 }

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>业务申请单</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'SimSun', 'Microsoft YaHei', 'PingFang SC', serif;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+            padding: 40px;
+        }
+        
+        .application-preview {
+            max-width: 100%;
+        }
+        
+        /* 申请单标题 */
+        .application-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .application-title h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        /* 合同基本信息 */
+        .contract-info {
+            margin-bottom: 30px;
+        }
+        
+        .contract-parties {
+            display: block;
+        }
+        
+        .party-item {
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .party-item .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 80px;
+        }
+        
+        .party-item .value {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
+        /* 申请说明 */
+        .application-description {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .application-description p {
+            margin: 0;
+        }
+        
+        /* 章节标题 */
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 25px 0 15px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        /* 信息项 */
+        .info-item {
+            display: block;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .info-item .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 200px;
+            margin-right: 10px;
+            vertical-align: top;
+        }
+        
+        .info-item .value {
+            display: inline-block;
+        }
+        
+        /* 订单明细表格 */
+        .order-details-table {
+            margin: 20px 0;
+        }
+        
+        .order-details-table table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #ccc;
+        }
+        
+        .order-details-table th,
+        .order-details-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+        }
+        
+        .order-details-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .order-details-table td {
+            text-align: center;
+        }
+        
+        /* 批注说明 */
+        .notes-section {
+            margin-top: 20px;
+        }
+        
+        .notes-text {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+        }
+        
+        /* 最终批注 */
+        .final-notes-section {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .final-notes-text {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        /* 公司信息和日期 */
+        .company-info-footer {
+            margin-top: 50px;
+            text-align: right;
+        }
+        
+        .company-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .application-date {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 打印样式 */
+        @media print {
+            body {
+                padding: 20mm;
+            }
+            
+            .application-preview {
+                page-break-inside: avoid;
+            }
+            
+            .section-title {
+                page-break-after: avoid;
+            }
+            
+            .order-details-table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="application-preview">
+        <!-- 申请单标题 -->
+        <div class="application-title">
+            <h1>业务申请单</h1>
+        </div>
+
+        <!-- 合同基本信息 -->
+        <div class="contract-info">
+            <div class="contract-parties">
+                <div class="party-item">
+                    <span class="label">甲方：</span>
+                    <span class="value" th:text="${orderData.partyA ?: '回收管理有限公司'}">回收管理有限公司</span>
+                </div>
+                <div class="party-item">
+                    <span class="label">乙方：</span>
+                    <span class="value" th:text="${orderData.partyB ?: '合作方' + (orderData.orderId ?: '')}">合作方</span>
+                </div>
+                <div class="party-item">
+                    <span class="label">合同编号：</span>
+                    <span class="value" th:text="${orderData.contractNo ?: 'CT' + (orderData.orderId ?: '')}">CT001</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 申请说明 -->
+        <div class="application-description">
+            <p>按合同约定，我方现就该合同下编号为 <strong th:text="${orderData.orderNo ?: 'RO' + (orderData.orderId ?: '')}">RO001</strong> 的订单申请执行：</p>
+        </div>
+
+        <!-- 一、订单信息 -->
+        <div class="order-info-section">
+            <h2 class="section-title">一、订单信息</h2>
+
+            <!-- （1）订单类型 -->
+            <div class="order-type-info">
+                <p class="info-item">
+                    <span class="label">（1）订单类型（我方）</span>
+                    <span class="value" th:text="${orderTypeText} + '订单'">采购订单</span>
+                </p>
+            </div>
+
+            <!-- （2）订单内容 -->
+            <div class="order-content-info">
+                <p class="info-item">
+                    <span class="label">（2）订单内容</span>
+                </p>
+
+                <!-- 订单明细表格 -->
+                <div class="order-details-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>分类</th>
+                                <th>名称</th>
+                                <th>规格型号</th>
+                                <th>备注</th>
+                                <th>数量</th>
+                                <th>单价</th>
+                                <th>总价</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${orderData.orderItems}">
+                                <td th:text="${itemTypeMap.get(item.type) ?: item.type}">货物</td>
+                                <td th:text="${item.name}">废纸</td>
+                                <td th:text="${item.specification}">A4纸</td>
+                                <td th:text="${item.remark ?: '--'}">--</td>
+                                <td th:text="${item.quantity}">1000</td>
+                                <td th:text="'¥' + ${#numbers.formatDecimal(item.unitPrice, 0, 2)}">¥2.50</td>
+                                <td th:text="'¥' + ${#numbers.formatDecimal(item.amount, 0, 2)}">¥2500.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 批注说明 -->
+                <div class="notes-section">
+                    <p class="notes-text">
+                        <strong>注：</strong>货物类数量单位为kg、运输类数量单位为km，总价单位为元。
+                    </p>
+                </div>
+            </div>
+
+            <!-- （3）订单交付地址 -->
+            <div class="delivery-address-info">
+                <p class="info-item">
+                    <span class="label">（3）订单交付地址</span>
+                    <span class="value" th:text="${orderData.deliveryAddress ?: '--'}">--</span>
+                </p>
+            </div>
+
+            <!-- （4）交付货物送达我司地址 -->
+            <div class="warehouse-address-info">
+                <p class="info-item">
+                    <span class="label">（4）交付货物送达我司地址（交付服务计入我司成本）</span>
+                    <span class="value" th:text="${orderData.warehouseAddress ?: '--'}">--</span>
+                </p>
+            </div>
+
+            <!-- （5）订单经办人 -->
+            <div class="processor-info">
+                <p class="info-item">
+                    <span class="label">（5）订单经办人</span>
+                    <span class="value">
+                        您方：<span th:text="${orderData.processor ?: '--'}">--</span>
+                        （<span th:text="${orderData.processorPhone ?: '--'}">--</span>）
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <!-- 二、其他信息 -->
+        <div class="other-info-section">
+            <h2 class="section-title">二、其他信息</h2>
+
+            <div class="other-info-content">
+                <p class="info-item">
+                    <span class="label">订单申请时间：</span>
+                    <span class="value" th:text="${startTimeText} + '（我方）'">2024-01-01 10:00:00（我方）</span>
+                </p>
+
+                <p class="info-item">
+                    <span class="label">订单内容流转方向：</span>
+                    <span class="value" th:text="${flowDirectionText}">采购</span>
+                </p>
+
+                <p class="info-item">
+                    <span class="label">合同约定走款账号：</span>
+                    <span class="value" th:text="${orderData.paymentAccount ?: '6222021234567890123'}">6222021234567890123</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- 最终批注 -->
+        <div class="final-notes-section">
+            <p class="final-notes-text">
+                <strong>注：</strong>如有疑问请于本单据发出后1个工作日内联系我司企业微信客服或经办人员 <strong>孟经理（13683335083）</strong>，过时默认同意本申请单内容。
+            </p>
+        </div>
+
+        <!-- 公司信息和日期 -->
+        <div class="company-info-footer">
+            <div class="company-name">云南伏宁再生资源有限公司</div>
+            <div class="application-date">生成申请单日期：<span th:text="${currentDate}">2024-01-01</span></div>
+        </div>
+    </div>
+</body>
+</html>
+
