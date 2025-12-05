@@ -24,33 +24,86 @@ import java.util.List;
 @Slf4j
 public class OpenPdfUtils {
 
-    // 中文字体支持
-    private static final String FONT_PATH = "/System/Library/Fonts/PingFang.ttc"; // macOS
-    private static final String FONT_PATH_WIN = "C:/Windows/Fonts/simsun.ttc"; // Windows
-    private static final String FONT_PATH_LINUX = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"; // Linux
+    // 中文字体支持 - 多个备选路径
+    private static final String[] FONT_PATHS_MAC = {
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/Supplemental/PingFang.ttc",
+        "/Library/Fonts/Microsoft/Microsoft YaHei.ttf",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc"
+    };
+    private static final String[] FONT_PATHS_WIN = {
+        "C:/Windows/Fonts/simsun.ttc",
+        "C:/Windows/Fonts/simhei.ttf",
+        "C:/Windows/Fonts/msyh.ttf",
+        "C:/Windows/Fonts/simkai.ttf"
+    };
+    private static final String[] FONT_PATHS_LINUX = {
+        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+        "/usr/share/fonts/truetype/arphic/uming.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"
+    };
 
     /**
      * 获取中文字体
      */
     private static BaseFont getChineseFont() {
-        try {
-            // 优先尝试使用系统字体
-            if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-                return BaseFont.createFont(FONT_PATH + ",0", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
-            } else if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                return BaseFont.createFont(FONT_PATH_WIN + ",1", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
-            } else {
-                // Linux系统，尝试使用DejaVu字体
-                return BaseFont.createFont(FONT_PATH_LINUX, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
-            }
-        } catch (Exception e) {
-            log.warn("无法加载中文字体，使用默认字体: {}", e.getMessage());
+        String osName = System.getProperty("os.name").toLowerCase();
+        String[] fontPaths;
+        int ttcIndex = 0;
+        
+        // 根据操作系统选择字体路径数组
+        if (osName.contains("mac")) {
+            fontPaths = FONT_PATHS_MAC;
+            ttcIndex = 0; // macOS PingFang.ttc 使用索引0
+        } else if (osName.contains("win")) {
+            fontPaths = FONT_PATHS_WIN;
+            ttcIndex = 1; // Windows simsun.ttc 使用索引1
+        } else {
+            fontPaths = FONT_PATHS_LINUX;
+            ttcIndex = 0;
+        }
+        
+        // 尝试加载字体，按优先级顺序
+        Exception lastException = null;
+        for (String fontPath : fontPaths) {
             try {
-                // 使用OpenPDF内置字体
-                return BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+                java.io.File fontFile = new java.io.File(fontPath);
+                if (!fontFile.exists()) {
+                    log.debug("字体文件不存在，跳过: {}", fontPath);
+                    continue;
+                }
+                
+                String fontPathWithIndex = fontPath;
+                if (fontPath.endsWith(".ttc")) {
+                    fontPathWithIndex = fontPath + "," + ttcIndex;
+                }
+                
+                log.info("尝试加载中文字体: {}", fontPathWithIndex);
+                BaseFont font = BaseFont.createFont(fontPathWithIndex, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+                log.info("成功加载中文字体: {}", fontPath);
+                return font;
+            } catch (Exception e) {
+                log.debug("加载字体失败: {}, 错误: {}", fontPath, e.getMessage());
+                lastException = e;
+                // 继续尝试下一个字体
+            }
+        }
+        
+        // 所有字体都加载失败，记录警告并使用备用方案
+        log.warn("无法加载任何中文字体，尝试使用STSong-Light: {}", lastException != null ? lastException.getMessage() : "未知错误");
+        try {
+            // 尝试使用OpenPDF内置的中文字体（如果支持）
+            return BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.EMBEDDED);
+        } catch (Exception e) {
+            log.error("无法加载STSong-Light字体", e);
+            // 最后尝试使用支持Unicode的字体
+            try {
+                return BaseFont.createFont(BaseFont.HELVETICA, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             } catch (Exception ex) {
-                log.error("创建默认字体失败", ex);
-                throw new RuntimeException("无法创建字体", ex);
+                log.error("创建备用字体失败", ex);
+                throw new RuntimeException("无法创建中文字体，请确保系统已安装中文字体", ex);
             }
         }
     }
@@ -78,18 +131,25 @@ public class OpenPdfUtils {
      */
     public static byte[] generateApplicationPdf(ApplicationPdfData orderData) {
         try {
+            // 记录输入数据，用于调试
+            log.info("开始生成PDF，订单ID: {}, 订单编号: {}, 订单类型: {}", 
+                    orderData.getOrderId(), orderData.getOrderNo(), orderData.getOrderType());
+            log.debug("订单明细数量: {}", orderData.getOrderItems() != null ? orderData.getOrderItems().size() : 0);
+            
             Document document = new Document(PageSize.A4, 50, 50, 50, 50);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             PdfWriter writer = PdfWriter.getInstance(document, baos);
             
             document.open();
             
-            // 设置字体
+            // 设置字体 - 确保字体加载成功
+            log.debug("开始创建中文字体");
             Font titleFont = createChineseFont(20, Font.BOLD);
             Font sectionFont = createChineseFont(14, Font.BOLD);
             Font normalFont = createChineseFont(12);
             Font labelFont = createChineseFont(12, Font.BOLD);
             Font smallFont = createChineseFont(10);
+            log.debug("中文字体创建完成");
             
             // 1. 标题
             Paragraph title = new Paragraph("业务申请单", titleFont);
@@ -129,7 +189,6 @@ public class OpenPdfUtils {
             
             document.close();
             writer.close();
-            
             return baos.toByteArray();
         } catch (Exception e) {
             log.error("生成业务申请单PDF失败", e);
@@ -232,8 +291,16 @@ public class OpenPdfUtils {
     private static void addOrderItemsTable(Document document, ApplicationPdfData orderData,
                                           Font normalFont, Font labelFont) throws DocumentException {
         if (orderData.getOrderItems() == null || orderData.getOrderItems().isEmpty()) {
+            log.warn("订单明细为空，跳过表格生成");
+            // 添加提示信息
+            Paragraph emptyNote = new Paragraph("（暂无订单明细）", normalFont);
+            emptyNote.setSpacingBefore(10);
+            emptyNote.setSpacingAfter(10);
+            document.add(emptyNote);
             return;
         }
+        
+        log.debug("开始添加订单明细表格，共 {} 条记录", orderData.getOrderItems().size());
         
         PdfPTable table = new PdfPTable(7);
         table.setWidthPercentage(100);
@@ -262,53 +329,66 @@ public class OpenPdfUtils {
         
         // 表格数据
         Font dataFont = createChineseFont(10);
+        int itemIndex = 0;
         for (ApplicationPdfData.OrderItem item : orderData.getOrderItems()) {
+            itemIndex++;
+            log.debug("添加订单明细第 {} 条: 类型={}, 名称={}, 数量={}", 
+                    itemIndex, item.getType(), item.getName(), item.getQuantity());
+            
             // 分类
-            PdfPCell cell1 = new PdfPCell(new Phrase(getItemTypeText(item.getType()), dataFont));
+            String typeText = getItemTypeText(item.getType());
+            PdfPCell cell1 = new PdfPCell(new Phrase(typeText, dataFont));
             cell1.setPadding(6);
             cell1.setBorderColor(Color.GRAY);
             table.addCell(cell1);
             
             // 名称
-            PdfPCell cell2 = new PdfPCell(new Phrase(item.getName() != null ? item.getName() : "--", dataFont));
+            String nameText = item.getName() != null ? item.getName() : "--";
+            PdfPCell cell2 = new PdfPCell(new Phrase(nameText, dataFont));
             cell2.setPadding(6);
             cell2.setBorderColor(Color.GRAY);
             table.addCell(cell2);
             
             // 规格型号
-            PdfPCell cell3 = new PdfPCell(new Phrase(item.getSpecification() != null ? item.getSpecification() : "--", dataFont));
+            String specText = item.getSpecification() != null ? item.getSpecification() : "--";
+            PdfPCell cell3 = new PdfPCell(new Phrase(specText, dataFont));
             cell3.setPadding(6);
             cell3.setBorderColor(Color.GRAY);
             table.addCell(cell3);
             
             // 备注
-            PdfPCell cell4 = new PdfPCell(new Phrase(item.getRemark() != null ? item.getRemark() : "--", dataFont));
+            String remarkText = item.getRemark() != null ? item.getRemark() : "--";
+            PdfPCell cell4 = new PdfPCell(new Phrase(remarkText, dataFont));
             cell4.setPadding(6);
             cell4.setBorderColor(Color.GRAY);
             table.addCell(cell4);
             
             // 数量
-            PdfPCell cell5 = new PdfPCell(new Phrase(item.getQuantity() != null ? item.getQuantity().toString() : "0", dataFont));
+            String quantityText = item.getQuantity() != null ? item.getQuantity().toString() : "0";
+            PdfPCell cell5 = new PdfPCell(new Phrase(quantityText, dataFont));
             cell5.setHorizontalAlignment(Element.ALIGN_RIGHT);
             cell5.setPadding(6);
             cell5.setBorderColor(Color.GRAY);
             table.addCell(cell5);
             
             // 单价
-            PdfPCell cell6 = new PdfPCell(new Phrase("¥" + formatAmount(item.getUnitPrice()), dataFont));
+            String unitPriceText = "¥" + formatAmount(item.getUnitPrice());
+            PdfPCell cell6 = new PdfPCell(new Phrase(unitPriceText, dataFont));
             cell6.setHorizontalAlignment(Element.ALIGN_RIGHT);
             cell6.setPadding(6);
             cell6.setBorderColor(Color.GRAY);
             table.addCell(cell6);
             
             // 总价
-            PdfPCell cell7 = new PdfPCell(new Phrase("¥" + formatAmount(item.getAmount()), dataFont));
+            String amountText = "¥" + formatAmount(item.getAmount());
+            PdfPCell cell7 = new PdfPCell(new Phrase(amountText, dataFont));
             cell7.setHorizontalAlignment(Element.ALIGN_RIGHT);
             cell7.setPadding(6);
             cell7.setBorderColor(Color.GRAY);
             table.addCell(cell7);
         }
         
+        log.debug("订单明细表格添加完成，共添加 {} 条记录", itemIndex);
         document.add(table);
     }
 
