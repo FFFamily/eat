@@ -23,6 +23,8 @@ import com.tutu.recycle.response.SortingDeliveryHallResponse;
 import com.tutu.recycle.response.WxTransportOrderListResponse;
 import com.tutu.recycle.schema.RecycleOrderInfo;
 import com.tutu.recycle.utils.UserOrderNoGenerator;
+import com.tutu.recycle.utils.pdf.PdfGenerator;
+import com.tutu.common.enums.BaseEnum;
 import com.tutu.point.entity.AccountPointDetail;
 import com.tutu.point.entity.PointGlobalConfig;
 import com.tutu.point.enums.PointChangeDirectionEnum;
@@ -32,6 +34,8 @@ import com.tutu.point.service.PointGlobalConfigService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -43,9 +47,16 @@ import com.tutu.user.service.AccountCustomerService;
 import com.tutu.user.service.AccountService;
 import cn.hutool.core.util.StrUtil;
 import com.tutu.user.service.AccountServiceScopeService;
+import com.tutu.system.config.FileUploadConfig;
+import com.tutu.system.utils.FileUtils;
+import com.tutu.system.utils.OpenPdfUtils;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.ExtendedModelMap;
+import org.springframework.ui.Model;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 /**
  * 用户订单服务实现类
@@ -69,6 +80,12 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     private AccountCustomerService accountCustomerService;
     @Resource
     private AccountServiceScopeService accountServiceScopeService;
+    
+    @Resource
+    private SpringTemplateEngine templateEngine;
+    
+    @Resource
+    private FileUploadConfig fileUploadConfig;
 
     /**
      * 获取当前登录用户作为合作方的订单列表
@@ -544,16 +561,29 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         }
         // 同时更新阶段
         userOrder.setStage(nextStage.getCode());
-        updateById(userOrder);
+//        updateById(userOrder);
         // 如果不是完成阶段，则创建对应阶段的回收订单
         if (!nextStage.isLastStage()) {
             recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderRequest,userOrder, currentStage,true);
             if (isCreateNextOrder) {
                 // 创建下一个阶段的订单
-                recycleOrderService.createRecycleOrderFromUserOrderByStage(new UserOrderDTO(), userOrder, nextStage,false);
+                recycleOrderService.createRecycleOrderFromUserOrderByStage(new UserOrderDTO(), userOrder, nextStage, false);
             }
         }
-
+        
+        // 如果是采购阶段，生成申请单PDF
+        if (currentStage == UserOrderStageEnum.PURCHASE) {
+            try {
+                String applicationPdfUrl = generateApplicationPdf(userOrder, userOrderRequest);
+                userOrder.setApplicationPdf(applicationPdfUrl);
+            } catch (Exception e) {
+                // 记录日志但不影响主流程
+                // TODO: 添加日志记录
+                e.printStackTrace();
+            }
+        }
+        updateById(userOrder);
+        // 结算时生成 结算单
         return true;
     }
 
@@ -635,6 +665,17 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         userOrder.setSettlementStatus(SettlementStatusEnum.WAITING_CONFIRMATION.getCode());
         // 根据合同受益人发放积分
         distributeSettlementPoints(userOrder);
+        
+        // 生成结算单PDF
+        try {
+            String settlementPdfUrl = generateSettlementPdf(userOrder, userOrderDTO, storageOrder, goodsTotalAmount, totalAmount, ratingCoefficient, otherAdjustAmount);
+            userOrder.setSettlementPdf(settlementPdfUrl);
+        } catch (Exception e) {
+            // 记录日志但不影响主流程
+            // TODO: 添加日志记录
+            e.printStackTrace();
+        }
+        
         return updateById(userOrder);
     }
 
@@ -888,6 +929,418 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         }
     }
 
+
+    /**
+     * 生成申请单PDF
+     * @param userOrder 用户订单
+     * @param userOrderRequest 用户订单DTO（包含经办人等额外信息）
+     * @return PDF文件访问URL
+     * @throws Exception 生成PDF时的异常
+     */
+    private String generateApplicationPdf(UserOrder userOrder, UserOrderDTO userOrderRequest) throws Exception {
+        // 创建Model并添加订单数据
+        Model model = new ExtendedModelMap();
+        
+        // 构建订单数据Map
+        Map<String, Object> orderData = new HashMap<>();
+        orderData.put("id", userOrder.getId());
+        orderData.put("no", userOrder.getNo());
+        orderData.put("type", RecycleOrderTypeEnum.PURCHASE.getCode());
+        orderData.put("contractNo", userOrder.getContractNo());
+        orderData.put("partyA", userOrder.getPartyAName());
+        orderData.put("partyB", userOrder.getPartyBName());
+        // 经办人信息从 UserOrderDTO 中获取
+        String processorName = userOrderRequest != null ? userOrderRequest.getProcessorName() : null;
+        orderData.put("processor", StrUtil.isNotBlank(processorName) ? processorName : "");
+        orderData.put("processorPhone", ""); // TODO: 从经办人信息中获取
+        // 交付地址和仓库地址从 UserOrderDTO 中获取
+        String deliveryAddress = userOrderRequest != null ? userOrderRequest.getDeliveryAddress() : null;
+        orderData.put("deliveryAddress", StrUtil.isNotBlank(deliveryAddress) ? deliveryAddress : "");
+        String warehouseAddress = userOrderRequest != null ? userOrderRequest.getWarehouseAddress() : null;
+        orderData.put("warehouseAddress", StrUtil.isNotBlank(warehouseAddress) ? warehouseAddress : "");
+        // 走款账号从 UserOrderDTO 中获取
+        String paymentAccount = userOrderRequest != null ? userOrderRequest.getPaymentAccount() : null;
+        orderData.put("paymentAccount", StrUtil.isNotBlank(paymentAccount) ? paymentAccount : "");
+        
+        // 订单申请时间
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        if (userOrder.getCreateTime() != null) {
+            LocalDateTime createTime = LocalDateTime.ofInstant(
+                userOrder.getCreateTime().toInstant(),
+                java.time.ZoneId.systemDefault()
+            );
+            orderData.put("startTime", createTime.format(formatter) + "（我方）");
+        } else {
+            orderData.put("startTime", LocalDateTime.now().format(formatter) + "（我方）");
+        }
+        
+        model.addAttribute("orderData", orderData);
+        
+        // 获取采购订单的明细数据
+        List<RecycleOrderInfo> recycleOrders = recycleOrderService.getAllByParentId(userOrder.getId());
+        RecycleOrderInfo purchaseOrder = recycleOrders.stream()
+                .filter(order -> RecycleOrderTypeEnum.PURCHASE.getCode().equals(order.getType()))
+                .findFirst()
+                .orElse(null);
+        
+        // 构建订单明细列表
+        List<Map<String, Object>> orderItems = new ArrayList<>();
+        if (purchaseOrder != null && purchaseOrder.getItems() != null) {
+            for (RecycleOrderItem item : purchaseOrder.getItems()) {
+                Map<String, Object> itemMap = new HashMap<>();
+                // 获取货物类型文本
+                String goodType = item.getGoodType();
+                itemMap.put("type", goodType);
+                itemMap.put("typeText", getItemTypeText(goodType));
+                itemMap.put("name", item.getGoodName());
+                itemMap.put("specification", item.getGoodModel());
+                itemMap.put("remark", Optional.ofNullable(item.getGoodRemark()).orElse(""));
+                itemMap.put("quantity", Optional.ofNullable(item.getGoodCount()).orElse(0));
+                itemMap.put("unitPrice", Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO));
+                // 计算总价：单价 × 数量
+                BigDecimal amount = Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO)
+                        .multiply(BigDecimal.valueOf(Optional.ofNullable(item.getGoodCount()).orElse(0)));
+                itemMap.put("amount", amount);
+                orderItems.add(itemMap);
+            }
+        }
+        
+        // 如果没有明细，使用空列表
+        model.addAttribute("orderItems", orderItems);
+        
+        // 订单类型文本
+        model.addAttribute("orderTypeText", getOrderTypeText(RecycleOrderTypeEnum.PURCHASE.getCode()));
+        
+        // 流转方向文本
+        model.addAttribute("flowDirectionText", getFlowDirectionText(RecycleOrderTypeEnum.PURCHASE.getCode()));
+        
+        // 申请单生成日期
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        model.addAttribute("applicationDate", LocalDateTime.now().format(dateFormatter));
+        
+        Context context = new Context();
+        context.setVariables(model.asMap());
+
+        // 渲染 HTML 模板
+        String html = templateEngine.process("report", context);
+
+        // 转 PDF
+        byte[] pdfBytes = PdfGenerator.htmlToPdf(html);
+        
+        // 保存PDF文件
+        String fileName = "application_" + userOrder.getNo() + "_" + System.currentTimeMillis() + ".pdf";
+        String storePath = FileUtils.generateFilePath(fileUploadConfig.getBasePath(), true);
+        FileUtils.createDirectories(storePath);
+        String fullPath = storePath + fileName;
+
+        if (OpenPdfUtils.savePdfToFile(pdfBytes, fullPath)) {
+            // 生成访问URL
+            String relativePath = fullPath.replace(fileUploadConfig.getBasePath(), "").replace("\\", "/");
+            if (!relativePath.startsWith("/")) {
+                relativePath = "/" + relativePath;
+            }
+            return fileUploadConfig.getUrlPrefix() + relativePath;
+        }
+        
+        throw new ServiceException("生成申请单PDF失败");
+    }
+    
+    /**
+     * 获取项目类型显示文本
+     */
+    private String getItemTypeText(String type) {
+        if (StrUtil.isBlank(type)) {
+            return "货物";
+        }
+        // 如果type是订单明细中的货物类型（如：废纸、废塑料等），直接返回
+        // 如果是系统预定义的类型，则进行映射转换
+        Map<String, String> typeMap = new HashMap<>();
+        typeMap.put("goods", "货物");
+        typeMap.put("transport", "运输");
+        typeMap.put("service", "服务");
+        typeMap.put("other", "其他");
+        
+        // 如果在预定义映射中找到，使用映射值；否则直接返回原值（货物类型）
+        return typeMap.getOrDefault(type, type);
+    }
+    
+    /**
+     * 获取订单类型显示文本
+     */
+    private String getOrderTypeText(String type) {
+        if (type == null) {
+            return "未知类型";
+        }
+        RecycleOrderTypeEnum orderType = BaseEnum.getByCode(RecycleOrderTypeEnum.class, type);
+        return orderType != null ? orderType.getTitle().replace("订单", "") : "未知类型";
+    }
+
+    /**
+     * 获取流转方向文本
+     */
+    private String getFlowDirectionText(String orderType) {
+        if (orderType == null) {
+            return "未知";
+        }
+        switch (orderType) {
+            case "purchase":
+                return "采购";
+            case "sale":
+                return "销售";
+            case "process":
+                return "加工";
+            case "storage":
+                return "入库/出库";
+            case "transport":
+                return "运输";
+            case "other":
+                return "其他";
+            default:
+                return "未知";
+        }
+    }
+
+    /**
+     * 生成结算单PDF
+     * @param userOrder 用户订单
+     * @param userOrderDTO 用户订单DTO
+     * @param storageOrder 仓储订单（入库订单）
+     * @param goodsTotalAmount 货物总金额
+     * @param totalAmount 最终总金额
+     * @param ratingCoefficient 评级系数
+     * @param otherAdjustAmount 其他调价金额
+     * @return PDF文件访问URL
+     * @throws Exception 生成PDF时的异常
+     */
+    private String generateSettlementPdf(UserOrder userOrder, UserOrderDTO userOrderDTO, 
+                                        RecycleOrderInfo storageOrder, BigDecimal goodsTotalAmount, 
+                                        BigDecimal totalAmount, BigDecimal ratingCoefficient, 
+                                        BigDecimal otherAdjustAmount) throws Exception {
+        // 创建Model并添加订单数据
+        Model model = new ExtendedModelMap();
+        
+        // 构建订单数据Map
+        Map<String, Object> orderData = new HashMap<>();
+        orderData.put("no", userOrder.getNo());
+        orderData.put("partyAName", userOrder.getPartyAName());
+        orderData.put("partyBName", userOrder.getPartyBName());
+        orderData.put("contractNo", userOrder.getContractNo());
+        orderData.put("deliveryAddress", Optional.ofNullable(userOrderDTO.getDeliveryAddress()).orElse(""));
+        orderData.put("warehouseAddress", Optional.ofNullable(userOrderDTO.getWarehouseAddress()).orElse(""));
+        orderData.put("processor", Optional.ofNullable(userOrderDTO.getProcessorName()).orElse(""));
+        orderData.put("paymentAccount", Optional.ofNullable(userOrderDTO.getPaymentAccount()).orElse(""));
+        
+        // 订单开始时间和结束时间
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        if (userOrder.getCreateTime() != null) {
+            LocalDateTime createTime = LocalDateTime.ofInstant(
+                userOrder.getCreateTime().toInstant(),
+                java.time.ZoneId.systemDefault()
+            );
+            orderData.put("startTime", createTime.format(formatter));
+        } else {
+            orderData.put("startTime", "--");
+        }
+        
+        if (userOrder.getSettlementTime() != null) {
+            LocalDateTime settlementTime = LocalDateTime.ofInstant(
+                userOrder.getSettlementTime().toInstant(),
+                java.time.ZoneId.systemDefault()
+            );
+            orderData.put("endTime", settlementTime.format(formatter));
+        } else {
+            orderData.put("endTime", "--");
+        }
+        
+        model.addAttribute("orderData", orderData);
+        
+        // 构建订单明细列表
+        List<Map<String, Object>> orderItems = new ArrayList<>();
+        BigDecimal totalQuantity = BigDecimal.ZERO;
+        BigDecimal totalAmountSum = BigDecimal.ZERO;
+        
+        if (storageOrder != null && storageOrder.getItems() != null) {
+            for (RecycleOrderItem item : storageOrder.getItems()) {
+                Map<String, Object> itemMap = new HashMap<>();
+                String goodType = item.getGoodType();
+                itemMap.put("type", goodType);
+                itemMap.put("typeText", getItemTypeText(goodType));
+                itemMap.put("name", item.getGoodName());
+                itemMap.put("specification", item.getGoodModel());
+                itemMap.put("quantity", Optional.ofNullable(item.getGoodCount()).orElse(0));
+                itemMap.put("unitPrice", Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO));
+                
+                // 计算金额：单价 × 数量
+                BigDecimal quantity = BigDecimal.valueOf(Optional.ofNullable(item.getGoodCount()).orElse(0));
+                BigDecimal amount = Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO).multiply(quantity);
+                itemMap.put("amount", amount);
+                
+                orderItems.add(itemMap);
+                totalQuantity = totalQuantity.add(quantity);
+                totalAmountSum = totalAmountSum.add(amount);
+            }
+        }
+        
+        model.addAttribute("orderItems", orderItems);
+        
+        // 计算统计数据
+        // 总数量
+        model.addAttribute("totalQuantity", totalQuantity.intValue());
+        
+        // 平均单价
+        BigDecimal averageUnitPrice = BigDecimal.ZERO;
+        if (orderItems.size() > 0) {
+            BigDecimal sumUnitPrice = orderItems.stream()
+                .map(item -> (BigDecimal) item.get("unitPrice"))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            averageUnitPrice = sumUnitPrice.divide(BigDecimal.valueOf(orderItems.size()), 2, RoundingMode.HALF_UP);
+        }
+        model.addAttribute("averageUnitPrice", averageUnitPrice);
+        
+        // 总金额（货物总金额）
+        model.addAttribute("totalAmount", goodsTotalAmount);
+        
+        // 计算调价金额
+        // 评级调价 = 货物总金额 × 评级系数
+        BigDecimal ratingAdjustment = goodsTotalAmount.multiply(ratingCoefficient);
+        model.addAttribute("ratingAdjustment", ratingAdjustment);
+        
+        // 其他调价
+        model.addAttribute("otherAdjustment", otherAdjustAmount);
+        
+        // 总调价金额
+        BigDecimal totalAdjustment = ratingAdjustment.add(otherAdjustAmount);
+        model.addAttribute("totalAdjustment", totalAdjustment);
+        
+        // 计算评级等级
+        String ratingLevel = calculateRatingLevel(ratingCoefficient);
+        model.addAttribute("ratingLevel", ratingLevel);
+        
+        // 待结金额 = 货物总金额 + 总调价金额
+        BigDecimal pendingAmount = goodsTotalAmount.add(totalAdjustment);
+        model.addAttribute("pendingAmount", pendingAmount);
+        
+        // 金额转中文大写
+        String amountToChinese = convertAmountToChinese(pendingAmount);
+        model.addAttribute("amountToChinese", amountToChinese);
+        
+        // 数量单位（判断是否有运输类型）
+        boolean hasTransport = orderItems.stream()
+            .anyMatch(item -> "transport".equals(item.get("type")));
+        String quantityUnit = hasTransport ? "km" : "kg";
+        model.addAttribute("quantityUnit", quantityUnit);
+        
+        // 订单类型文本
+        model.addAttribute("orderTypeText", getOrderTypeText(RecycleOrderTypeEnum.STORAGE.getCode()));
+        
+        // 结算单生成日期
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        model.addAttribute("settlementDate", LocalDateTime.now().format(dateFormatter));
+        
+        Context context = new Context();
+        context.setVariables(model.asMap());
+
+        // 渲染 HTML 模板
+        String html = templateEngine.process("settlement", context);
+
+        // 转 PDF
+        byte[] pdfBytes = PdfGenerator.htmlToPdf(html);
+        
+        // 保存PDF文件
+        String fileName = "settlement_" + userOrder.getNo() + "_" + System.currentTimeMillis() + ".pdf";
+        String storePath = FileUtils.generateFilePath(fileUploadConfig.getBasePath(), true);
+        FileUtils.createDirectories(storePath);
+        String fullPath = storePath + fileName;
+
+        if (OpenPdfUtils.savePdfToFile(pdfBytes, fullPath)) {
+            // 生成访问URL
+            String relativePath = fullPath.replace(fileUploadConfig.getBasePath(), "").replace("\\", "/");
+            if (!relativePath.startsWith("/")) {
+                relativePath = "/" + relativePath;
+            }
+            return fileUploadConfig.getUrlPrefix() + relativePath;
+        }
+        
+        throw new ServiceException("生成结算单PDF失败");
+    }
+    
+    /**
+     * 计算评级等级
+     */
+    private String calculateRatingLevel(BigDecimal ratingCoefficient) {
+        if (ratingCoefficient == null) {
+            return "A";
+        }
+        double coefficient = ratingCoefficient.doubleValue();
+        if (coefficient >= 0.1) return "A+";
+        if (coefficient >= 0.05) return "A";
+        if (coefficient >= 0) return "B";
+        if (coefficient >= -0.05) return "C";
+        return "D";
+    }
+    
+    /**
+     * 金额转中文大写
+     */
+    private String convertAmountToChinese(BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) {
+            return "零元整";
+        }
+        
+        String[] digits = {"零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖"};
+        String[] units = {"", "拾", "佰", "仟"};
+        String[] bigUnits = {"", "万", "亿"};
+        
+        // 分离整数和小数部分
+        long integerPart = amount.longValue();
+        int decimalPart = amount.subtract(BigDecimal.valueOf(integerPart))
+            .multiply(BigDecimal.valueOf(100))
+            .intValue();
+        
+        StringBuilder result = new StringBuilder();
+        
+        // 处理整数部分
+        if (integerPart > 0) {
+            String intStr = String.valueOf(integerPart);
+            int len = intStr.length();
+            
+            for (int i = 0; i < len; i++) {
+                int digit = Character.getNumericValue(intStr.charAt(i));
+                int unitIndex = len - 1 - i;
+                int bigUnitIndex = unitIndex / 4;
+                int smallUnitIndex = unitIndex % 4;
+                
+                if (digit != 0) {
+                    result.append(digits[digit]).append(units[smallUnitIndex]);
+                } else if (result.length() > 0 && !result.toString().endsWith("零")) {
+                    result.append("零");
+                }
+                
+                if (smallUnitIndex == 0 && bigUnitIndex > 0 && unitIndex > 0) {
+                    result.append(bigUnits[bigUnitIndex]);
+                }
+            }
+            
+            result.append("元");
+        }
+        
+        // 处理小数部分
+        if (decimalPart > 0) {
+            int jiao = decimalPart / 10;
+            int fen = decimalPart % 10;
+            
+            if (jiao > 0) {
+                result.append(digits[jiao]).append("角");
+            }
+            if (fen > 0) {
+                result.append(digits[fen]).append("分");
+            }
+        } else {
+            result.append("整");
+        }
+        
+        return result.toString();
+    }
 
     /**
      * 检查用户是否具备创建订单的权限

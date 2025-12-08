@@ -45,6 +45,32 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- Thymeleaf 用于渲染 HTML 模板 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <!-- Flying Saucer + OpenPDF（HTML → PDF） -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf-openpdf</artifactId>
+        </dependency>
+
+        <!-- 字体支持（可选，但支持中文推荐加） -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+        </dependency>
+        
+        <!-- 添加旧版本 iText 以解决 flying-saucer-pdf-openpdf 的兼容性问题 -->
+        <!-- flying-saucer-pdf-openpdf 内部可能引用了 com.lowagie.text.DocumentException -->
+<!--        <dependency>-->
+<!--            <groupId>com.lowagie</groupId>-->
+<!--            <artifactId>itext</artifactId>-->
+<!--            <version>2.1.7</version>-->
+<!--        </dependency>-->
     </dependencies>
 
 </project>

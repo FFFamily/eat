@@ -107,7 +107,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @param stage     订单阶段枚举
      */
     @Transactional(rollbackFor = Exception.class)
-    public void createRecycleOrderFromUserOrderByStage(UserOrderDTO userOrderRequest,
+    public RecycleOrderInfo createRecycleOrderFromUserOrderByStage(UserOrderDTO userOrderRequest,
                                                        UserOrder order,
                                                        UserOrderStageEnum stage,
                                                        Boolean isNeedSettle) {
@@ -123,7 +123,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             throw new ServiceException("阶段 " + stage.getDescription() + " 没有对应的回收订单类型");
         }
         // 使用代理对象调用，确保事务生效
-        ((RecycleOrderService) AopContext.currentProxy()).createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType,isNeedSettle);
+        return ((RecycleOrderService) AopContext.currentProxy()).createRecycleOrderFromUserOrderByType(userOrderRequest, order, orderType, isNeedSettle);
     }
     
     /**
@@ -136,7 +136,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @return 创建的回收订单
      */
     @Transactional(rollbackFor = Exception.class)
-    public void createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType, Boolean isNeedSettle) {
+    public RecycleOrderInfo createRecycleOrderFromUserOrderByType(UserOrderDTO userOrderRequest, UserOrder order, RecycleOrderTypeEnum orderType, Boolean isNeedSettle) {
         if (userOrderRequest == null) {
             throw new ServiceException("用户订单不能为空");
         }
@@ -152,6 +152,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         BeanUtil.copyProperties(recycleOrder, existingOrder, CopyOptions.create().setIgnoreNullValue(true));
         // 保存回收订单
         createOrUpdate(existingOrder);
+        return existingOrder;
     }
     
     /**

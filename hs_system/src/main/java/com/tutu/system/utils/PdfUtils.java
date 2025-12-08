@@ -1,11 +1,11 @@
 package com.tutu.system.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.openpdf.text.*;
-import org.openpdf.text.pdf.BaseFont;
-import org.openpdf.text.pdf.PdfPCell;
-import org.openpdf.text.pdf.PdfPTable;
-import org.openpdf.text.pdf.PdfWriter;
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
@@ -24,9 +24,7 @@ import java.util.List;
 public class PdfUtils {
 
     // 中文字体支持
-    private static final String FONT_PATH = "/System/Library/Fonts/PingFang.ttc"; // macOS
-    private static final String FONT_PATH_WIN = "C:/Windows/Fonts/simsun.ttc"; // Windows
-    private static final String FONT_PATH_LINUX = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"; // Linux
+    private static final String FONT_PATH = "fonts/SimSun.ttc"; // macOS
 
     /**
      * 获取中文字体
@@ -34,14 +32,7 @@ public class PdfUtils {
     private static BaseFont getChineseFont() {
         try {
             // 优先尝试使用系统字体
-            if (System.getProperty("os.name").toLowerCase().contains("mac")) {
-                return BaseFont.createFont(FONT_PATH + ",0", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
-            } else if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                return BaseFont.createFont(FONT_PATH_WIN + ",1", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
-            } else {
-                // Linux系统，尝试使用DejaVu字体
-                return BaseFont.createFont(FONT_PATH_LINUX, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
-            }
+            return BaseFont.createFont(FONT_PATH + ",0", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
         } catch (Exception e) {
             log.warn("无法加载中文字体，使用默认字体: {}", e.getMessage());
             try {
