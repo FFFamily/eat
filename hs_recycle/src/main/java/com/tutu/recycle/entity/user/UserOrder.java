@@ -77,10 +77,10 @@ public class UserOrder extends BaseEntity {
     // 交付时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date deliveryTime;
-    // 客户确认时间
+    // 结算确认时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date confirmTime;
-    // 确认备注
+    // 结算确认备注
     private String confirmRemark;
     // 结算单PDF URL
     @TableField("settlement_pdf")

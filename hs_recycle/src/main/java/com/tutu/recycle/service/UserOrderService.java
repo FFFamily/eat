@@ -629,8 +629,10 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             throw new ServiceException("订单不存在");
         }
         // 验证当前阶段必须是待结算
-        if (!UserOrderStageEnum.PENDING_SETTLEMENT.getCode().equals(userOrder.getStage())) {
-            throw new ServiceException("订单当前阶段不是待结算，无法确认结算");
+        if (!(UserOrderStageEnum.PENDING_SETTLEMENT.getCode().equals(userOrder.getStage())
+                || UserOrderStageEnum.PENDING_CUSTOMER_CONFIRMATION.getCode().equals(userOrder.getStage()))
+        ) {
+            throw new ServiceException("当前项目阶段无法确认结算");
         }
         // 获取入库订单（仓储订单）的货物详情
         List<RecycleOrderInfo> recycleOrders = recycleOrderService.getAllByParentId(userOrder.getId());
@@ -665,17 +667,9 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         userOrder.setSettlementStatus(SettlementStatusEnum.WAITING_CONFIRMATION.getCode());
         // 根据合同受益人发放积分
         distributeSettlementPoints(userOrder);
-        
         // 生成结算单PDF
-        try {
-            String settlementPdfUrl = generateSettlementPdf(userOrder, userOrderDTO, storageOrder, goodsTotalAmount, totalAmount, ratingCoefficient, otherAdjustAmount);
-            userOrder.setSettlementPdf(settlementPdfUrl);
-        } catch (Exception e) {
-            // 记录日志但不影响主流程
-            // TODO: 添加日志记录
-            e.printStackTrace();
-        }
-        
+        String settlementPdfUrl = generateSettlementPdf(userOrder, userOrderDTO, storageOrder, goodsTotalAmount, totalAmount, ratingCoefficient, otherAdjustAmount);
+        userOrder.setSettlementPdf(settlementPdfUrl);
         return updateById(userOrder);
     }
 
@@ -1115,7 +1109,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     private String generateSettlementPdf(UserOrder userOrder, UserOrderDTO userOrderDTO, 
                                         RecycleOrderInfo storageOrder, BigDecimal goodsTotalAmount, 
                                         BigDecimal totalAmount, BigDecimal ratingCoefficient, 
-                                        BigDecimal otherAdjustAmount) throws Exception {
+                                        BigDecimal otherAdjustAmount)  {
         // 创建Model并添加订单数据
         Model model = new ExtendedModelMap();
         

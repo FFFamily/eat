@@ -277,12 +277,8 @@ public class UserOrderController {
      */
     @PostMapping("/confirmSettlement")
     public BaseResponse<Boolean> confirmSettlement(@RequestBody UserOrderDTO userOrderDTO) {
-        try {
-            boolean result = userOrderService.confirmSettlement(userOrderDTO);
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
+        boolean result = userOrderService.confirmSettlement(userOrderDTO);
+        return BaseResponse.success(result);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.tutu.api.controller;
+package com.tutu.api.controller.recycle;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;

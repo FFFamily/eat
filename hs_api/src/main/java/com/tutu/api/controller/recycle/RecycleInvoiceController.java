@@ -1,4 +1,4 @@
-package com.tutu.api.controller;
+package com.tutu.api.controller.recycle;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tutu.common.Response.BaseResponse;
