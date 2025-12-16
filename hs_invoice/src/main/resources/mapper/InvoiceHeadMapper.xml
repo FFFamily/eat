@@ -26,6 +26,7 @@
             <if test="invoiceHead.taxNumber != null and invoiceHead.taxNumber != ''">
                 AND h.tax_number like '%${invoiceHead.taxNumber}%'
             </if>
+                                              and h.is_deleted = '0'
         </where>
         limit #{pageNum}, #{pageSize}
     </select>   

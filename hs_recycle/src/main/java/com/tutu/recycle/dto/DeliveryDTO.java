@@ -25,7 +25,10 @@ public class DeliveryDTO {
      * 交付方式
      */
     private String deliveryMethod;
-
+    /**
+     * 交付PDF
+     */
+    private String deliveryPDF;
     /**
      * 交付照片
      */

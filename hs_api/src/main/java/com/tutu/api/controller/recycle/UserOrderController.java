@@ -284,6 +284,7 @@ public class UserOrderController {
     /**
      * 交付订单
      * 保存订单的交付信息，并更新交付状态为已交付
+     * 如果是线上交付，会自动生成交付单PDF
      * @param deliveryDTO 交付信息DTO
      * @return 交付结果
      */

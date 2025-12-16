@@ -23,7 +23,7 @@ public class InvoiceHeadController {
      * @param invoiceHead 发票抬头信息
      * @return 添加结果
      */
-    @PostMapping
+    @PostMapping("/create")
     public BaseResponse<Boolean> addInvoiceHead(@RequestBody InvoiceHead invoiceHead) {
         boolean result = invoiceHeadService.addInvoiceHead(invoiceHead);
         return result ? BaseResponse.success(true) : BaseResponse.error("添加发票抬头失败");
@@ -34,7 +34,7 @@ public class InvoiceHeadController {
      * @param id 发票抬头 ID
      * @return 删除结果
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public BaseResponse<Boolean> deleteInvoiceHead(@PathVariable String id) {
         boolean result = invoiceHeadService.deleteInvoiceHead(id);
         return result ? BaseResponse.success(true) : BaseResponse.error("删除发票抬头失败");
@@ -45,7 +45,7 @@ public class InvoiceHeadController {
      * @param invoiceHead 发票抬头信息
      * @return 更新结果
      */
-    @PutMapping
+    @PutMapping("/update")
     public BaseResponse<Boolean> updateInvoiceHead(@RequestBody InvoiceHead invoiceHead) {
         boolean result = invoiceHeadService.updateInvoiceHead(invoiceHead);
         return result ? BaseResponse.success(true) : BaseResponse.error("更新发票抬头失败");

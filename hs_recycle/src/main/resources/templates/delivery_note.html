@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>货物交付单</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'SimSun', 'Microsoft YaHei', 'PingFang SC', serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #333;
+            background: white;
+            padding: 40px;
+        }
+        
+        .delivery-note-preview {
+            background: white;
+            min-height: 100%;
+        }
+        
+        /* 交付单标题 */
+        .delivery-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .delivery-title h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        /* 合同基本信息 */
+        .contract-info {
+            margin-bottom: 30px;
+        }
+        
+        .contract-parties {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .party-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .party-item .label {
+            font-weight: bold;
+            min-width: 80px;
+        }
+        
+        .party-item .value {
+            margin-left: 10px;
+        }
+        
+        /* 交付说明 */
+        .delivery-description {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .delivery-description p {
+            margin: 0;
+        }
+        
+        /* 章节标题 */
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 25px 0 15px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        /* 订单基本信息 */
+        .order-basic-info {
+            margin-bottom: 30px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-item .label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+        
+        .info-item .value {
+            margin-left: 10px;
+        }
+        
+        /* 货物明细表格 */
+        .goods-details-table {
+            margin-bottom: 20px;
+        }
+        
+        .goods-details-table table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #ccc;
+        }
+        
+        .goods-details-table th,
+        .goods-details-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .goods-details-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .goods-details-table .total-row {
+            background-color: #f9f9f9;
+            font-weight: bold;
+        }
+        
+        .goods-details-table .total-label {
+            text-align: right;
+        }
+        
+        /* 交付信息 */
+        .delivery-info-section {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .delivery-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .delivery-info-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        
+        .delivery-info-item .label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .delivery-info-item .value {
+            min-height: 40px;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        /* 签名区域 */
+        .signature-section {
+            margin-top: 50px;
+            margin-bottom: 30px;
+        }
+        
+        .signature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+        
+        .signature-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .signature-item .label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .signature-item .signature-box {
+            min-height: 80px;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        
+        .signature-item .signature-name {
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .signature-item .signature-date {
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        /* 批注说明 */
+        .notes-section {
+            margin-top: 20px;
+        }
+        
+        .notes-text {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        /* 公司信息和日期 */
+        .company-info-footer {
+            margin-top: 50px;
+            text-align: right;
+        }
+        
+        .company-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .delivery-date {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 打印样式优化 */
+        @media print {
+            body {
+                padding: 20px;
+            }
+            
+            .delivery-note-preview {
+                page-break-inside: avoid;
+            }
+            
+            .signature-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="delivery-note-preview">
+        <!-- 交付单标题 -->
+        <div class="delivery-title">
+            <h1>货物交付单</h1>
+        </div>
+
+        <!-- 合同基本信息 -->
+        <div class="contract-info">
+            <div class="contract-parties">
+                <div class="party-item">
+                    <span class="label">甲方：</span>
+                    <span class="value" th:text="${orderData.partyAName ?: '--'}">甲方名称</span>
+                </div>
+                <div class="party-item">
+                    <span class="label">乙方：</span>
+                    <span class="value" th:text="${orderData.partyBName ?: '--'}">乙方名称</span>
+                </div>
+                <div class="party-item">
+                    <span class="label">合同编号：</span>
+                    <span class="value" th:text="${orderData.contractNo ?: '--'}">合同编号</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 交付说明 -->
+        <div class="delivery-description">
+            <p>现就该合同下编号为 <strong th:text="${orderData.no ?: '--'}">订单编号</strong> 的订单进行货物交付</p>
+        </div>
+
+        <!-- 订单基本信息 -->
+        <div class="order-basic-info">
+            <h2 class="section-title">订单基本信息</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">订单编号：</span>
+                    <span class="value" th:text="${orderData.no ?: '--'}">订单编号</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">订单类型：</span>
+                    <span class="value" th:text="${orderTypeText ?: '--'}">订单类型</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">交付日期：</span>
+                    <span class="value" th:text="${deliveryDate ?: '--'}">交付日期</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">订单经办人：</span>
+                    <span class="value" th:text="${orderData.processorName ?: orderData.processor ?: '--'}">经办人</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">经办人电话：</span>
+                    <span class="value" th:text="${orderData.processorPhone ?: '--'}">电话</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 货物明细 -->
+        <div class="goods-details-section">
+            <h2 class="section-title">货物明细</h2>
+            
+            <!-- 货物明细表格 -->
+            <div class="goods-details-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>货物类型</th>
+                            <th>货物名称</th>
+                            <th>规格型号</th>
+                            <th>数量</th>
+                            <th>单位</th>
+                            <th>重量(kg)</th>
+                            <th>备注</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item, iterStat : ${orderItems}">
+                            <td th:text="${iterStat.count}">序号</td>
+                            <td th:text="${item.goodType ?: '--'}">货物类型</td>
+                            <td th:text="${item.goodName ?: '--'}">货物名称</td>
+                            <td th:text="${item.goodModel ?: '--'}">规格型号</td>
+                            <td th:text="${item.goodCount ?: '--'}">数量</td>
+                            <td>kg</td>
+                            <td th:text="${item.goodWeight ?: '--'}">重量</td>
+                            <td th:text="${item.goodRemark ?: '--'}">备注</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="4" class="total-label">合计</td>
+                            <td th:text="${totalCount ?: '--'}">总数量</td>
+                            <td>kg</td>
+                            <td th:text="${totalWeight ?: '--'}">总重量</td>
+                            <td>--</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- 批注说明 -->
+            <div class="notes-section">
+                <p class="notes-text">
+                    <strong>注：</strong>货物数量单位为kg，请核对货物明细，确认无误后签字。
+                </p>
+            </div>
+        </div>
+
+        <!-- 交付信息 -->
+        <div class="delivery-info-section">
+            <h2 class="section-title">交付信息</h2>
+            <div class="delivery-info-grid">
+                <div class="delivery-info-item">
+                    <span class="label">交付地址：</span>
+                    <span class="value" th:text="${orderData.deliveryAddress ?: '--'}">交付地址</span>
+                </div>
+                <div class="delivery-info-item">
+                    <span class="label">收货地址：</span>
+                    <span class="value" th:text="${orderData.warehouseAddress ?: orderData.receiveAddress ?: '--'}">收货地址</span>
+                </div>
+                <div class="delivery-info-item">
+                    <span class="label">交付方式：</span>
+                    <span class="value" th:text="${deliveryMethodText ?: '--'}">交付方式</span>
+                </div>
+                <div class="delivery-info-item">
+                    <span class="label">运输状态：</span>
+                    <span class="value" th:text="${transportStatusText ?: '--'}">运输状态</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 签名区域 -->
+        <div class="signature-section">
+            <div class="signature-grid">
+                <div class="signature-item">
+                    <span class="label">交付方（甲方）签字：</span>
+                    <div class="signature-box" th:if="${orderData.partnerSignature}">
+                        <img th:src="${orderData.partnerSignature}" style="max-width: 100%; max-height: 80px; object-fit: contain;" alt="交付方签名"/>
+                    </div>
+                    <div class="signature-name" th:text="${orderData.partyAName ?: '--'}">交付方名称</div>
+                    <div class="signature-date" th:text="${deliveryDate ?: '--'}">日期</div>
+                </div>
+                <div class="signature-item">
+                    <span class="label">接收方（乙方）签字：</span>
+                    <div class="signature-box" th:if="${orderData.processorSignature}">
+                        <img th:src="${orderData.processorSignature}" style="max-width: 100%; max-height: 80px; object-fit: contain;" alt="接收方签名"/>
+                    </div>
+                    <div class="signature-name" th:text="${orderData.partyBName ?: '--'}">接收方名称</div>
+                    <div class="signature-date" th:text="${deliveryDate ?: '--'}">日期</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 交付照片 -->
+        <div class="delivery-photo-section" th:if="${orderData.deliveryPhoto}">
+            <h2 class="section-title">交付照片</h2>
+            <div style="text-align: center; margin: 20px 0;">
+                <img th:src="${orderData.deliveryPhoto}" style="max-width: 100%; max-height: 400px; object-fit: contain; border: 1px solid #ccc; padding: 10px;" alt="交付照片"/>
+            </div>
+        </div>
+
+        <!-- 备注信息 -->
+        <div class="notes-section" th:if="${orderData.deliveryRemark}">
+            <p class="notes-text">
+                <strong>备注：</strong><span th:text="${orderData.deliveryRemark}">备注内容</span>
+            </p>
+        </div>
+
+        <!-- 最终批注 -->
+        <div class="notes-section" style="margin-top: 30px;">
+            <p class="notes-text">
+                <strong>注：</strong>本交付单经双方签字确认后生效，如有疑问请于本单据发出后3个工作日内联系我司企业微信客服或经办人员 <strong>孟经理（13683335083）</strong>。
+            </p>
+        </div>
+
+        <!-- 公司信息和日期 -->
+        <div class="company-info-footer">
+            <div class="company-name">云南伏宁再生资源有限公司</div>
+            <div class="delivery-date">交付单生成日期：<span th:text="${deliveryDate ?: '--'}">日期</span></div>
+        </div>
+    </div>
+</body>
+</html>
+

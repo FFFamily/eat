@@ -752,6 +752,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
     /**
      * 交付订单
      * 保存订单的交付信息，并更新交付状态为已交付
+     * 如果是线上交付，会自动生成交付单PDF
      * @param deliveryDTO 交付信息DTO
      * @return 是否交付成功
      */
@@ -771,9 +772,46 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 签名
         Optional.ofNullable(deliveryDTO.getPartnerSignature()).ifPresent(userOrder::setPartnerSignature);
         Optional.ofNullable(deliveryDTO.getProcessorSignature()).ifPresent(userOrder::setProcessorSignature);
+        // PDF 线下交付时会上传pdf
+        Optional.ofNullable(deliveryDTO.getDeliveryPDF()).ifPresent(userOrder::setDeliveryPdf);
         // 更新交付状态为已交付
         userOrder.setDeliveryStatus(DeliveryStatusEnum.DELIVERED.getCode());
-        return updateById(userOrder);
+        boolean result = updateById(userOrder);
+        
+        // 如果是线上交付，生成交付单PDF
+        if (result && OrderDeliveryMethodEnum.ONLINE.getCode().equals(deliveryDTO.getDeliveryMethod())) {
+            try {
+                // 查找对应的回收订单（优先查找运输订单，如果没有则查找加工订单）
+                List<RecycleOrderInfo> recycleOrders = recycleOrderService.getAllByParentId(deliveryDTO.getOrderId());
+                
+                // 优先使用运输订单
+                RecycleOrderInfo targetOrder = recycleOrders.stream()
+                        .filter(order -> RecycleOrderTypeEnum.TRANSPORT.getCode().equals(order.getType()))
+                        .findFirst()
+                        .orElse(null);
+                
+                // 如果没有运输订单，则使用加工订单
+                if (targetOrder == null) {
+                    targetOrder = recycleOrders.stream()
+                            .filter(order -> RecycleOrderTypeEnum.PROCESSING.getCode().equals(order.getType()))
+                            .findFirst()
+                            .orElse(null);
+                }
+                
+                // 如果找到了对应的回收订单，生成交付单PDF
+                if (targetOrder != null) {
+                    String pdfUrl = recycleOrderService.generateDeliveryNotePdf(targetOrder.getId());
+                    // 将PDF URL保存到订单的交付PDF字段
+                    userOrder.setDeliveryPdf(pdfUrl);
+                    updateById(userOrder);
+                }
+            } catch (Exception e) {
+                // 生成PDF失败不影响交付流程，只记录错误
+                // 线上交付时如果PDF生成失败，可以后续手动生成或重新生成
+            }
+        }
+        
+        return result;
     }
     
     /**

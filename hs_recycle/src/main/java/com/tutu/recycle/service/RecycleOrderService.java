@@ -56,6 +56,10 @@ import java.io.FileOutputStream;
 import com.tutu.system.service.MessageService;
 import com.tutu.system.service.SysFileService;
 import com.tutu.system.utils.MessageUtil;
+import com.tutu.system.config.FileUploadConfig;
+import com.tutu.system.utils.FileUtils;
+import com.tutu.system.utils.OpenPdfUtils;
+import com.tutu.recycle.utils.pdf.PdfGenerator;
 
 import jakarta.annotation.Resource;
 
@@ -65,8 +69,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.springframework.ui.ExtendedModelMap;
+import org.springframework.ui.Model;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, RecycleOrder> {
@@ -96,6 +107,12 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     @Resource
     @Lazy
     private UserOrderService userOrderService;
+    
+    @Autowired
+    private SpringTemplateEngine templateEngine;
+    
+    @Autowired
+    private FileUploadConfig fileUploadConfig;
     
     // 使用ConcurrentHashMap存储订单ID对应的锁，防止并发抢单
     private final ConcurrentHashMap<String, ReentrantLock> orderLocks = new ConcurrentHashMap<>();
@@ -1574,6 +1591,166 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             BeanUtil.copyProperties(order, info);
             return info;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 生成交付单PDF
+     * @param orderId 订单ID
+     * @return PDF文件访问URL
+     */
+    public String generateDeliveryNotePdf(String orderId) {
+        if (StrUtil.isBlank(orderId)) {
+            throw new ServiceException("订单ID不能为空");
+        }
+        
+        // 查询订单信息
+        RecycleOrderInfo orderInfo = getOrderInfo(orderId);
+        if (orderInfo == null) {
+            throw new ServiceException("订单不存在");
+        }
+        
+        // 查询关联的主订单（UserOrder）获取交付相关信息
+        UserOrder userOrder = null;
+        if (StrUtil.isNotBlank(orderInfo.getParentId())) {
+            userOrder = userOrderService.getById(orderInfo.getParentId());
+        }
+        
+        // 创建Model并添加订单数据
+        Model model = new ExtendedModelMap();
+        
+        // 构建订单数据Map
+        Map<String, Object> orderData = new HashMap<>();
+        orderData.put("no", orderInfo.getNo());
+        orderData.put("partyAName", orderInfo.getPartyAName());
+        orderData.put("partyBName", orderInfo.getPartyBName());
+        orderData.put("contractNo", orderInfo.getContractNo());
+        orderData.put("deliveryAddress", Optional.ofNullable(orderInfo.getDeliveryAddress()).orElse("--"));
+        orderData.put("warehouseAddress", Optional.ofNullable(orderInfo.getWarehouseAddress()).orElse("--"));
+        orderData.put("processor", Optional.ofNullable(orderInfo.getProcessor()).orElse("--"));
+        orderData.put("processorName", Optional.ofNullable(orderInfo.getProcessorName()).orElse("--"));
+        orderData.put("processorPhone", Optional.ofNullable(orderInfo.getProcessorPhone()).orElse("--"));
+        
+        // 从UserOrder获取交付相关信息
+        if (userOrder != null) {
+            orderData.put("deliveryPhoto", Optional.ofNullable(userOrder.getDeliveryPhoto()).orElse(""));
+            orderData.put("deliveryRemark", Optional.ofNullable(userOrder.getDeliveryRemark()).orElse(""));
+            orderData.put("partnerSignature", Optional.ofNullable(userOrder.getPartnerSignature()).orElse(""));
+            orderData.put("processorSignature", Optional.ofNullable(userOrder.getProcessorSignature()).orElse(""));
+        } else {
+            orderData.put("deliveryPhoto", "");
+            orderData.put("deliveryRemark", "");
+            orderData.put("partnerSignature", "");
+            orderData.put("processorSignature", "");
+        }
+        
+        model.addAttribute("orderData", orderData);
+        
+        // 构建订单明细列表
+        List<RecycleOrderItem> orderItems = Optional.ofNullable(orderInfo.getItems()).orElse(new ArrayList<>());
+        model.addAttribute("orderItems", orderItems);
+        
+        // 计算总数量和总重量
+        int totalCount = orderItems.stream()
+                .mapToInt(item -> Optional.ofNullable(item.getGoodCount()).orElse(0))
+                .sum();
+        BigDecimal totalWeight = orderItems.stream()
+                .map(item -> Optional.ofNullable(item.getGoodWeight()).orElse(BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        model.addAttribute("totalCount", totalCount);
+        model.addAttribute("totalWeight", totalWeight);
+        
+        // 订单类型文本
+        String orderType = orderInfo.getType();
+        model.addAttribute("orderTypeText", getOrderTypeText(orderType));
+        
+        // 交付方式文本（从UserOrder获取）
+        String deliveryMethodText = "--";
+        if (userOrder != null && StrUtil.isNotBlank(userOrder.getDeliveryMethod())) {
+            deliveryMethodText = getDeliveryMethodText(userOrder.getDeliveryMethod());
+        }
+        model.addAttribute("deliveryMethodText", deliveryMethodText);
+        
+        // 运输状态文本
+        String transportStatus = orderInfo.getTransportStatus();
+        model.addAttribute("transportStatusText", getTransportStatusText(transportStatus));
+        
+        // 交付日期（从UserOrder获取）
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String deliveryDate = "--";
+        if (userOrder != null && userOrder.getDeliveryTime() != null) {
+            LocalDateTime deliveryTime = LocalDateTime.ofInstant(
+                userOrder.getDeliveryTime().toInstant(),
+                java.time.ZoneId.systemDefault()
+            );
+            deliveryDate = deliveryTime.format(dateFormatter);
+        } else {
+            deliveryDate = LocalDateTime.now().format(dateFormatter);
+        }
+        model.addAttribute("deliveryDate", deliveryDate);
+        
+        Context context = new Context();
+        context.setVariables(model.asMap());
+
+        // 渲染 HTML 模板
+        String html = templateEngine.process("delivery_note", context);
+
+        // 转 PDF
+        byte[] pdfBytes = PdfGenerator.htmlToPdf(html);
+        
+        // 保存PDF文件
+        String fileName = "delivery_note_" + orderInfo.getNo() + "_" + System.currentTimeMillis() + ".pdf";
+        String storePath = FileUtils.generateFilePath(fileUploadConfig.getBasePath(), true);
+        FileUtils.createDirectories(storePath);
+        String fullPath = storePath + fileName;
+
+        if (OpenPdfUtils.savePdfToFile(pdfBytes, fullPath)) {
+            // 生成访问URL
+            String relativePath = fullPath.replace(fileUploadConfig.getBasePath(), "").replace("\\", "/");
+            if (!relativePath.startsWith("/")) {
+                relativePath = "/" + relativePath;
+            }
+            return fileUploadConfig.getUrlPrefix() + relativePath;
+        }
+        
+        throw new ServiceException("生成交付单PDF失败");
+    }
+    
+    /**
+     * 获取订单类型显示文本
+     */
+    private String getOrderTypeText(String type) {
+        if (StrUtil.isBlank(type)) {
+            return "未知类型";
+        }
+        RecycleOrderTypeEnum orderType = BaseEnum.getByCode(RecycleOrderTypeEnum.class, type);
+        return orderType != null ? orderType.getTitle().replace("订单", "") : "未知类型";
+    }
+    
+    /**
+     * 获取交付方式文本
+     */
+    private String getDeliveryMethodText(String deliveryMethod) {
+        if (StrUtil.isBlank(deliveryMethod)) {
+            return "--";
+        }
+        OrderDeliveryMethodEnum method = OrderDeliveryMethodEnum.ONLINE.getCode().equals(deliveryMethod) 
+            ? OrderDeliveryMethodEnum.ONLINE 
+            : (OrderDeliveryMethodEnum.OFFLINE.getCode().equals(deliveryMethod) 
+                ? OrderDeliveryMethodEnum.OFFLINE 
+                : null);
+        return method != null ? method.getTitle() : deliveryMethod;
+    }
+    
+    /**
+     * 获取运输状态文本
+     */
+    private String getTransportStatusText(String transportStatus) {
+        if (StrUtil.isBlank(transportStatus)) {
+            return "--";
+        }
+        TransportStatusEnum status = TransportStatusEnum.getByCode(transportStatus);
+        return status != null ? status.getDescription() : transportStatus;
     }
 }
 
