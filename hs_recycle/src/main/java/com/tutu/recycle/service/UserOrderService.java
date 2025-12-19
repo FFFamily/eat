@@ -665,8 +665,6 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 流转到完成阶段
         userOrder.setStage(UserOrderStageEnum.PENDING_CUSTOMER_CONFIRMATION.getCode());
         userOrder.setSettlementStatus(SettlementStatusEnum.WAITING_CONFIRMATION.getCode());
-        // 根据合同受益人发放积分
-        distributeSettlementPoints(userOrder);
         // 生成结算单PDF
         String settlementPdfUrl = generateSettlementPdf(userOrder, userOrderDTO, storageOrder, goodsTotalAmount, totalAmount, ratingCoefficient, otherAdjustAmount);
         userOrder.setSettlementPdf(settlementPdfUrl);
@@ -700,6 +698,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 更新结算状态为已结算
         userOrder.setSettlementStatus(SettlementStatusEnum.SETTLED.getCode());
         updateById(userOrder);
+        // 根据合同受益人发放积分
+        distributeSettlementPoints(userOrder);
     }
 
     /**
@@ -918,7 +918,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                 .filter(beneficiary -> StrUtil.isNotBlank(beneficiary.getBeneficiaryId()))
                 .filter(beneficiary -> Optional.ofNullable(beneficiary.getShareRatio()).orElse(BigDecimal.ZERO)
                         .compareTo(BigDecimal.ZERO) > 0)
-                .collect(Collectors.toList());
+                .toList();
         if (eligibleBeneficiaries.isEmpty()) {
             return;
         }
@@ -1190,7 +1190,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         List<Map<String, Object>> orderItems = new ArrayList<>();
         BigDecimal totalQuantity = BigDecimal.ZERO;
         BigDecimal totalAmountSum = BigDecimal.ZERO;
-        
+        BigDecimal totalUnitPrice = BigDecimal.ZERO;
         if (storageOrder != null && storageOrder.getItems() != null) {
             for (RecycleOrderItem item : storageOrder.getItems()) {
                 Map<String, Object> itemMap = new HashMap<>();
@@ -1210,6 +1210,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                 orderItems.add(itemMap);
                 totalQuantity = totalQuantity.add(quantity);
                 totalAmountSum = totalAmountSum.add(amount);
+                totalUnitPrice = totalUnitPrice.add(Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO));
             }
         }
         
@@ -1218,20 +1219,10 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 计算统计数据
         // 总数量
         model.addAttribute("totalQuantity", totalQuantity.intValue());
-        
-        // 平均单价
-        BigDecimal averageUnitPrice = BigDecimal.ZERO;
-        if (orderItems.size() > 0) {
-            BigDecimal sumUnitPrice = orderItems.stream()
-                .map(item -> (BigDecimal) item.get("unitPrice"))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-            averageUnitPrice = sumUnitPrice.divide(BigDecimal.valueOf(orderItems.size()), 2, RoundingMode.HALF_UP);
-        }
-        model.addAttribute("averageUnitPrice", averageUnitPrice);
-        
         // 总金额（货物总金额）
         model.addAttribute("totalAmount", goodsTotalAmount);
-        
+        // 总单价
+        model.addAttribute("totalUnitPrice", totalUnitPrice);
         // 计算调价金额
         // 评级调价 = 货物总金额 × 评级系数
         BigDecimal ratingAdjustment = goodsTotalAmount.multiply(ratingCoefficient);
@@ -1255,11 +1246,9 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 金额转中文大写
         String amountToChinese = convertAmountToChinese(pendingAmount);
         model.addAttribute("amountToChinese", amountToChinese);
-        
-        // 数量单位（判断是否有运输类型）
-        boolean hasTransport = orderItems.stream()
-            .anyMatch(item -> "transport".equals(item.get("type")));
-        String quantityUnit = hasTransport ? "km" : "kg";
+
+        // 数量单位
+        String quantityUnit = "kg";
         model.addAttribute("quantityUnit", quantityUnit);
         
         // 订单类型文本

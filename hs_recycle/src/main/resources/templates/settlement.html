@@ -266,63 +266,31 @@
         <div class="contract-info">
             <div class="contract-parties">
                 <div class="party-item">
-                    <span class="label">甲方：</span>
+                    <span class="label">供方：</span>
                     <span class="value" th:text="${orderData.partyAName ?: '--'}">甲方名称</span>
                 </div>
                 <div class="party-item">
-                    <span class="label">乙方：</span>
+                    <span class="label">需方：</span>
                     <span class="value" th:text="${orderData.partyBName ?: '--'}">乙方名称</span>
-                </div>
-                <div class="party-item">
-                    <span class="label">合同编号：</span>
-                    <span class="value" th:text="${orderData.contractNo ?: '--'}">合同编号</span>
                 </div>
             </div>
         </div>
 
         <!-- 结算说明 -->
         <div class="settlement-description">
-            <p>现就该合同下编号为 <strong th:text="${orderData.no ?: '--'}">订单编号</strong> 的订单出具以下业务结算单</p>
+            <p>按合同 <strong th:text="${orderData.contractNo ?: '--'}">合同编号</strong> 约定, 现就该合同下编号为 <strong th:text="${orderData.no ?: '--'}">订单编号</strong> 的订单进行结算</p>
         </div>
 
-        <!-- 订单详细信息 -->
-        <div class="order-details-info">
-            <h2 class="section-title">订单详细信息</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="label">订单类型：</span>
-                    <span class="value" th:text="${orderTypeText ?: '--'}">订单类型</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">交付地址：</span>
-                    <span class="value" th:text="${orderData.deliveryAddress ?: '--'}">交付地址</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">交付货物送达我司地址：</span>
-                    <span class="value" th:text="${orderData.warehouseAddress ?: '--'}">仓库地址</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">交付服务计入我司成本：</span>
-                    <span class="value">是</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">订单开始时间：</span>
-                    <span class="value" th:text="${orderData.startTime ?: '--'}">开始时间</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">订单结束时间：</span>
-                    <span class="value" th:text="${orderData.endTime ?: '--'}">结束时间</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">订单经办人：</span>
-                    <span class="value" th:text="${orderData.processor ?: '--'}">经办人</span>
-                </div>
-            </div>
-        </div>
 
         <!-- 常规部分 -->
         <div class="regular-section">
             <h2 class="section-title">常规部分</h2>
+
+            <!-- （1）订单内容 -->
+            <p class="info-item">
+                <span class="label">（1）订单内容：</span>
+                <span class="value"></span>
+            </p>
 
             <!-- 订单明细表格 -->
             <div class="order-details-table">
@@ -345,16 +313,16 @@
                             <td th:text="${item.name}">名称</td>
                             <td th:text="${item.specification}">规格型号</td>
                             <td th:text="${item.quantity}">数量</td>
-                            <td th:text="'¥' + ${#numbers.formatDecimal(item.unitPrice, 0, 2)}">单价</td>
-                            <td th:text="'¥' + ${#numbers.formatDecimal(item.amount, 0, 2)}">金额</td>
+                            <td th:text="${item.unitPrice}">单价</td>
+                            <td th:text="${item.amount}">金额</td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr class="total-row">
                             <td colspan="4" class="total-label">合计</td>
                             <td th:text="${totalQuantity}">总数量</td>
-                            <td th:text="'¥' + ${#numbers.formatDecimal(averageUnitPrice, 0, 2)}">平均单价</td>
-                            <td th:text="'¥' + ${#numbers.formatDecimal(totalAmount, 0, 2)}">总金额</td>
+                            <td th:text="${totalUnitPrice}">总单价</td>
+                            <td th:text="${totalAmount}">总金额</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -366,6 +334,25 @@
                     <strong>批注：</strong>货物类数量单位为kg、运输类数量单位为kg，总价单位为元
                 </p>
             </div>
+
+            <!-- 常规部分补充信息 -->
+            <div class="regular-info-content">
+                <p class="info-item">
+                    <span class="label">（2）交付地址：</span>
+                    <span class="value">交付地点字段</span>
+                </p>
+                <p class="info-item">
+                    <span class="label">（3）订单时间：</span>
+                    <span class="value">开始时间：起始时间字段；结束时间：结束时间字段</span>
+                </p>
+                <p class="info-item">
+                    <span class="label">（4）订单经办人：</span>
+                    <span class="value">
+                        供方公司名称：供方经办人字段（供方经办人电话字段）<br/>
+                        需方公司名称：需方经办人字段（需方经办人电话字段）
+                    </span>
+                </p>
+            </div>
         </div>
 
         <!-- 调价部分 -->
@@ -373,20 +360,20 @@
             <h2 class="section-title">调价部分</h2>
             <div class="adjustment-content">
                 <p class="adjustment-summary">
-                    此结算单调价共调价 <strong th:text="'¥' + ${#numbers.formatDecimal(totalAdjustment, 0, 2)}">总调价</strong> 元
+                    此结算单调价共调价 <strong th:text="${totalAdjustment}">总调价</strong> 元
                 </p>
                 <div class="adjustment-details">
                     <div class="adjustment-item">
                         <span class="adjustment-number">（1）</span>
                         <span class="adjustment-label">合作评级：</span>
                         <span class="adjustment-value">
-                            评级<span th:text="${ratingLevel}">A</span>，总金额调整<span th:text="'¥' + ${#numbers.formatDecimal(ratingAdjustment, 0, 2)}">评级调价</span>，调价<span th:text="'¥' + ${#numbers.formatDecimal(ratingAdjustment, 0, 2)}">评级调价</span>元
+                            评级<span th:text="${ratingLevel}">A</span>，总金额调整<span th:text="${ratingAdjustment}">评级调价</span>，调价<span th:text="${ratingAdjustment}">评级调价</span>元
                         </span>
                     </div>
                     <div class="adjustment-item">
                         <span class="adjustment-number">（2）</span>
                         <span class="adjustment-label">其他调价：</span>
-                        <span class="adjustment-value">调价<span th:text="'¥' + ${#numbers.formatDecimal(otherAdjustment, 0, 2)}">其他调价</span>元</span>
+                        <span class="adjustment-value">调价<span th:text="${otherAdjustment}">其他调价</span>元</span>
                     </div>
                 </div>
             </div>
@@ -397,26 +384,48 @@
             <h2 class="section-title">结算金额</h2>
             <div class="settlement-content">
                 <p class="settlement-summary">
-                    该笔订单总数 <strong th:text="${totalQuantity}">总数</strong> <span th:text="${quantityUnit}">kg</span>，待结金额 <strong th:text="'¥' + ${#numbers.formatDecimal(pendingAmount, 0, 2)}">待结金额</strong> 元，综合单价 <strong th:text="'¥' + ${#numbers.formatDecimal(averageUnitPrice, 0, 2)}">综合单价</strong> 元/<span th:text="${quantityUnit}">kg</span>
+                    该笔订单总数 <strong th:text="${totalQuantity}">总数</strong> <span th:text="${quantityUnit}">kg</span>，待结金额 <strong th:text="${pendingAmount}">待结金额</strong> 元，综合单价 <strong th:text="${averageUnitPrice}">综合单价</strong> 元/<span th:text="${quantityUnit}">kg</span>
                 </p>
                 <p class="settlement-amount-words">
                     待结金额大写：<strong th:text="${amountToChinese}">金额大写</strong>
                 </p>
-                <p class="settlement-account">
+                <!-- <p class="settlement-account">
                     约定走款账号：<strong th:text="${orderData.paymentAccount ?: '6222021234567890123'}">走款账号</strong>
-                </p>
+                </p> -->
                 <p class="settlement-request">
                     请您核算以上数据，我司将据此结算。
                 </p>
             </div>
         </div>
 
+        <!-- 四、其他信息 -->
+        <div class="other-info-section">
+            <h2 class="section-title">四、其他信息</h2>
+
+            <div class="other-info-content">
+                <p class="info-item">
+                    <span class="label">（1）合规提示：</span>
+                    <span class="value">按合同约定，您承诺并确认交付的货物来源合法、安全，非盗窃、抢劫等非法所得。</span>
+                </p>
+
+                <p class="info-item">
+                    <span class="label">（2）授权提示：</span>
+                    <span class="value">按合同约定，您的“同意”行为视为您同意本结算单。</span>
+                </p>
+
+                <p class="info-item">
+                    <span class="label">（3）异议提示：</span>
+                    <span class="value">按合同约定，我们将通过一种或多种方式提醒您经办本结算单，如有疑问请于本单据发出后7个工作日内联系我司企业微信客服，过时默认同意本结算单内容。</span>
+                </p>
+            </div>
+        </div>
+
         <!-- 最终批注 -->
-        <div class="final-notes-section">
+        <!-- <div class="final-notes-section">
             <p class="final-notes-text">
                 如有疑问请于本单据发出后3个工作日内联系我司企业微信客服或经办人员 <strong>孟经理（13683335083）</strong>，过时默认同意本结算单内容。
             </p>
-        </div>
+        </div> -->
 
         <!-- 公司信息和日期 -->
         <div class="company-info-footer">

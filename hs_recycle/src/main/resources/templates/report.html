@@ -206,69 +206,35 @@
                 </p>
             </div>
 
-            <!-- （2）订单内容 -->
-            <div class="order-content-info">
-                <p class="info-item">
-                    <span class="label">（2）订单内容</span>
-                </p>
-
-                <!-- 订单明细表格 -->
-                <div class="order-details-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>分类</th>
-                                <th>名称</th>
-                                <th>规格型号</th>
-                                <th>备注</th>
-                                <th>数量</th>
-                                <th>单价</th>
-                                <th>总价</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="item, iterStat : ${orderItems}">
-                                <td th:text="${item.typeText}">货物</td>
-                                <td th:text="${item.name}">商品名称</td>
-                                <td th:text="${item.specification}">规格型号</td>
-                                <td th:text="${item.remark ?: '--'}">备注</td>
-                                <td th:text="${item.quantity}">数量</td>
-                                <td th:text="'¥' + ${#numbers.formatDecimal(item.unitPrice, 0, 2)}">单价</td>
-                                <td th:text="'¥' + ${#numbers.formatDecimal(item.amount, 0, 2)}">总价</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- 批注说明 -->
-                <div class="notes-section">
-                    <p class="notes-text">
-                        <strong>注：</strong>货物类数量单位为kg、运输类数量单位为km，总价单位为元。
-                    </p>
-                </div>
-            </div>
-
-            <!-- （3）订单交付地址 -->
+            <!-- （2）交付地址 -->
             <div class="delivery-address-info">
                 <p class="info-item">
-                    <span class="label">（3）订单交付地址</span>
-                    <span class="value" th:text="${orderData.deliveryAddress ?: '--'}">交付地址</span>
+                    <span class="label">（2）交付地址</span>
+                    <span class="value" th:text="${orderData.deliveryAddress ?: '--'}">交付地点字段</span>
                 </p>
             </div>
 
-            <!-- （4）交付货物送达我司地址 -->
-            <div class="warehouse-address-info">
+            <!-- （3）订单时间 -->
+            <div class="order-time-info">
                 <p class="info-item">
-                    <span class="label">（4）交付货物送达我司地址（交付服务计入我司成本）</span>
-                    <span class="value" th:text="${orderData.warehouseAddress ?: '--'}">仓库地址</span>
+                    <span class="label">（3）订单时间</span>
+                    <span class="value">
+                        开始时间：
+                        <span th:text="${orderData.startTime ?: '--'}">起始时间字段</span>
+                        ；结束时间：
+                        <span th:text="${orderData.endTime ?: '--'}">结束时间字段</span>
+                    </span>
                 </p>
             </div>
 
-            <!-- （5）订单经办人 -->
+            <!-- （4）订单经办人 -->
             <div class="processor-info">
                 <p class="info-item">
-                    <span class="label">（5）订单经办人</span>
-                    <span class="value">您方：<span th:text="${orderData.processor ?: '--'}">经办人</span>（<span th:text="${orderData.processorPhone ?: '--'}">电话</span>）</span>
+                    <span class="label">（4）订单经办人</span>
+                    <span class="value">
+                        供方公司名称：供方经办人字段（供方经办人电话字段）<br/>
+                        需方公司名称：需方经办人字段（需方经办人电话字段）
+                    </span>
                 </p>
             </div>
         </div>
@@ -282,15 +248,31 @@
                     <span class="label">订单申请时间：</span>
                     <span class="value" th:text="${orderData.startTime ?: '--'}">（我方）</span>
                 </p>
-
                 <p class="info-item">
                     <span class="label">订单内容流转方向：</span>
                     <span class="value" th:text="${flowDirectionText}">流转方向</span>
                 </p>
+            </div>
+        </div>
+
+        <!-- 四、其他信息 -->
+        <div class="other-info-section">
+            <h2 class="section-title">四、其他信息</h2>
+
+            <div class="other-info-content">
+                <p class="info-item">
+                    <span class="label">（1）合规提示：</span>
+                    <span class="value">按合同约定，您承诺并确认交付的货物来源合法、安全，非盗窃、抢劫等非法所得。</span>
+                </p>
 
                 <p class="info-item">
-                    <span class="label">合同约定走款账号：</span>
-                    <span class="value" th:text="${orderData.paymentAccount ?: '6222021234567890123'}">账号</span>
+                    <span class="label">（2）授权提示：</span>
+                    <span class="value">按合同约定，您的“同意”行为视为您同意本结算单。</span>
+                </p>
+
+                <p class="info-item">
+                    <span class="label">（3）异议提示：</span>
+                    <span class="value">按合同约定，我们将通过一种或多种方式提醒您经办本结算单，如有疑问请于本单据发出后7个工作日内联系我司企业微信客服，过时默认同意本结算单内容。</span>
                 </p>
             </div>
         </div>
