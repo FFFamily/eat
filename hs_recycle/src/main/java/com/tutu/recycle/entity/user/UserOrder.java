@@ -51,6 +51,8 @@ public class UserOrder extends BaseEntity {
     private String pricingMethod;
     // 运输方式（上门回收/送货上门）
     private String transportMethod;
+    // 用户评级等级
+    private String accountRatingLevel;
     // 用户评级系数
     private BigDecimal accountCoefficient;
     // 其他调价

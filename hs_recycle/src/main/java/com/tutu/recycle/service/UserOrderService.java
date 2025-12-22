@@ -1,7 +1,9 @@
 package com.tutu.recycle.service;
 
+import ch.qos.logback.core.util.TimeUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -37,6 +39,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -577,9 +580,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                 String applicationPdfUrl = generateApplicationPdf(userOrder, userOrderRequest);
                 userOrder.setApplicationPdf(applicationPdfUrl);
             } catch (Exception e) {
-                // 记录日志但不影响主流程
-                // TODO: 添加日志记录
-                e.printStackTrace();
+                throw new ServiceException("生成申请单PDF失败"+ e.getMessage());
             }
         }
         updateById(userOrder);
@@ -654,9 +655,10 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         }
         //   - 货物总金额 = Σ(单价 × 数量 )
         //  - 最终总金额 = 货物总金额 × (1 + 评级系数) + 其他调价
-        BigDecimal ratingCoefficient = Optional.ofNullable(userOrderDTO.getAccountCoefficient()).orElse(BigDecimal.ZERO);
+        BigDecimal ratingCoefficient = Optional.ofNullable(userOrder.getAccountCoefficient()).orElse(BigDecimal.ZERO);
         BigDecimal otherAdjustAmount = Optional.ofNullable(userOrderDTO.getOtherAdjustAmount()).orElse(BigDecimal.ZERO);
-        BigDecimal totalAmount = goodsTotalAmount.multiply(BigDecimal.ONE.add(ratingCoefficient)).add(otherAdjustAmount);
+        BigDecimal ratingCoefficientAmount = goodsTotalAmount.multiply(ratingCoefficient).setScale(2,RoundingMode.HALF_UP);
+        BigDecimal totalAmount = goodsTotalAmount.add(ratingCoefficientAmount).add(otherAdjustAmount);
         // 更新金额和调价信息
         userOrder.setGoodsTotalAmount(goodsTotalAmount);
         userOrder.setTotalAmount(totalAmount);
@@ -665,8 +667,21 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 流转到完成阶段
         userOrder.setStage(UserOrderStageEnum.PENDING_CUSTOMER_CONFIRMATION.getCode());
         userOrder.setSettlementStatus(SettlementStatusEnum.WAITING_CONFIRMATION.getCode());
+        // 查询甲方和乙方
+        Account partyA = accountService.getById(userOrder.getPartyA());
+        Account partyB = accountService.getById(userOrder.getPartyB());
         // 生成结算单PDF
-        String settlementPdfUrl = generateSettlementPdf(userOrder, userOrderDTO, storageOrder, goodsTotalAmount, totalAmount, ratingCoefficient, otherAdjustAmount);
+        String settlementPdfUrl = generateSettlementPdf(
+                userOrder,
+                partyA,
+                partyB,
+                userOrderDTO,
+                storageOrder,
+                goodsTotalAmount,
+                totalAmount,
+                ratingCoefficient,
+                ratingCoefficientAmount,
+                otherAdjustAmount);
         userOrder.setSettlementPdf(settlementPdfUrl);
         return updateById(userOrder);
     }
@@ -1140,13 +1155,20 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      * @param goodsTotalAmount 货物总金额
      * @param totalAmount 最终总金额
      * @param ratingCoefficient 评级系数
+     * @param ratingCoefficientAmount 评级系数调整金额
      * @param otherAdjustAmount 其他调价金额
      * @return PDF文件访问URL
      * @throws Exception 生成PDF时的异常
      */
-    private String generateSettlementPdf(UserOrder userOrder, UserOrderDTO userOrderDTO, 
-                                        RecycleOrderInfo storageOrder, BigDecimal goodsTotalAmount, 
-                                        BigDecimal totalAmount, BigDecimal ratingCoefficient, 
+    private String generateSettlementPdf(UserOrder userOrder,
+                                         Account partyA,
+                                         Account partyB,
+                                         UserOrderDTO userOrderDTO,
+                                        RecycleOrderInfo storageOrder,
+                                         BigDecimal goodsTotalAmount,
+                                        BigDecimal totalAmount,
+                                         BigDecimal ratingCoefficient,
+                                        BigDecimal ratingCoefficientAmount,
                                         BigDecimal otherAdjustAmount)  {
         // 创建Model并添加订单数据
         Model model = new ExtendedModelMap();
@@ -1215,45 +1237,49 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         }
         
         model.addAttribute("orderItems", orderItems);
-        
-        // 计算统计数据
+        // 交付地址
+        model.addAttribute("deliveryAddress", Optional.ofNullable(userOrderDTO.getDeliveryAddress()).orElse("暂无交付地址，请联系客户"));
+        // 开始时间、结束时间
+        model.addAttribute("startTime", userOrderDTO.getCreateTime() != null ? DateUtil.format(userOrderDTO.getCreateTime(), formatter) : "暂无开始时间，请联系客户");
+        model.addAttribute("endTime", userOrderDTO.getSettlementTime() != null ? DateUtil.format(userOrderDTO.getEndTime(), formatter) : "暂无结束时间，请联系客户");
+        // 供方公司名称
+        model.addAttribute("partyBCompanyName", partyB.getNickname());
+        // 供方经办人
+        model.addAttribute("partyBProcessor", "暂无");
+        // 需求方公司名称
+        model.addAttribute("partyACompanyName", partyA.getNickname());
+        // 需求方经办人
+        model.addAttribute("partyAProcessor", "暂无");
+        // 计算调价金额
+        // 评级系数
+        String accountRatingLevel = userOrder.getAccountRatingLevel();
+        model.addAttribute("ratingLevel", accountRatingLevel);
+        // 评级系数比例
+        model.addAttribute("ratingCoefficient", ratingCoefficient);
+        // 评级系数金额
+        model.addAttribute("ratingAdjustment", ratingCoefficientAmount);
+        // 其他调价
+        model.addAttribute("otherAdjustment", otherAdjustAmount);
+        // 总调价金额
+        BigDecimal totalAdjustment = ratingCoefficientAmount.add(otherAdjustAmount);
+        model.addAttribute("totalAdjustment", totalAdjustment);
+
+        // 货物小计统计
         // 总数量
         model.addAttribute("totalQuantity", totalQuantity.intValue());
-        // 总金额（货物总金额）
+        // 待结算金额
         model.addAttribute("totalAmount", goodsTotalAmount);
         // 总单价
         model.addAttribute("totalUnitPrice", totalUnitPrice);
-        // 计算调价金额
-        // 评级调价 = 货物总金额 × 评级系数
-        BigDecimal ratingAdjustment = goodsTotalAmount.multiply(ratingCoefficient);
-        model.addAttribute("ratingAdjustment", ratingAdjustment);
-        
-        // 其他调价
-        model.addAttribute("otherAdjustment", otherAdjustAmount);
-        
-        // 总调价金额
-        BigDecimal totalAdjustment = ratingAdjustment.add(otherAdjustAmount);
-        model.addAttribute("totalAdjustment", totalAdjustment);
-        
-        // 计算评级等级
-        String ratingLevel = calculateRatingLevel(ratingCoefficient);
-        model.addAttribute("ratingLevel", ratingLevel);
-        
-        // 待结金额 = 货物总金额 + 总调价金额
-        BigDecimal pendingAmount = goodsTotalAmount.add(totalAdjustment);
-        model.addAttribute("pendingAmount", pendingAmount);
-        
-        // 金额转中文大写
-        String amountToChinese = convertAmountToChinese(pendingAmount);
-        model.addAttribute("amountToChinese", amountToChinese);
 
-        // 数量单位
-        String quantityUnit = "kg";
-        model.addAttribute("quantityUnit", quantityUnit);
-        
-        // 订单类型文本
-        model.addAttribute("orderTypeText", getOrderTypeText(RecycleOrderTypeEnum.STORAGE.getCode()));
-        
+        // 结算部分
+        // 待结金额
+        model.addAttribute("pendingAmount", totalAmount);
+        // 综合单价
+        model.addAttribute("averageUnitPrice", totalAmount.divide(totalQuantity, 2, RoundingMode.HALF_UP));
+        // 金额转中文大写
+        String amountToChinese = convertAmountToChinese(totalAmount);
+        model.addAttribute("amountToChinese", amountToChinese);
         // 结算单生成日期
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         model.addAttribute("settlementDate", LocalDateTime.now().format(dateFormatter));
@@ -1284,22 +1310,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         
         throw new ServiceException("生成结算单PDF失败");
     }
-    
-    /**
-     * 计算评级等级
-     */
-    private String calculateRatingLevel(BigDecimal ratingCoefficient) {
-        if (ratingCoefficient == null) {
-            return "A";
-        }
-        double coefficient = ratingCoefficient.doubleValue();
-        if (coefficient >= 0.1) return "A+";
-        if (coefficient >= 0.05) return "A";
-        if (coefficient >= 0) return "B";
-        if (coefficient >= -0.05) return "C";
-        return "D";
-    }
-    
+
     /**
      * 金额转中文大写
      */

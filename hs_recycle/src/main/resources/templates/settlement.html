@@ -140,11 +140,12 @@
         
         /* 批注说明 */
         .notes-section {
-            margin-top: 20px;
+            margin-top: 5px;
+            margin-bottom: 15px;
         }
         
         .notes-text {
-            font-size: 12px;
+            font-size: 10px;
             color: #666;
             margin: 0;
         }
@@ -288,7 +289,7 @@
 
             <!-- （1）订单内容 -->
             <p class="info-item">
-                <span class="label">（1）订单内容：</span>
+                <span class="label">（1）订单内容：</span><br/>
                 <span class="value"></span>
             </p>
 
@@ -338,18 +339,20 @@
             <!-- 常规部分补充信息 -->
             <div class="regular-info-content">
                 <p class="info-item">
-                    <span class="label">（2）交付地址：</span>
-                    <span class="value">交付地点字段</span>
+                    <span class="label">（2）交付地址：</span><br/>
+                    <span class="value" th:text="${deliveryAddress ?: '--'}">交付地点字段</span>
                 </p>
                 <p class="info-item">
-                    <span class="label">（3）订单时间：</span>
-                    <span class="value">开始时间：起始时间字段；结束时间：结束时间字段</span>
-                </p>
-                <p class="info-item">
-                    <span class="label">（4）订单经办人：</span>
+                    <span class="label">（3）订单时间：</span><br/>
                     <span class="value">
-                        供方公司名称：供方经办人字段（供方经办人电话字段）<br/>
-                        需方公司名称：需方经办人字段（需方经办人电话字段）
+                        开始时间：<span th:text="${startTime ?: '--'}">起始时间字段</span>；结束时间：<span th:text="${endTime ?: '--'}">结束时间字段</span>
+                    </span>
+                </p>
+                <p class="info-item">
+                    <span class="label">（4）订单经办人：</span><br/>
+                    <span class="value">
+                        供方公司名称：<span th:text="${partyBCompanyName ?: '--'}">供方公司名称</span>；供方经办人：<span th:text="${partyBProcessor ?: '--'}">供方经办人字段</span>（<span th:text="${partyBProcessorPhone ?: '--'}">供方经办人电话字段</span>）<br/>
+                        需方公司名称：<span th:text="${partyACompanyName ?: '--'}">需方公司名称</span>；需方经办人：<span th:text="${partyAProcessor ?: '--'}">需方经办人字段</span>（<span th:text="${partyAProcessorPhone ?: '--'}">需方经办人电话字段</span>）
                     </span>
                 </p>
             </div>
@@ -367,7 +370,7 @@
                         <span class="adjustment-number">（1）</span>
                         <span class="adjustment-label">合作评级：</span>
                         <span class="adjustment-value">
-                            评级<span th:text="${ratingLevel}">A</span>，总金额调整<span th:text="${ratingAdjustment}">评级调价</span>，调价<span th:text="${ratingAdjustment}">评级调价</span>元
+                            评级<span th:text="${ratingLevel}">A</span>，总金额调整<span th:text="${ratingCoefficient}">评级调价</span>，调价<span th:text="${ratingAdjustment}">评级调价</span>元
                         </span>
                     </div>
                     <div class="adjustment-item">
@@ -384,7 +387,7 @@
             <h2 class="section-title">结算金额</h2>
             <div class="settlement-content">
                 <p class="settlement-summary">
-                    该笔订单总数 <strong th:text="${totalQuantity}">总数</strong> <span th:text="${quantityUnit}">kg</span>，待结金额 <strong th:text="${pendingAmount}">待结金额</strong> 元，综合单价 <strong th:text="${averageUnitPrice}">综合单价</strong> 元/<span th:text="${quantityUnit}">kg</span>
+                    该笔订单总数 <strong th:text="${totalQuantity}">总数</strong> <span>kg</span>，待结金额 <strong th:text="${pendingAmount}">待结金额</strong> 元，综合单价 <strong th:text="${averageUnitPrice}">综合单价</strong> 元/<span>kg</span>
                 </p>
                 <p class="settlement-amount-words">
                     待结金额大写：<strong th:text="${amountToChinese}">金额大写</strong>
