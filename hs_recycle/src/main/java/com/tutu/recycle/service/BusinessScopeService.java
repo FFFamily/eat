@@ -2,6 +2,7 @@ package com.tutu.recycle.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tutu.common.constant.CommonConstant;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.recycle.entity.BusinessScope;
 import com.tutu.recycle.mapper.BusinessScopeMapper;
@@ -178,7 +179,8 @@ public class BusinessScopeService extends ServiceImpl<BusinessScopeMapper, Busin
      */
     public List<BusinessScope> getAllOrdered() {
         LambdaQueryWrapper<BusinessScope> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByAsc(BusinessScope::getGoodType, BusinessScope::getSortNum);
+        wrapper.eq(BusinessScope::getIsShow, CommonConstant.YES_STR_Y);
+        wrapper.orderByAsc(BusinessScope::getSortNum);
         return list(wrapper);
     }
 } 

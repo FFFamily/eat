@@ -9,4 +9,8 @@ public class CommonConstant {
     public static final String YES_STR = "1";
     // 否|禁用
     public static final String NO_STR = "0";
+    // 是|启用
+    public static final String YES_STR_Y = "Y";
+    // 否|禁用
+    public static final String NO_STR_N = "N";
 }
