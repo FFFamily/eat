@@ -25,23 +25,7 @@ public class FileUploadController {
     @Autowired
     private SysFileService sysFileService;
 
-    /**
-     * 单文件上传
-     */
-    @PostMapping("/noAuth/upload")
-    @OperationLog(value = "上传文件", type = OperationType.INSERT, recordParams = false)
-    public BaseResponse<FileUploadVO> uploadFileWithOutLogin(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "uploadUserId", required = false) String uploadUserId,
-            @RequestParam(value = "uploadUserName", required = false) String uploadUserName) {
-        try {
-            FileUploadVO result = sysFileService.uploadFile(file, uploadUserId, uploadUserName);
-            return BaseResponse.success(result);
-        } catch (Exception e) {
-            log.error("文件上传失败", e);
-            return BaseResponse.error("文件上传失败: " + e.getMessage());
-        }
-    }
+
     
     /**
      * 单文件上传

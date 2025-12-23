@@ -199,6 +199,7 @@ public class WxEmployeeController {
                 UserOrder userOrder = userOrderMap.get(order.getParentId());
                 if (userOrder != null) {
                     dto.setDeliveryTime(userOrder.getDeliveryTime());
+                    dto.setMainOrderNo(userOrder.getNo());
                 }
             }
 

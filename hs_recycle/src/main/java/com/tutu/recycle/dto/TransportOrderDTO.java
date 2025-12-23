@@ -24,6 +24,10 @@ public class TransportOrderDTO {
      * 订单编号
      */
     private String no;
+    /**
+     * 主订单编号
+     */
+    private String mainOrderNo;
 
     /**
      * 取货地址

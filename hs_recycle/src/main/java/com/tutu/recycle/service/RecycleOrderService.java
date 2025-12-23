@@ -1054,16 +1054,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @return 运输订单列表
      */
     public List<RecycleOrder> getTransportOrdersByStatus(String transportStatus, String processorId) {
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.TRANSPORT.getCode());
-        if (StrUtil.isNotBlank(transportStatus)) {
-            wrapper.eq(RecycleOrder::getTransportStatus, transportStatus);
-        }
-        if (StrUtil.isNotBlank(processorId)) {
-            wrapper.eq(RecycleOrder::getProcessorId, processorId);
-        }
-        wrapper.orderByDesc(RecycleOrder::getCreateTime);
-        return list(wrapper);
+        return baseMapper.selectTransportOrders(transportStatus, processorId);
     }
 
     /**

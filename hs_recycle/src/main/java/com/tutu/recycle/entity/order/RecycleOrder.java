@@ -170,7 +170,7 @@ public class RecycleOrder extends BaseEntity {
     private String transportMethod;
 
     /**
-     * 运输状态（可接单/交付大厅/运输中/已送达）
+     * 运输状态（可接单/待交付/运输中/已送达）
      */
     @TableField("transport_status")
     private String transportStatus;

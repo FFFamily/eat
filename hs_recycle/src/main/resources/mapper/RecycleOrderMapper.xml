@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.recycle.mapper.RecycleOrderMapper">
+
+    <select id="selectTransportOrders" resultType="com.tutu.recycle.entity.order.RecycleOrder">
+        SELECT
+            id,
+            parent_id,
+            no,
+            type,
+            status,
+            start_time,
+            end_time,
+            identify_code,
+            processor_id,
+            processor,
+            processor_phone,
+            total_amount,
+            upload_time,
+            order_node_img,
+            contract_id,
+            contract_no,
+            contract_name,
+            contract_partner,
+            contract_partner_name,
+            party_a,
+            party_a_name,
+            party_b,
+            party_b_name,
+            contract_price,
+            site_name,
+            warehouse_address,
+            warehouse_id,
+            pickup_address,
+            delivery_address,
+            flow_direction,
+            payment_account,
+            goods_weight,
+            transport_method,
+            transport_status,
+            sorting_status,
+            goods_total_amount,
+            settlement_pdf_url,
+            settlement_time,
+            application_pdf_url,
+            delivery_note_pdf_url,
+            create_time,
+            update_time,
+            create_by,
+            update_by,
+            is_deleted
+        FROM recycle_order
+        WHERE is_deleted = '0'
+          AND type = 'transport'
+        <if test="transportStatus != null and transportStatus != ''">
+            AND transport_status = #{transportStatus}
+        </if>
+        <if test="processorId != null and processorId != ''">
+            AND processor_id = #{processorId}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>
+
