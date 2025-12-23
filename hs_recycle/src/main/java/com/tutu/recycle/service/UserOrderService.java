@@ -996,10 +996,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         orderData.put("contractNo", userOrder.getContractNo());
         orderData.put("partyA", userOrder.getPartyAName());
         orderData.put("partyB", userOrder.getPartyBName());
-        // 经办人信息从 UserOrderDTO 中获取
-        String processorName = userOrderRequest != null ? userOrderRequest.getProcessorName() : null;
-        orderData.put("processor", StrUtil.isNotBlank(processorName) ? processorName : "");
-        orderData.put("processorPhone", ""); // TODO: 从经办人信息中获取
+
         // 交付地址和仓库地址从 UserOrderDTO 中获取
         String deliveryAddress = userOrderRequest != null ? userOrderRequest.getDeliveryAddress() : null;
         orderData.put("deliveryAddress", StrUtil.isNotBlank(deliveryAddress) ? deliveryAddress : "");
@@ -1008,7 +1005,12 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 走款账号从 UserOrderDTO 中获取
         String paymentAccount = userOrderRequest != null ? userOrderRequest.getPaymentAccount() : null;
         orderData.put("paymentAccount", StrUtil.isNotBlank(paymentAccount) ? paymentAccount : "");
-        
+
+
+        // 经办人信息从 UserOrderDTO 中获取
+        String processorName = userOrderRequest != null ? userOrderRequest.getProcessorName() : null;
+        orderData.put("processor", StrUtil.isNotBlank(processorName) ? processorName : "");
+        orderData.put("processorPhone", ""); // TODO: 从经办人信息中获取
         // 订单申请时间
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         if (userOrder.getCreateTime() != null) {
@@ -1020,7 +1022,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         } else {
             orderData.put("startTime", LocalDateTime.now().format(formatter) + "（我方）");
         }
-        
+        orderData.put("createTime",DateUtil.format(userOrder.getCreateTime(),"yyyy-MM-dd HH:mm:ss"));
         model.addAttribute("orderData", orderData);
         
         // 获取采购订单的明细数据
