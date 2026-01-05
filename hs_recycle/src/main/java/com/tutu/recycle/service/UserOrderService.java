@@ -566,8 +566,9 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         userOrder.setStage(nextStage.getCode());
 //        updateById(userOrder);
         // 如果不是完成阶段，则创建对应阶段的回收订单
+        RecycleOrderInfo currentRecycleOrderInfo = null;
         if (!nextStage.isLastStage()) {
-            recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderRequest,userOrder, currentStage,true);
+            currentRecycleOrderInfo = recycleOrderService.createRecycleOrderFromUserOrderByStage(userOrderRequest, userOrder, currentStage, true);
             if (isCreateNextOrder) {
                 // 创建下一个阶段的订单
                 recycleOrderService.createRecycleOrderFromUserOrderByStage(new UserOrderDTO(), userOrder, nextStage, false);
@@ -577,7 +578,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 如果是采购阶段，生成申请单PDF
         if (currentStage == UserOrderStageEnum.PURCHASE) {
             try {
-                String applicationPdfUrl = generateApplicationPdf(userOrder, userOrderRequest);
+                String applicationPdfUrl = generateApplicationPdf(userOrder, currentRecycleOrderInfo);
                 userOrder.setApplicationPdf(applicationPdfUrl);
             } catch (Exception e) {
                 throw new ServiceException("生成申请单PDF失败"+ e.getMessage());
@@ -982,9 +983,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      * @param userOrder 用户订单
      * @param userOrderRequest 用户订单DTO（包含经办人等额外信息）
      * @return PDF文件访问URL
-     * @throws Exception 生成PDF时的异常
      */
-    private String generateApplicationPdf(UserOrder userOrder, UserOrderDTO userOrderRequest) throws Exception {
+    private String generateApplicationPdf(UserOrder userOrder, RecycleOrderInfo userOrderRequest){
         // 创建Model并添加订单数据
         Model model = new ExtendedModelMap();
         
@@ -998,30 +998,15 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         orderData.put("partyB", userOrder.getPartyBName());
 
         // 交付地址和仓库地址从 UserOrderDTO 中获取
-        String deliveryAddress = userOrderRequest != null ? userOrderRequest.getDeliveryAddress() : null;
+        String deliveryAddress =  userOrderRequest.getPickupAddress();
         orderData.put("deliveryAddress", StrUtil.isNotBlank(deliveryAddress) ? deliveryAddress : "");
-        String warehouseAddress = userOrderRequest != null ? userOrderRequest.getWarehouseAddress() : null;
-        orderData.put("warehouseAddress", StrUtil.isNotBlank(warehouseAddress) ? warehouseAddress : "");
-        // 走款账号从 UserOrderDTO 中获取
-        String paymentAccount = userOrderRequest != null ? userOrderRequest.getPaymentAccount() : null;
-        orderData.put("paymentAccount", StrUtil.isNotBlank(paymentAccount) ? paymentAccount : "");
-
 
         // 经办人信息从 UserOrderDTO 中获取
-        String processorName = userOrderRequest != null ? userOrderRequest.getProcessorName() : null;
+        String processorName = userOrderRequest.getProcessor();
+        String processorPhone = userOrderRequest.getProcessorPhone();
         orderData.put("processor", StrUtil.isNotBlank(processorName) ? processorName : "");
-        orderData.put("processorPhone", ""); // TODO: 从经办人信息中获取
+        orderData.put("processorPhone", StrUtil.isNotBlank(processorPhone) ? processorPhone : "");
         // 订单申请时间
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        if (userOrder.getCreateTime() != null) {
-            LocalDateTime createTime = LocalDateTime.ofInstant(
-                userOrder.getCreateTime().toInstant(),
-                java.time.ZoneId.systemDefault()
-            );
-            orderData.put("startTime", createTime.format(formatter) + "（我方）");
-        } else {
-            orderData.put("startTime", LocalDateTime.now().format(formatter) + "（我方）");
-        }
         orderData.put("createTime",DateUtil.format(userOrder.getCreateTime(),"yyyy-MM-dd HH:mm:ss"));
         model.addAttribute("orderData", orderData);
         
@@ -1031,38 +1016,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                 .filter(order -> RecycleOrderTypeEnum.PURCHASE.getCode().equals(order.getType()))
                 .findFirst()
                 .orElse(null);
-        
-        // 构建订单明细列表
-        List<Map<String, Object>> orderItems = new ArrayList<>();
-        if (purchaseOrder != null && purchaseOrder.getItems() != null) {
-            for (RecycleOrderItem item : purchaseOrder.getItems()) {
-                Map<String, Object> itemMap = new HashMap<>();
-                // 获取货物类型文本
-                String goodType = item.getGoodType();
-                itemMap.put("type", goodType);
-                itemMap.put("typeText", getItemTypeText(goodType));
-                itemMap.put("name", item.getGoodName());
-                itemMap.put("specification", item.getGoodModel());
-                itemMap.put("remark", Optional.ofNullable(item.getGoodRemark()).orElse(""));
-                itemMap.put("quantity", Optional.ofNullable(item.getGoodCount()).orElse(0));
-                itemMap.put("unitPrice", Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO));
-                // 计算总价：单价 × 数量
-                BigDecimal amount = Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO)
-                        .multiply(BigDecimal.valueOf(Optional.ofNullable(item.getGoodCount()).orElse(0)));
-                itemMap.put("amount", amount);
-                orderItems.add(itemMap);
-            }
-        }
-        
-        // 如果没有明细，使用空列表
-        model.addAttribute("orderItems", orderItems);
-        
-        // 订单类型文本
-        model.addAttribute("orderTypeText", getOrderTypeText(RecycleOrderTypeEnum.PURCHASE.getCode()));
-        
-        // 流转方向文本
-        model.addAttribute("flowDirectionText", getFlowDirectionText(RecycleOrderTypeEnum.PURCHASE.getCode()));
-        
+
         // 申请单生成日期
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         model.addAttribute("applicationDate", LocalDateTime.now().format(dateFormatter));
@@ -1278,7 +1232,12 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 待结金额
         model.addAttribute("pendingAmount", totalAmount);
         // 综合单价
-        model.addAttribute("averageUnitPrice", totalAmount.divide(totalQuantity, 2, RoundingMode.HALF_UP));
+        if ( totalQuantity.compareTo(BigDecimal.ZERO) != 0){
+            model.addAttribute("averageUnitPrice", totalAmount.divide(totalQuantity, 2, RoundingMode.HALF_UP));
+        }else {
+            model.addAttribute("averageUnitPrice", BigDecimal.ZERO);
+        }
+
         // 金额转中文大写
         String amountToChinese = convertAmountToChinese(totalAmount);
         model.addAttribute("amountToChinese", amountToChinese);

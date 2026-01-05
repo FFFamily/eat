@@ -85,11 +85,10 @@ public class WxPointController {
      * 兑换商品
      */
     @PostMapping("/goods/exchange")
-    public BaseResponse<Void> exchangeGoods(@RequestBody AccountPointUseDetail useDetail) {
+    public BaseResponse<AccountPointUseDetail> exchangeGoods(@RequestBody AccountPointUseDetail useDetail) {
         String accountId = StpUtil.getLoginIdAsString();
         useDetail.setAccountId(accountId);
-        accountPointUseDetailService.exchangeGoods(useDetail);
-        return BaseResponse.success();
+        return BaseResponse.success(accountPointUseDetailService.exchangeGoods(useDetail));
     }
 
     /**

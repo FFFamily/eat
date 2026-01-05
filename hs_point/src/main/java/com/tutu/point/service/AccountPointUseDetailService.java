@@ -5,16 +5,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tutu.common.constant.CommonConstant;
 import com.tutu.common.exceptions.ServiceException;
-import com.tutu.point.constant.UserPointLockConstant;
 import com.tutu.point.dto.ExchangePointGoodsDto;
 import com.tutu.point.entity.AccountPointDetail;
 import com.tutu.point.entity.AccountPointUseDetail;
+import com.tutu.point.entity.PointGoods;
 import com.tutu.point.enums.PointChangeDirectionEnum;
 import com.tutu.point.enums.PointChangeTypeEnum;
 import com.tutu.point.mapper.AccountPointUseDetailMapper;
 import com.tutu.point.vo.AccountPointUseDetailVO;
-import com.tutu.user.entity.Account;
 import com.tutu.user.service.AccountService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
@@ -35,6 +35,9 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
 
     @Resource
     private AccountPointDetailService accountPointDetailService;
+
+    @Resource
+    private PointGoodsService pointGoodsService;
     /**
      * 根据账户ID查询积分使用详情列表（关联查询商品名称）
      * @param accountId 账户ID
@@ -125,7 +128,72 @@ public class AccountPointUseDetailService extends ServiceImpl<AccountPointUseDet
      * 兑换商品
      * @param useDetail 积分使用详情
      */
-    public void exchangeGoods(AccountPointUseDetail useDetail) {
+    @Transactional(rollbackFor = Exception.class)
+    public AccountPointUseDetail exchangeGoods(AccountPointUseDetail useDetail) {
+        // 1. 验证参数
+        if (StrUtil.isBlank(useDetail.getAccountId())) {
+            throw new ServiceException("账户ID不能为空");
+        }
+        if (StrUtil.isBlank(useDetail.getPointGoodsId())) {
+            throw new ServiceException("积分商品ID不能为空");
+        }
+
+        // 2. 查询积分商品信息
+        PointGoods pointGoods = pointGoodsService.getById(useDetail.getPointGoodsId());
+        if (pointGoods == null) {
+            throw new ServiceException("积分商品不存在");
+        }
+        useDetail.setPointGoodsName(pointGoods.getGoodsName());
+        // 3. 验证商品是否上架
+        if (!CommonConstant.YES_STR.equals(pointGoods.getStatus())) {
+            throw new ServiceException("商品已下架，无法兑换");
+        }
+
+        // 4. 验证商品库存
+        if (pointGoods.getStock() == null || pointGoods.getStock() < 1) {
+            throw new ServiceException("商品库存不足");
+        }
+
+        // 5. 获取商品所需积分（BigDecimal转Long）
+        long requiredPoint = pointGoods.getPointPrice().longValue();
+        if (requiredPoint <= 0) {
+            throw new ServiceException("商品积分价格无效");
+        }
+
+        // 6. 验证账户积分是否足够
+        long accountPoint = accountPointDetailService.getPointByAccountId(useDetail.getAccountId());
+        if (accountPoint < requiredPoint) {
+            throw new ServiceException("账户积分不足，当前积分：" + accountPoint + "，所需积分：" + requiredPoint);
+        }
+
+        // 7. 扣除积分（创建积分明细记录）
+        AccountPointDetail pointDetail = new AccountPointDetail();
+        pointDetail.setAccountId(useDetail.getAccountId());
+        pointDetail.setChangeDirection(PointChangeDirectionEnum.SUB.getValue());
+        pointDetail.setChangePoint(requiredPoint);
+        pointDetail.setChangeType(PointChangeTypeEnum.USER_ADJUST.getType());
+        pointDetail.setChangeReason("兑换商品：" + pointGoods.getGoodsName());
+        pointDetail.setRemark("兑换商品ID：" + useDetail.getPointGoodsId());
+        accountPointDetailService.createDetail(pointDetail);
+
+        // 8. 减少商品库存
+        pointGoodsService.decreaseStock(useDetail.getPointGoodsId(), 1);
+
+        // 9. 生成兑换码
+        if (StrUtil.isBlank(useDetail.getExchangeCode())) {
+            useDetail.setExchangeCode(generateExchangeCode());
+        }
+
+        // 10. 设置默认未使用
+        if (useDetail.getIsUsed() == null) {
+            useDetail.setIsUsed(false);
+        }
+
+        // 11. 保存积分使用详情记录
+        useDetail.setPoint(requiredPoint);
+        useDetail.setDetailId(pointDetail.getId());
+        save(useDetail);
+        return useDetail;
     }
 
     /**

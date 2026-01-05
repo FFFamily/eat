@@ -160,8 +160,8 @@
                     <span class="value">
                         供方公司名称：
                         <span th:text="${orderData.partyA ?: '供方公司名称'}">供方公司名称</span>
-                        ：<span th:text="${processor ?: '供方经办人字段'}">供方经办人字段</span>
-                        （<span th:text="${processorPhone ?: '供方经办人电话字段'}">供方经办人电话字段</span>）<br/>
+                        ：<span th:text="${orderData.processor ?: '供方经办人字段'}">供方经办人字段</span>
+                        （<span th:text="${orderData.processorPhone ?: '供方经办人电话字段'}">供方经办人电话字段</span>）<br/>
                     </span>
                 </p>
             </div>

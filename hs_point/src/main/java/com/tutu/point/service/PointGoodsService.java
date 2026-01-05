@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.point.constant.UserPointLockConstant;
 import com.tutu.point.entity.PointGoods;
 import com.tutu.point.mapper.PointGoodsMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -133,20 +135,34 @@ public class PointGoodsService extends ServiceImpl<PointGoodsMapper, PointGoods>
     }
     
     /**
-     * 减少库存
+     * 减少库存（带锁，防止超卖）
      */
+    @Transactional(rollbackFor = Exception.class)
     public void decreaseStock(String goodsId, Integer quantity) {
-        PointGoods goods = getById(goodsId);
-        if (goods == null) {
-            throw new ServiceException("商品不存在");
+        if (StrUtil.isBlank(goodsId)) {
+            throw new ServiceException("商品ID不能为空");
+        }
+        if (quantity == null || quantity <= 0) {
+            throw new ServiceException("减少库存数量必须大于0");
         }
         
-        if (goods.getStock() == null || goods.getStock() < quantity) {
-            throw new ServiceException("库存不足");
+        // 使用商品ID作为锁键，确保同一商品的库存操作串行执行
+        synchronized ((UserPointLockConstant.GOODS_STOCK_LOCK_KEY + goodsId).intern()) {
+            // 在锁内重新查询商品，确保获取最新的库存数据
+            PointGoods goods = getById(goodsId);
+            if (goods == null) {
+                throw new ServiceException("商品不存在");
+            }
+            
+            // 再次检查库存是否充足（防止并发超卖）
+            if (goods.getStock() == null || goods.getStock() < quantity) {
+                throw new ServiceException("库存不足，当前库存：" + (goods.getStock() == null ? 0 : goods.getStock()) + "，需要数量：" + quantity);
+            }
+            
+            // 更新库存
+            goods.setStock(goods.getStock() - quantity);
+            updateById(goods);
         }
-        
-        goods.setStock(goods.getStock() - quantity);
-        updateById(goods);
     }
     
     /**
