@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.DirectedGraph;
 import com.tutu.common.enums.BaseEnum;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.recycle.dto.DeliveryDTO;
 import com.tutu.recycle.dto.RecycleOrderTracePath;
 import com.tutu.recycle.dto.RecycleOrderTraceResponse;
 import com.tutu.recycle.dto.UserOrderDTO;
@@ -39,6 +40,7 @@ import com.tutu.user.entity.Processor;
 import com.tutu.user.enums.UserUseTypeEnum;
 import com.tutu.user.service.AccountService;
 import com.tutu.user.service.ProcessorService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.multipart.MultipartFile;
 import com.tutu.system.vo.FileUploadVO;
 import java.io.IOException;
@@ -116,6 +118,9 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
     
     // 使用ConcurrentHashMap存储订单ID对应的锁，防止并发抢单
     private final ConcurrentHashMap<String, ReentrantLock> orderLocks = new ConcurrentHashMap<>();
+    @Autowired
+    private RecycleOrderMapper recycleOrderMapper;
+
     /**
      * 根据用户订单和阶段创建对应类型的回收订单
      *
@@ -163,8 +168,8 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         // 使用BaseRecycleOrderServer创建回收订单
         RecycleOrderInfo recycleOrder = baseRecycleOrderServer.createRecycleOrderFromUserOrderByType(userOrderRequest,order, orderType,isNeedSettle);
         // 查询对应阶段是否有已存在订单
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RecycleOrder::getParentId, recycleOrder.getParentId());
+//        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(RecycleOrder::getParentId, recycleOrder.getParentId());
         RecycleOrderInfo existingOrder = Optional.ofNullable(getByParentId(recycleOrder.getParentId(),orderType.getCode())).orElse(new RecycleOrderInfo());
         BeanUtil.copyProperties(recycleOrder, existingOrder, CopyOptions.create().setIgnoreNullValue(true));
         // 保存回收订单
@@ -1281,7 +1286,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
      * @return 是否交付成功
      */
     @Transactional(rollbackFor = Exception.class)
-    public boolean deliverOrder(DeliverOrderRequest request) {
+    public void deliverOrder(DeliverOrderRequest request) {
         if (request == null) {
             throw new ServiceException("交付请求不能为空");
         }
@@ -1307,9 +1312,19 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (request.getWeight() != null) {
             order.setGoodsWeight(request.getWeight());
         }
-        boolean orderUpdated = updateById(order);
-        boolean userOrderUpdated = updateUserOrderDeliveryInfo(order, request);
-        return orderUpdated && userOrderUpdated;
+        updateById(order);
+//        boolean userOrderUpdated = updateUserOrderDeliveryInfo(order, request);
+
+        DeliveryDTO deliveryDTO = new DeliveryDTO();
+        deliveryDTO.setOrderId(order.getParentId());
+        deliveryDTO.setDeliveryMethod(OrderDeliveryMethodEnum.ONLINE.getCode());
+        deliveryDTO.setDeliveryPhoto(request.getDeliveryPhoto());
+        deliveryDTO.setPartnerSignature(request.getCustomerSignature());
+        deliveryDTO.setProcessorSignature(request.getProcessorSignature());
+        deliveryDTO.setWeight(request.getWeight());
+        deliveryDTO.setRemark(request.getRemark());
+        userOrderService.delivery(deliveryDTO);
+//        return orderUpdated && userOrderUpdated;
     }
 
     /**
@@ -1433,7 +1448,14 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isNotBlank(processorId)) {
             wrapper.eq(RecycleOrder::getProcessorId, processorId);
         }
-        return list(wrapper);
+        List<RecycleOrder> list = list(wrapper);
+        List<String> userOrderIdList = list.stream().map(i -> i.getParentId()).toList();
+        Map<String, UserOrder> collect = userOrderService.listByIds(userOrderIdList).stream()
+                .collect(Collectors.toMap(i -> i.getId(), i -> i));
+        for (RecycleOrder recycleOrder : list) {
+            recycleOrder.setParentCode(Optional.ofNullable(collect.get(recycleOrder.getParentId())).orElse(new UserOrder()).getNo());
+        }
+        return list;
     }
 
     /**
@@ -1445,12 +1467,13 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (StrUtil.isBlank(processorId)) {
             throw new ServiceException("经办人ID不能为空");
         }
-        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
-                .eq(RecycleOrder::getProcessorId, processorId)
-                .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.PENDING.getCode())
-                .orderByDesc(RecycleOrder::getCreateTime);
-        return list(wrapper);
+//        LambdaQueryWrapper<RecycleOrder> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(RecycleOrder::getType, RecycleOrderTypeEnum.PROCESSING.getCode())
+//                .eq(RecycleOrder::getProcessorId, processorId)
+//                .eq(RecycleOrder::getSortingStatus, SortingStatusEnum.PENDING.getCode())
+//                .orderByDesc(RecycleOrder::getCreateTime);
+//        return list(wrapper);
+        return recycleOrderMapper.selectMyPendingSortingList(processorId);
     }
 
     /**
@@ -1523,11 +1546,37 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         if (order == null) {
             throw new ServiceException("订单不存在");
         }
-        UserOrderDTO dto = new UserOrderDTO();
-        dto.setId(order.getParentId());
-        dto.setItems(request.getItems());
-        dto.setProcessorId(request.getProcessorId());
-        userOrderService.settleOrder(dto,false);
+        if (!order.getType().equals(RecycleOrderTypeEnum.PROCESSING.getCode())) {
+            throw new ServiceException("当前订单非加工/入库订单");
+        }
+        Processor processor = processorService.getById(order.getProcessorId());
+        if (processor == null) {
+            throw new ServiceException("当前经办人不存在");
+        }
+        for (RecycleOrderItem item : request.getItems()) {
+            item.setRecycleOrderId(orderId);
+        }
+        // 如果不是完成阶段，则创建对应阶段的回收订单
+        RecycleOrderInfo recycleOrderInfo = new RecycleOrderInfo();
+        BeanUtils.copyProperties(order, recycleOrderInfo);
+        recycleOrderInfo.setProcessorId(processor.getId());
+        recycleOrderInfo.setProcessor(processor.getName());
+        recycleOrderInfo.setProcessorPhone(processor.getPhone());
+        recycleOrderInfo.setItems(request.getItems());
+        recycleOrderInfo.setSortingStatus(SortingStatusEnum.SORTED.getCode());
+        createOrUpdate(recycleOrderInfo);
+        UserOrder userOrder = userOrderService.getById(order.getParentId());
+        // 获取当前阶段
+        UserOrderStageEnum currentStage = UserOrderStageEnum.getByCode(userOrder.getStage());
+        if (currentStage == null) {
+            throw new ServiceException("当前订单阶段无效");
+        }
+       UserOrderStageEnum nextStage = currentStage.getNextStage(userOrder.getTransportMethod());
+        if (nextStage == null) {
+            throw new ServiceException("订单阶段已经是最后阶段，无法继续结算");
+        }
+        userOrder.setStage(nextStage.getCode());
+        userOrderService.updateById(userOrder);
     }
 
     /**
@@ -1620,6 +1669,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         orderData.put("processor", Optional.ofNullable(orderInfo.getProcessor()).orElse("--"));
         orderData.put("processorName", Optional.ofNullable(orderInfo.getProcessorName()).orElse("--"));
         orderData.put("processorPhone", Optional.ofNullable(orderInfo.getProcessorPhone()).orElse("--"));
+        orderData.put("contractPartnerName", Optional.ofNullable(orderInfo.getContractPartnerName()).orElse("--"));
         
         // 从UserOrder获取交付相关信息
         if (userOrder != null) {
@@ -1627,11 +1677,25 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
             orderData.put("deliveryRemark", Optional.ofNullable(userOrder.getDeliveryRemark()).orElse(""));
             orderData.put("partnerSignature", Optional.ofNullable(userOrder.getPartnerSignature()).orElse(""));
             orderData.put("processorSignature", Optional.ofNullable(userOrder.getProcessorSignature()).orElse(""));
+            orderData.put("deliveryWeight", Optional.ofNullable(userOrder.getDeliveryWeight()).orElse(null));
+            // 格式化交付时间
+            if (userOrder.getDeliveryTime() != null) {
+                DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                LocalDateTime deliveryTime = LocalDateTime.ofInstant(
+                    userOrder.getDeliveryTime().toInstant(),
+                    java.time.ZoneId.systemDefault()
+                );
+                orderData.put("deliveryTime", deliveryTime.format(dateTimeFormatter));
+            } else {
+                orderData.put("deliveryTime", null);
+            }
         } else {
             orderData.put("deliveryPhoto", "");
             orderData.put("deliveryRemark", "");
             orderData.put("partnerSignature", "");
             orderData.put("processorSignature", "");
+            orderData.put("deliveryWeight", null);
+            orderData.put("deliveryTime", null);
         }
         
         model.addAttribute("orderData", orderData);

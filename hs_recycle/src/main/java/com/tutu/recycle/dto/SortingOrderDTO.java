@@ -19,6 +19,7 @@ public class SortingOrderDTO {
      * 父订单ID
      */
     private String parentId;
+    private String parentCode;
 
     /**
      * 订单识别码

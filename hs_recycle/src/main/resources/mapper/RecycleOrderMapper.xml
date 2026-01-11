@@ -61,5 +61,16 @@
         ORDER BY create_time DESC
     </select>
 
+    <select id="selectMyPendingSortingList" resultType="com.tutu.recycle.entity.order.RecycleOrder">
+        select rc.*, uo.no as parent_code from recycle_order rc
+                 left join user_order uo on rc.parent_id = uo.id
+        where rc.is_deleted = 0
+        and rc.type = 'process'
+        and rc.sorting_status = 'pending'
+        and rc.processor_id = #{processorId}
+        order by rc.create_time desc
+    </select>
+
+
 </mapper>
 

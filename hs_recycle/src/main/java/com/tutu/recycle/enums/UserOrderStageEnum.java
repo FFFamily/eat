@@ -81,22 +81,15 @@ public enum UserOrderStageEnum {
      * @return 下一个阶段，如果是最后一个阶段则返回null
      */
     public UserOrderStageEnum getNextStage() {
-        switch (this) {
-            case PURCHASE:
-                return TRANSPORT;
-            case TRANSPORT:
-                return PROCESSING;
-            case PROCESSING:
-                return PENDING_SETTLEMENT;
-            case PENDING_SETTLEMENT:
-                return PENDING_CUSTOMER_CONFIRMATION;
-            case PENDING_CUSTOMER_CONFIRMATION:
-                return COMPLETED;
-            case COMPLETED:
-                return null; // 已经是最后一个阶段
-            default:
-                return null;
-        }
+        return switch (this) {
+            case PURCHASE -> TRANSPORT;
+            case TRANSPORT -> PROCESSING;
+            case PROCESSING -> PENDING_SETTLEMENT;
+            case PENDING_SETTLEMENT -> PENDING_CUSTOMER_CONFIRMATION;
+            case PENDING_CUSTOMER_CONFIRMATION -> COMPLETED;
+            case COMPLETED -> null; // 已经是最后一个阶段
+            default -> null;
+        };
     }
 
     /**
@@ -116,22 +109,14 @@ public enum UserOrderStageEnum {
             return getNextStage();
         }
 
-        switch (this) {
-            case PURCHASE:
-                return method.isNeedTransportStage() ? TRANSPORT : PROCESSING;
-            case TRANSPORT:
-                return PROCESSING;
-            case PROCESSING:
-                return PENDING_SETTLEMENT;
-            case PENDING_SETTLEMENT:
-                return PENDING_CUSTOMER_CONFIRMATION;
-            case PENDING_CUSTOMER_CONFIRMATION:
-                return COMPLETED;
-            case COMPLETED:
-                return null; // 已经是最后一个阶段
-            default:
-                return null;
-        }
+        return switch (this) {
+            case PURCHASE -> method.isNeedTransportStage() ? TRANSPORT : PROCESSING;
+            case TRANSPORT -> PROCESSING;
+            case PROCESSING -> PENDING_SETTLEMENT;
+            case PENDING_SETTLEMENT -> PENDING_CUSTOMER_CONFIRMATION;
+            case PENDING_CUSTOMER_CONFIRMATION -> COMPLETED;
+            case COMPLETED -> null; // 已经是最后一个阶段
+        };
     }
     
     /**
@@ -139,22 +124,14 @@ public enum UserOrderStageEnum {
      * @return 上一个阶段，如果是第一个阶段则返回null
      */
     public UserOrderStageEnum getPreviousStage() {
-        switch (this) {
-            case PURCHASE:
-                return null; // 已经是第一个阶段
-            case TRANSPORT:
-                return PURCHASE;
-            case PROCESSING:
-                return TRANSPORT;
-            case PENDING_SETTLEMENT:
-                return PROCESSING;
-            case PENDING_CUSTOMER_CONFIRMATION:
-                return PENDING_SETTLEMENT;
-            case COMPLETED:
-                return PENDING_CUSTOMER_CONFIRMATION;
-            default:
-                return null;
-        }
+        return switch (this) {
+            case PURCHASE -> null; // 已经是第一个阶段
+            case TRANSPORT -> PURCHASE;
+            case PROCESSING -> TRANSPORT;
+            case PENDING_SETTLEMENT -> PROCESSING;
+            case PENDING_CUSTOMER_CONFIRMATION -> PENDING_SETTLEMENT;
+            case COMPLETED -> PENDING_CUSTOMER_CONFIRMATION;
+        };
     }
     
     /**

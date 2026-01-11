@@ -93,6 +93,7 @@ public class WxEmployeeSortingController {
                 UserOrder userOrder = userOrderService.getById(order.getParentId());
                 if (userOrder != null) {
                     dto.setDeliveryTime(userOrder.getDeliveryTime());
+                    dto.setParentCode(userOrder.getNo());
                 }
             }
 

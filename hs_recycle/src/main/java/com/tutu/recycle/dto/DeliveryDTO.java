@@ -3,6 +3,7 @@ package com.tutu.recycle.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -43,4 +44,12 @@ public class DeliveryDTO {
      * 经办人签名
      */
     private String processorSignature;
+    /**
+     * 重量
+     */
+    private BigDecimal weight;
+    /**
+     * 备注
+     */
+    private String remark;
 }

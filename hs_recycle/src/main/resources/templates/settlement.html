@@ -97,6 +97,27 @@
             margin-left: 10px;
         }
         
+        .info-item .value .time-row {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .info-item .value .time-item {
+            white-space: nowrap;
+        }
+        
+        .info-item .value .processor-row {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-top: 5px;
+        }
+        
+        .info-item .value .processor-item {
+            white-space: nowrap;
+        }
+        
         /* 章节标题 */
         .section-title {
             font-size: 18px;
@@ -340,19 +361,25 @@
             <div class="regular-info-content">
                 <p class="info-item">
                     <span class="label">（2）交付地址：</span><br/>
-                    <span class="value" th:text="${deliveryAddress ?: '--'}">交付地点字段</span>
+                    <span class="value" th:text="${orderData.deliveryAddress ?: '--'}">交付地点字段</span>
                 </p>
                 <p class="info-item">
-                    <span class="label">（3）订单时间：</span><br/>
+                    <span class="label">（3）订单时间：</span>
                     <span class="value">
-                        开始时间：<span th:text="${startTime ?: '--'}">起始时间字段</span>；结束时间：<span th:text="${endTime ?: '--'}">结束时间字段</span>
+                        <span class="time-row">
+                            <span class="time-item">结束时间：<span th:text="${orderData.endTime ?: '--'}">结束时间字段</span></span>
+                            <span class="time-item">开始时间：<span th:text="${orderData.startTime ?: '--'}">起始时间字段</span></span>
+                        </span>
                     </span>
                 </p>
                 <p class="info-item">
-                    <span class="label">（4）订单经办人：</span><br/>
+                    <span class="label">（4）订单经办人：</span>
                     <span class="value">
-                        供方公司名称：<span th:text="${partyBCompanyName ?: '--'}">供方公司名称</span>；供方经办人：<span th:text="${partyBProcessor ?: '--'}">供方经办人字段</span>（<span th:text="${partyBProcessorPhone ?: '--'}">供方经办人电话字段</span>）<br/>
-                        需方公司名称：<span th:text="${partyACompanyName ?: '--'}">需方公司名称</span>；需方经办人：<span th:text="${partyAProcessor ?: '--'}">需方经办人字段</span>（<span th:text="${partyAProcessorPhone ?: '--'}">需方经办人电话字段</span>）
+                        <span>供方经办人：<span th:text="${purchaseProcessor ?: '--'}">供方经办人字段</span>（<span th:text="${purchaseProcessorPhone ?: '--'}">供方经办人电话字段</span>）</span><br/>
+                        <span class="processor-row">
+                            <span class="processor-item">运输经办人：<span th:text="${transportProcessor ?: '--'}">运输经办人字段</span>（<span th:text="${transportProcessorPhone ?: '--'}">运输经办人电话字段</span>）</span>
+                            <span class="processor-item">加工经办人：<span th:text="${storageProcessor ?: '--'}">加工经办人字段</span>（<span th:text="${storageProcessorPhone ?: '--'}">加工经办人电话字段</span>）</span>
+                        </span>
                     </span>
                 </p>
             </div>

@@ -27,6 +27,11 @@ public class RecycleOrder extends BaseEntity {
      * 父订单ID
      */
     private String parentId;
+    /**
+     * 主订单编号
+     */
+    @TableField(exist = false)
+    private String parentCode;
 
     /**
      * 订单编号

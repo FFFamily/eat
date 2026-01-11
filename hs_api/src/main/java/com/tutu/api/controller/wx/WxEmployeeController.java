@@ -85,8 +85,8 @@ public class WxEmployeeController {
     @PostMapping("/transport/deliver")
     public BaseResponse<Boolean> deliverOrder(@RequestBody DeliverOrderRequest request) {
         try {
-            boolean result = recycleOrderService.deliverOrder(request);
-            return BaseResponse.success(result);
+             recycleOrderService.deliverOrder(request);
+            return BaseResponse.success();
         } catch (Exception e) {
             return BaseResponse.error(e.getMessage());
         }

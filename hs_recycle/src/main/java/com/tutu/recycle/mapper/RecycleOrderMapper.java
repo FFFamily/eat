@@ -14,4 +14,11 @@ public interface RecycleOrderMapper extends BaseMapper<RecycleOrder> {
      */
     List<RecycleOrder> selectTransportOrders(@Param("transportStatus") String transportStatus,
                                              @Param("processorId") String processorId);
+
+    /**
+     * 查询我的待分拣订单列表
+     * @param processorId 经办人
+     * @return 待分拣订单列表
+     */
+    List<RecycleOrder> selectMyPendingSortingList(String processorId);
 }

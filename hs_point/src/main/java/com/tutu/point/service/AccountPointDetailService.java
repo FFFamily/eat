@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -82,6 +83,10 @@ public class AccountPointDetailService extends ServiceImpl<AccountPointDetailMap
             throw new ServiceException("变更积分不能为空");
         }
         Account account = accountService.getById(detail.getAccountId());
+        Long point = Optional.ofNullable(account.getPoint()).orElse(0L) ;
+        if (point - detail.getChangePoint() <= 0) {
+            throw new ServiceException("积分不足");
+        }
         synchronized (UserPointLockConstant.POINT_LOCK_KEY + detail.getAccountId().intern()){
             account.setPoint(account.getPoint() + PointChangeDirectionEnum.getPointValue(detail.getChangeDirection(), detail.getChangePoint()));
             accountService.updateById(account);

@@ -54,6 +54,8 @@ import com.tutu.system.config.FileUploadConfig;
 import com.tutu.system.utils.FileUtils;
 import com.tutu.system.utils.OpenPdfUtils;
 import jakarta.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.ExtendedModelMap;
@@ -66,6 +68,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
  */
 @Service
 public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
+    private final static Logger logger = LoggerFactory.getLogger(UserOrderService.class);
     @Resource
     private RecycleOrderService recycleOrderService;
     
@@ -589,6 +592,40 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         return true;
     }
 
+//    @Transactional(rollbackFor = Exception.class)
+//    public void settleOrderWithExitOrder(UserOrderDTO userOrderRequest) {
+//        if (StrUtil.isBlank(userOrderRequest.getId())) {
+//            throw new ServiceException("订单ID不能为空");
+//        }
+//        UserOrder userOrder = getById(userOrderRequest.getId());
+//        if (userOrder == null) {
+//            throw new ServiceException("订单不存在");
+//        }
+//        // 获取当前阶段
+//        UserOrderStageEnum currentStage = UserOrderStageEnum.getByCode(userOrder.getStage());
+//        if (currentStage == null) {
+//            throw new ServiceException("当前订单阶段无效");
+//        }
+//        // 如果不是完成阶段，则创建对应阶段的回收订单
+//        new RecycleOrderInfo().var;
+//        RecycleOrderInfo currentRecycleOrderInfo = recycleOrderService.createRecycleOrderFromUserOrderByStage(
+//                userOrderRequest,
+//                userOrder,
+//                currentStage,
+//                true);
+//        // 如果是采购阶段，生成申请单PDF
+//        if (currentStage == UserOrderStageEnum.PURCHASE) {
+//            try {
+//                String applicationPdfUrl = generateApplicationPdf(userOrder, currentRecycleOrderInfo);
+//                userOrder.setApplicationPdf(applicationPdfUrl);
+//            } catch (Exception e) {
+//                throw new ServiceException("生成申请单PDF失败"+ e.getMessage());
+//            }
+//        }
+//        updateById(userOrder);
+//    }
+
+
     /**
      * 保存当前阶段的子回收订单
      * 仅保存数据，不做阶段流转
@@ -639,9 +676,9 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 获取入库订单（仓储订单）的货物详情
         List<RecycleOrderInfo> recycleOrders = recycleOrderService.getAllByParentId(userOrder.getId());
         RecycleOrderInfo storageOrder = recycleOrders.stream()
-                .filter(order -> RecycleOrderTypeEnum.STORAGE.getCode().equals(order.getType()))
+                .filter(order -> RecycleOrderTypeEnum.PROCESSING.getCode().equals(order.getType()))
                 .findFirst()
-                .orElseThrow(() -> new ServiceException("未找到入库订单"));
+                .orElseThrow(() -> new ServiceException("未找到加工订单"));
 
         // 计算金额
         BigDecimal goodsTotalAmount = BigDecimal.ZERO;
@@ -671,6 +708,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 查询甲方和乙方
         Account partyA = accountService.getById(userOrder.getPartyA());
         Account partyB = accountService.getById(userOrder.getPartyB());
+
         // 生成结算单PDF
         String settlementPdfUrl = generateSettlementPdf(
                 userOrder,
@@ -682,7 +720,8 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                 totalAmount,
                 ratingCoefficient,
                 ratingCoefficientAmount,
-                otherAdjustAmount);
+                otherAdjustAmount,
+                recycleOrders);
         userOrder.setSettlementPdf(settlementPdfUrl);
         return updateById(userOrder);
     }
@@ -788,6 +827,10 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         // 签名
         Optional.ofNullable(deliveryDTO.getPartnerSignature()).ifPresent(userOrder::setPartnerSignature);
         Optional.ofNullable(deliveryDTO.getProcessorSignature()).ifPresent(userOrder::setProcessorSignature);
+        // 交付重量
+        Optional.ofNullable(deliveryDTO.getWeight()).ifPresent(userOrder::setDeliveryWeight);
+        // 交付备注
+        Optional.ofNullable(deliveryDTO.getRemark()).ifPresent(userOrder::setDeliveryRemark);
         // PDF 线下交付时会上传pdf
         Optional.ofNullable(deliveryDTO.getDeliveryPDF()).ifPresent(userOrder::setDeliveryPdf);
         // 更新交付状态为已交付
@@ -913,14 +956,16 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      */
     private void distributeSettlementPoints(UserOrder userOrder) {
         if (userOrder == null || StrUtil.isBlank(userOrder.getContractId())) {
-            return;
+            throw new ServiceException("订单异常：当前订单没有绑定合同");
         }
+        // 订单总金额
         BigDecimal totalAmount = Optional.ofNullable(userOrder.getTotalAmount()).orElse(BigDecimal.ZERO);
         if (totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
         RecycleContract contract = recycleContractService.getContractById(userOrder.getContractId());
         if (contract == null || contract.getBeneficiaries() == null || contract.getBeneficiaries().isEmpty()) {
+            // 合同不存在或没有受益人
             return;
         }
         PointGlobalConfig pointGlobalConfig = pointGlobalConfigService.getConfig();
@@ -930,46 +975,58 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (pointRatio.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        List<RecycleContractBeneficiary> eligibleBeneficiaries = contract.getBeneficiaries().stream()
+        pointRatio = pointRatio.divide(BigDecimal.valueOf(100),4, RoundingMode.HALF_UP);
+        logger.info("当前全局分配比例：{}", pointRatio);
+        List<RecycleContractBeneficiary> eligibleBeneficiaries = contract.getBeneficiaries()
+                .stream()
                 .filter(beneficiary -> StrUtil.isNotBlank(beneficiary.getBeneficiaryId()))
                 .filter(beneficiary -> Optional.ofNullable(beneficiary.getShareRatio()).orElse(BigDecimal.ZERO)
                         .compareTo(BigDecimal.ZERO) > 0)
                 .toList();
         if (eligibleBeneficiaries.isEmpty()) {
+            logger.info("当前可用的受益人为空，跳过积分发放");
             return;
         }
+        // 计算出可以分配出的金额
+        logger.info("分配总金额为：{}",totalAmount);
         BigDecimal totalPointAmount = totalAmount.multiply(pointRatio);
-        long totalPoints = totalPointAmount.setScale(0, RoundingMode.DOWN).longValue();
-        if (totalPoints <= 0) {
+        BigDecimal totalPointsDecimal = totalPointAmount.setScale(2, RoundingMode.DOWN);
+        logger.info("当前可分配金额：{}",totalPointsDecimal);
+        if (totalPointsDecimal.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        BigDecimal totalPointsDecimal = BigDecimal.valueOf(totalPoints);
-        long distributedPoints = 0L;
+        BigDecimal distributedPoints = BigDecimal.ZERO;
         for (int i = 0; i < eligibleBeneficiaries.size(); i++) {
             RecycleContractBeneficiary beneficiary = eligibleBeneficiaries.get(i);
-            long remainingPoints = totalPoints - distributedPoints;
-            if (remainingPoints <= 0) {
+            logger.info("当前受益人：{}-{} 积分分配比例为：{}",
+                    beneficiary.getBeneficiaryId(),
+                    beneficiary.getBeneficiaryName(),
+                    beneficiary.getShareRatio()
+            );
+            BigDecimal remainingPoints = totalPointsDecimal.subtract(distributedPoints) ;
+            if (remainingPoints.compareTo(BigDecimal.ZERO) <= 0) {
                 break;
             }
             BigDecimal shareRatio = beneficiary.getShareRatio();
-            long sharePoints;
+            BigDecimal sharePoints;
             if (i == eligibleBeneficiaries.size() - 1) {
                 sharePoints = remainingPoints;
             } else {
                 BigDecimal sharePointDecimal = totalPointsDecimal.multiply(shareRatio);
-                sharePoints = sharePointDecimal.setScale(0, RoundingMode.DOWN).longValue();
-                if (sharePoints > remainingPoints) {
+                sharePoints = sharePointDecimal.setScale(0, RoundingMode.HALF_UP);
+                if (sharePoints.compareTo(remainingPoints) > 0) {
                     sharePoints = remainingPoints;
                 }
             }
-            if (sharePoints <= 0) {
+            if (sharePoints.compareTo(BigDecimal.ZERO) <= 0) {
+                logger.info("当前受益人计算积分小于0");
                 continue;
             }
-            distributedPoints += sharePoints;
+            distributedPoints = distributedPoints.add(sharePoints);
             AccountPointDetail pointDetail = new AccountPointDetail();
             pointDetail.setAccountId(beneficiary.getBeneficiaryId());
             pointDetail.setChangeDirection(PointChangeDirectionEnum.ADD.getValue());
-            pointDetail.setChangePoint(sharePoints);
+            pointDetail.setChangePoint(sharePoints.longValue());
             pointDetail.setChangeType(PointChangeTypeEnum.SYSTEM_REWARD.getType());
             pointDetail.setChangeReason(StrUtil.format("订单{}结算积分奖励", Optional.ofNullable(userOrder.getNo()).orElse(userOrder.getId())));
             pointDetail.setRemark(StrUtil.format("总金额:{}, 积分比例:{}, 受益人分成:{}", totalAmount, pointRatio, shareRatio));
@@ -1125,12 +1182,32 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                                         BigDecimal totalAmount,
                                          BigDecimal ratingCoefficient,
                                         BigDecimal ratingCoefficientAmount,
-                                        BigDecimal otherAdjustAmount)  {
+                                        BigDecimal otherAdjustAmount,
+                                         List<RecycleOrderInfo> recycleOrders)  {
         // 创建Model并添加订单数据
         Model model = new ExtendedModelMap();
-        
         // 构建订单数据Map
         Map<String, Object> orderData = new HashMap<>();
+        // 根据订单查找经办人
+        // 找到经办人
+        RecycleOrderInfo purchaseOrder = recycleOrders.stream()
+                .filter(order -> RecycleOrderTypeEnum.PURCHASE.getCode().equals(order.getType()))
+                .findFirst()
+                .orElse(new RecycleOrderInfo());
+        RecycleOrderInfo transportOrder = recycleOrders.stream()
+                .filter(order -> RecycleOrderTypeEnum.TRANSPORT.getCode().equals(order.getType()))
+                .findFirst()
+                .orElse(new RecycleOrderInfo());
+
+        model.addAttribute("purchaseProcessor", purchaseOrder.getProcessor());
+        model.addAttribute("purchaseProcessorPhone", purchaseOrder.getProcessorPhone());
+        model.addAttribute("transportProcessor", transportOrder.getProcessor());
+        model.addAttribute("transportProcessorPhone", transportOrder.getProcessorPhone());
+        model.addAttribute("storageProcessor", storageOrder.getProcessor());
+        model.addAttribute("storageProcessorPhone", storageOrder.getProcessorPhone());
+
+
+
         orderData.put("no", userOrder.getNo());
         orderData.put("partyAName", userOrder.getPartyAName());
         orderData.put("partyBName", userOrder.getPartyBName());

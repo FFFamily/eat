@@ -81,29 +81,101 @@
             border-bottom: 1px solid #ccc;
         }
         
-        /* 订单基本信息 */
-        .order-basic-info {
-            margin-bottom: 30px;
+        /* 二级标题 */
+        .sub-section-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 15px 0 10px 0;
+            display: block;
         }
         
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
+        /* 信息项 */
         .info-item {
-            display: flex;
-            align-items: center;
+            margin: 8px 0;
+            line-height: 1.8;
+            display: block;
         }
         
         .info-item .label {
             font-weight: bold;
-            min-width: 120px;
+            margin-right: 5px;
+            display: inline;
         }
         
         .info-item .value {
-            margin-left: 10px;
+            display: inline;
+            margin-left: 0;
+        }
+        
+        /* 对于交付重量等特殊情况，value 直接显示 */
+        .delivery-weight-info .info-item .value {
+            display: inline;
+        }
+        
+        /* 交付地址中的每个字段独立一行 */
+        .delivery-address-info .info-item {
+            display: block;
+        }
+        
+        .delivery-address-info .info-item .label {
+            display: inline;
+        }
+        
+        .delivery-address-info .info-item .value {
+            display: inline;
+        }
+        
+        /* 交付经办人中的每个字段独立一行 */
+        .delivery-processor-info .info-item {
+            display: block;
+        }
+        
+        .delivery-processor-info .info-item .label {
+            display: inline;
+        }
+        
+        .delivery-processor-info .info-item .value {
+            display: inline;
+        }
+        
+        /* 信息文本 */
+        .info-text {
+            margin: 8px 0;
+            line-height: 1.8;
+        }
+        
+        /* 交付内容信息 */
+        .delivery-content-info {
+            margin-bottom: 20px;
+        }
+        
+        /* 交付重量信息 */
+        .delivery-weight-info {
+            margin-bottom: 20px;
+        }
+        
+        /* 交付地址信息 */
+        .delivery-address-info {
+            margin-bottom: 20px;
+        }
+        
+        /* 交付经办人信息 */
+        .delivery-processor-info {
+            margin-bottom: 20px;
+        }
+        
+        /* 其他信息 */
+        .other-info-section {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .other-info-content {
+            margin-top: 15px;
+        }
+        
+        .other-info-item {
+            margin-bottom: 20px;
         }
         
         /* 货物明细表格 */
@@ -138,34 +210,6 @@
             text-align: right;
         }
         
-        /* 交付信息 */
-        .delivery-info-section {
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .delivery-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .delivery-info-item {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 15px;
-        }
-        
-        .delivery-info-item .label {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .delivery-info-item .value {
-            min-height: 40px;
-            padding: 5px;
-            border-bottom: 1px solid #ccc;
-        }
         
         /* 签名区域 */
         .signature-section {
@@ -281,103 +325,83 @@
             <p>现就该合同下编号为 <strong th:text="${orderData.no ?: '--'}">订单编号</strong> 的订单进行货物交付</p>
         </div>
 
-        <!-- 订单基本信息 -->
-        <div class="order-basic-info">
-            <h2 class="section-title">订单基本信息</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="label">订单编号：</span>
-                    <span class="value" th:text="${orderData.no ?: '--'}">订单编号</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">订单类型：</span>
-                    <span class="value" th:text="${orderTypeText ?: '--'}">订单类型</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">交付日期：</span>
-                    <span class="value" th:text="${deliveryDate ?: '--'}">交付日期</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">订单经办人：</span>
-                    <span class="value" th:text="${orderData.processorName ?: orderData.processor ?: '--'}">经办人</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">经办人电话：</span>
-                    <span class="value" th:text="${orderData.processorPhone ?: '--'}">电话</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 货物明细 -->
-        <div class="goods-details-section">
-            <h2 class="section-title">货物明细</h2>
+        <!-- 一、交付信息 -->
+        <div class="delivery-info-section">
+            <h2 class="section-title">一、交付信息</h2>
             
-            <!-- 货物明细表格 -->
-            <div class="goods-details-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>序号</th>
-                            <th>货物类型</th>
-                            <th>货物名称</th>
-                            <th>规格型号</th>
-                            <th>数量</th>
-                            <th>单位</th>
-                            <th>重量(kg)</th>
-                            <th>备注</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="item, iterStat : ${orderItems}">
-                            <td th:text="${iterStat.count}">序号</td>
-                            <td th:text="${item.goodType ?: '--'}">货物类型</td>
-                            <td th:text="${item.goodName ?: '--'}">货物名称</td>
-                            <td th:text="${item.goodModel ?: '--'}">规格型号</td>
-                            <td th:text="${item.goodCount ?: '--'}">数量</td>
-                            <td>kg</td>
-                            <td th:text="${item.goodWeight ?: '--'}">重量</td>
-                            <td th:text="${item.goodRemark ?: '--'}">备注</td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr class="total-row">
-                            <td colspan="4" class="total-label">合计</td>
-                            <td th:text="${totalCount ?: '--'}">总数量</td>
-                            <td>kg</td>
-                            <td th:text="${totalWeight ?: '--'}">总重量</td>
-                            <td>--</td>
-                        </tr>
-                    </tfoot>
-                </table>
+            <!-- （1）交付内容 -->
+            <div class="delivery-content-info">
+                <p class="sub-section-title">（1）交付内容</p>
+                <p class="info-text">再生资源货物，以该订单对应的《业务结算单》为准</p>
+                <p class="info-item">
+                    <span class="label">货物备注：</span>
+                    <span class="value" th:text="${orderData.deliveryRemark ?: '--'}">货物备注字段</span>
+                </p>
             </div>
-
-            <!-- 批注说明 -->
-            <div class="notes-section">
-                <p class="notes-text">
-                    <strong>注：</strong>货物数量单位为kg，请核对货物明细，确认无误后签字。
+            
+            <!-- （2）交付重量 -->
+            <div class="delivery-weight-info">
+                <p class="sub-section-title">（2）交付重量</p>
+                <p class="info-item">
+                    <span class="value" th:if="${orderData.deliveryWeight != null}" th:text="${#numbers.formatDecimal(orderData.deliveryWeight, 0, 2) + ' kg'}">交付重量字段 kg</span>
+                    <span class="value" th:unless="${orderData.deliveryWeight != null}">--</span>
+                </p>
+            </div>
+            
+            <!-- （3）交付地址 -->
+            <div class="delivery-address-info">
+                <p class="sub-section-title">（3）交付地址</p>
+                <p class="info-item">
+                    <span class="label">交付地点：</span>
+                    <span class="value" th:text="${orderData.deliveryAddress ?: '--'}">交付地点字段</span>
+                </p>
+                <p class="info-item">
+                    <span class="label">交付时间：</span>
+                    <span class="value" th:text="${orderData.deliveryTime ?: deliveryDate ?: '--'}">交付时间字段</span>
+                </p>
+                <p class="info-item">
+                    <span class="label">交付照片：</span>
+                    <span class="value" th:if="${orderData.deliveryPhoto}">
+                        <img th:src="${orderData.deliveryPhoto}" style="max-width: 300px; max-height: 200px; object-fit: contain; border: 1px solid #ccc; padding: 5px; margin-top: 5px;" alt="交付照片"/>
+                    </span>
+                    <span class="value" th:unless="${orderData.deliveryPhoto}">--</span>
+                </p>
+            </div>
+            
+            <!-- （4）交付经办人 -->
+            <div class="delivery-processor-info">
+                <p class="sub-section-title">（4）交付经办人</p>
+                <p class="info-item">
+                    <span class="label">供方公司名称：</span>
+                    <span class="value" th:text="${orderData.partyAName ?: '--'}">供方公司名称</span>
+                    <br/>
+                    <span th:if="${orderData.partnerProcessorName != null and orderData.partnerProcessorName != '--'}" class="value" th:text="${'：' + orderData.partnerProcessorName + '（' + (orderData.partnerProcessorPhone ?: '--') + '）'}">：供方经办人字段（电话）</span>
+                    <span th:unless="${orderData.partnerProcessorName != null and orderData.partnerProcessorName != '--'}" class="value">：--（--）</span>
+                </p>
+                <p class="info-item">
+                    <span class="label">需方公司名称：</span>
+                    <span class="value" th:text="${orderData.partyBName ?: '--'}">需方公司名称</span>
+                    <br/>
+                    <span class="value" th:text="${'：' + (orderData.processorName ?: orderData.processor ?: '--') + '（' + (orderData.processorPhone ?: '--') + '）'}">：需方经办人（电话）</span>
                 </p>
             </div>
         </div>
 
-        <!-- 交付信息 -->
-        <div class="delivery-info-section">
-            <h2 class="section-title">交付信息</h2>
-            <div class="delivery-info-grid">
-                <div class="delivery-info-item">
-                    <span class="label">交付地址：</span>
-                    <span class="value" th:text="${orderData.deliveryAddress ?: '--'}">交付地址</span>
+        <!-- 二、其他信息 -->
+        <div class="other-info-section">
+            <h2 class="section-title">二、其他信息</h2>
+            <div class="other-info-content">
+                <div class="other-info-item">
+                    <p class="sub-section-title">（1）合规提示</p>
+                    <p class="info-text">按合同约定，您承诺并确认本次交付的货物来源合法，非盗窃、抢劫等非法所得。</p>
                 </div>
-                <div class="delivery-info-item">
-                    <span class="label">收货地址：</span>
-                    <span class="value" th:text="${orderData.warehouseAddress ?: orderData.receiveAddress ?: '--'}">收货地址</span>
+                <div class="other-info-item">
+                    <p class="sub-section-title">（2）授权提示</p>
+                    <p class="info-text">按合同约定，您在确认本交付单内容后，您提供"订单识别码"行为，视为您同意本交付单。</p>
                 </div>
-                <div class="delivery-info-item">
-                    <span class="label">交付方式：</span>
-                    <span class="value" th:text="${deliveryMethodText ?: '--'}">交付方式</span>
-                </div>
-                <div class="delivery-info-item">
-                    <span class="label">运输状态：</span>
-                    <span class="value" th:text="${transportStatusText ?: '--'}">运输状态</span>
+                <div class="other-info-item">
+                    <p class="sub-section-title">（3）双方确认</p>
+                    <p class="info-text">以上货物已交付，此交付单为交付事实确认。</p>
                 </div>
             </div>
         </div>
@@ -404,20 +428,6 @@
             </div>
         </div>
 
-        <!-- 交付照片 -->
-        <div class="delivery-photo-section" th:if="${orderData.deliveryPhoto}">
-            <h2 class="section-title">交付照片</h2>
-            <div style="text-align: center; margin: 20px 0;">
-                <img th:src="${orderData.deliveryPhoto}" style="max-width: 100%; max-height: 400px; object-fit: contain; border: 1px solid #ccc; padding: 10px;" alt="交付照片"/>
-            </div>
-        </div>
-
-        <!-- 备注信息 -->
-        <div class="notes-section" th:if="${orderData.deliveryRemark}">
-            <p class="notes-text">
-                <strong>备注：</strong><span th:text="${orderData.deliveryRemark}">备注内容</span>
-            </p>
-        </div>
 
         <!-- 最终批注 -->
         <div class="notes-section" style="margin-top: 30px;">
