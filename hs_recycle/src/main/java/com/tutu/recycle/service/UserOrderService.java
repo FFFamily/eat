@@ -821,7 +821,12 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
             throw new ServiceException("订单不存在");
         }
         // 更新交付信息
-        Optional.ofNullable(deliveryDTO.getDeliveryTime()).ifPresent(userOrder::setDeliveryTime);
+        if (deliveryDTO.getDeliveryTime() != null){
+            userOrder.setDeliveryTime(deliveryDTO.getDeliveryTime());
+        }else {
+            userOrder.setDeliveryTime(new Date());
+        }
+//        Optional.ofNullable(deliveryDTO.getDeliveryTime()).ifPresent(userOrder::setDeliveryTime);
         Optional.ofNullable(deliveryDTO.getDeliveryMethod()).ifPresent(userOrder::setDeliveryMethod);
         Optional.ofNullable(deliveryDTO.getDeliveryPhoto()).ifPresent(userOrder::setDeliveryPhoto);
         // 签名
