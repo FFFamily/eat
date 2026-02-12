@@ -28,7 +28,7 @@ public class RecycleOrderItem extends BaseEntity {
     // 货物型号
     private String goodModel;
     // 货物数量
-    private Integer goodCount;
+    private BigDecimal goodCount;
     // 货物重量
     private BigDecimal goodWeight;
     // 合同预计单价

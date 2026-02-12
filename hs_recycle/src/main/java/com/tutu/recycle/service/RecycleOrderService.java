@@ -189,7 +189,7 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         return switch (stage) {
             case PURCHASE -> RecycleOrderTypeEnum.PURCHASE;
             case TRANSPORT -> RecycleOrderTypeEnum.TRANSPORT;
-            case PROCESSING -> RecycleOrderTypeEnum.STORAGE;// 分拣阶段对应仓储订单
+            case PROCESSING -> RecycleOrderTypeEnum.PROCESSING;
             default -> null;
         };
     }
@@ -1705,9 +1705,9 @@ public class RecycleOrderService extends ServiceImpl<RecycleOrderMapper, Recycle
         model.addAttribute("orderItems", orderItems);
         
         // 计算总数量和总重量
-        int totalCount = orderItems.stream()
-                .mapToInt(item -> Optional.ofNullable(item.getGoodCount()).orElse(0))
-                .sum();
+        BigDecimal totalCount = orderItems.stream()
+                .map(item -> Optional.ofNullable(item.getGoodCount()).orElse(BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO,(curr,item) -> curr = curr.add(item),(l,r) -> l);
         BigDecimal totalWeight = orderItems.stream()
                 .map(item -> Optional.ofNullable(item.getGoodWeight()).orElse(BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

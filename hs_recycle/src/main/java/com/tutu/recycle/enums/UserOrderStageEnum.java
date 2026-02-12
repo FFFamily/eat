@@ -23,7 +23,7 @@ public enum UserOrderStageEnum {
     /**
      * 入库阶段 -> 待结算
      */
-    PROCESSING("processing", "入库","wait_settlement"),
+    PROCESSING("processing", "入库/加工","wait_settlement"),
     /**
      * 待结算阶段 -> 待客户确认
      */

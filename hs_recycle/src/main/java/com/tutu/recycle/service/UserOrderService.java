@@ -541,6 +541,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean settleOrder(UserOrderDTO userOrderRequest,Boolean isCreateNextOrder) {
+        logger.info("========订单结算逻辑开始========");
         if (StrUtil.isBlank(userOrderRequest.getId())) {
             throw new ServiceException("订单ID不能为空");
         }
@@ -552,12 +553,11 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         UserOrderStageEnum currentStage = UserOrderStageEnum.getByCode(userOrder.getStage());
         if (currentStage == null) {
             throw new ServiceException("当前订单阶段无效");
-        }        
+        }
         // 检查是否已经是最后一个阶段
         if (currentStage.isLastStage()) {
             throw new ServiceException("订单已经在最后阶段，无法继续结算");
         }
-        
         // 获取下一个阶段和下一个状态（使用枚举类中的方法）
         // 根据计价方式获取下一个阶段
         UserOrderStageEnum nextStage = currentStage.getNextStage(userOrder.getTransportMethod());
@@ -565,9 +565,9 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (nextStage == null) {
             throw new ServiceException("订单阶段已经是最后阶段，无法继续结算");
         }
+        logger.info("当前订单 {} 阶段为：{} 下一个订单阶段为：{}",userOrderRequest.getId(),currentStage.getDescription(),nextStage.getDescription());
         // 同时更新阶段
         userOrder.setStage(nextStage.getCode());
-//        updateById(userOrder);
         // 如果不是完成阶段，则创建对应阶段的回收订单
         RecycleOrderInfo currentRecycleOrderInfo = null;
         if (!nextStage.isLastStage()) {
@@ -584,7 +584,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                 String applicationPdfUrl = generateApplicationPdf(userOrder, currentRecycleOrderInfo);
                 userOrder.setApplicationPdf(applicationPdfUrl);
             } catch (Exception e) {
-                throw new ServiceException("生成申请单PDF失败"+ e.getMessage());
+                throw new ServiceException("生成申请单PDF失败: "+ e.getMessage());
             }
         }
         updateById(userOrder);
@@ -686,7 +686,7 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
         if (items != null) {
             for (RecycleOrderItem item : items) {
                 BigDecimal price = Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO);
-                BigDecimal count = item.getGoodCount() != null ? BigDecimal.valueOf(item.getGoodCount()) : BigDecimal.ZERO;
+                BigDecimal count = item.getGoodCount() != null ? item.getGoodCount() : BigDecimal.ZERO;
 //                BigDecimal weight = Optional.ofNullable(item.getGoodWeight()).orElse(BigDecimal.ZERO);
                 goodsTotalAmount = goodsTotalAmount.add(price.multiply(count));
             }
@@ -1259,11 +1259,11 @@ public class UserOrderService extends ServiceImpl<UserOrderMapper, UserOrder> {
                 itemMap.put("typeText", getItemTypeText(goodType));
                 itemMap.put("name", item.getGoodName());
                 itemMap.put("specification", item.getGoodModel());
-                itemMap.put("quantity", Optional.ofNullable(item.getGoodCount()).orElse(0));
+                itemMap.put("quantity", Optional.ofNullable(item.getGoodCount()).orElse(BigDecimal.ZERO));
                 itemMap.put("unitPrice", Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO));
                 
                 // 计算金额：单价 × 数量
-                BigDecimal quantity = BigDecimal.valueOf(Optional.ofNullable(item.getGoodCount()).orElse(0));
+                BigDecimal quantity = Optional.ofNullable(item.getGoodCount()).orElse(BigDecimal.ZERO);
                 BigDecimal amount = Optional.ofNullable(item.getGoodPrice()).orElse(BigDecimal.ZERO).multiply(quantity);
                 itemMap.put("amount", amount);
                 
