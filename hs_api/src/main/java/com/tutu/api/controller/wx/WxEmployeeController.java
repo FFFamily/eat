@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -179,7 +180,7 @@ public class WxEmployeeController {
         // 获取所有父订单ID
         List<String> parentIds = orders.stream()
                 .map(RecycleOrder::getParentId)
-                .filter(parentId -> parentId != null)
+                .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
 

@@ -2,12 +2,15 @@ package com.tutu.api.controller.wx;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.recycle.dto.SortingOrderDTO;
 import com.tutu.recycle.entity.order.RecycleOrder;
+import com.tutu.recycle.entity.order.RecycleOrderItem;
 import com.tutu.recycle.entity.user.UserOrder;
 import com.tutu.recycle.request.*;
 import com.tutu.recycle.response.SortingDeliveryHallResponse;
+import com.tutu.recycle.service.RecycleOrderItemService;
 import com.tutu.recycle.service.RecycleOrderService;
 import com.tutu.recycle.service.UserOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,9 @@ import java.util.List;
 public class WxEmployeeSortingController {
     @Autowired
     private RecycleOrderService recycleOrderService;
+
+    @Autowired
+    private RecycleOrderItemService recycleOrderItemService;
 
     @Autowired
     private UserOrderService userOrderService;
@@ -96,6 +102,11 @@ public class WxEmployeeSortingController {
                     dto.setParentCode(userOrder.getNo());
                 }
             }
+
+            // 订单明细
+            dto.setItems(recycleOrderItemService.list(
+                    new LambdaQueryWrapper<RecycleOrderItem>().eq(RecycleOrderItem::getRecycleOrderId, order.getId())
+            ));
 
             return BaseResponse.success(dto);
         } catch (Exception e) {

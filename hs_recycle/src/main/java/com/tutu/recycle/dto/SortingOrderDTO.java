@@ -1,9 +1,11 @@
 package com.tutu.recycle.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tutu.recycle.entity.order.RecycleOrderItem;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 分拣订单详情 DTO
@@ -83,6 +85,10 @@ public class SortingOrderDTO {
      * 分拣图片/凭证
      */
     private String orderNodeImg;
-}
 
+    /**
+     * 回收订单明细
+     */
+    private List<RecycleOrderItem> items;
+}
 
