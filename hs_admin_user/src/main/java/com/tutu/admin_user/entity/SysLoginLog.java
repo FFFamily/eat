@@ -8,26 +8,31 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 角色权限关联实体
+ * 登录日志（后台基础能力）
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("ad_role_permission")
-public class AdRolePermission extends BaseEntity {
-    
-    /**
-     * 主键ID
-     */
+@TableName("sys_login_log")
+public class SysLoginLog extends BaseEntity {
     @TableId(type = IdType.ASSIGN_UUID)
     private String id;
-    
+
+    private String username;
+
     /**
-     * 角色ID
+     * 登录端类型：ad / wx / api 等
      */
-    private String roleId;
-    
+    private String loginType;
+
     /**
-     * 权限ID
+     * 1 成功；0 失败
      */
-    private String permissionId;
+    private Integer success;
+
+    private String reason;
+
+    private String ip;
+
+    private String ua;
 }
+

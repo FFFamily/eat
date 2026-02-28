@@ -1,12 +1,12 @@
 package com.tutu.api.controller.wx;
 
-import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.tutu.api.service.LoginService;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.entity.Account;
 import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.user.request.LoginRequest;
@@ -39,7 +39,7 @@ public class WxLoginController {
     public BaseResponse<String> login(@RequestBody @Valid LoginRequest loginRequest) {
         // 获取用户信息
         Account account = accountService.getUserByUsername(loginRequest.getUsername());
-        loginService.doLogin(account,loginRequest.getPassword());
+        loginService.doLogin(loginRequest.getUsername(), account, loginRequest.getPassword(), "wx");
         // 登录
         StpUtil.login(account.getId());
         // 返回token
@@ -97,7 +97,7 @@ public class WxLoginController {
         Account account = new Account();
         BeanUtil.copyProperties(loginRequest, account);
         account.setStatus(UserStatusEnum.USE.getCode());
-        account.setPassword(SaSecureUtil.md5(loginRequest.getPassword()));
+        account.setPassword(PasswordUtil.encode(loginRequest.getPassword()));
         accountService.save(account);
         return BaseResponse.success();
     }

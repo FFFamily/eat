@@ -6,16 +6,16 @@
         left join account a on p.account_id = a.id
         <where>
             <if test="processor.accountName != null and processor.accountName != ''">
-                and a.nickname like '%${processor.accountName}%'
+                and a.nickname like CONCAT('%', #{processor.accountName}, '%')
             </if>
             <if test="processor.no != null and processor.no != ''">
-                and p.no like '%${processor.no}%'
+                and p.no like CONCAT('%', #{processor.no}, '%')
             </if>
             <if test="processor.name != null and processor.name != ''">
-                and p.name like '%${processor.name}%'
+                and p.name like CONCAT('%', #{processor.name}, '%')
             </if>
             <if test="processor.phone != null and processor.phone != ''">
-                and p.phone like '%${processor.phone}%'
+                and p.phone like CONCAT('%', #{processor.phone}, '%')
             </if>
         </where>
     </select>
@@ -24,16 +24,16 @@
         left join account a on p.account_id = a.id
         <where>
             <if test="processor.accountName != null and processor.accountName != ''">
-                and a.nickname like '%${processor.accountName}%'
+                and a.nickname like CONCAT('%', #{processor.accountName}, '%')
             </if>
             <if test="processor.no != null and processor.no != ''">
-                and p.no like '%${processor.no}%'
+                and p.no like CONCAT('%', #{processor.no}, '%')
             </if>
             <if test="processor.name != null and processor.name != ''">
-                and p.name like '%${processor.name}%'
+                and p.name like CONCAT('%', #{processor.name}, '%')
             </if>
             <if test="processor.phone != null and processor.phone != ''">
-                and p.phone like '%${processor.phone}%'
+                and p.phone like CONCAT('%', #{processor.phone}, '%')
             </if>
         </where>
     </select>

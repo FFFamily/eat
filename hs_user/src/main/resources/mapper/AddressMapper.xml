@@ -5,11 +5,12 @@
         SELECT address.*, account.nickname as accountName FROM address
         left join account on address.account_id = account.id
         <where>
+            address.is_deleted = '0'
             <if test="accountName != null and accountName != ''">
-                and account.nickname like '%${accountName}%'
+                and account.nickname like CONCAT('%', #{accountName}, '%')
             </if>
             <if test="address != null and address != ''">
-                and address.real_address like '%${address}%'
+                and address.real_address like CONCAT('%', #{address}, '%')
             </if>
         </where>
     </select>
@@ -17,11 +18,12 @@
         SELECT count(*) FROM address
         left join account on address.account_id = account.id
         <where>
+            address.is_deleted = '0'
             <if test="accountName != null and accountName != ''">
-                and account.nickname like '%${accountName}%'
+                and account.nickname like CONCAT('%', #{accountName}, '%')
             </if>
             <if test="address != null and address != ''">
-                and address.real_address like '%${address}%'
+                and address.real_address like CONCAT('%', #{address}, '%')
             </if>
         </where>
     </select>

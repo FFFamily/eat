@@ -15,6 +15,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TableName("ad_permission")
 public class AdPermission extends BaseEntity {
     
     /**

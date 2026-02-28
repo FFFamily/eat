@@ -1,6 +1,7 @@
 package com.tutu.api.config.aspect;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.tutu.common.constant.AdminConstant;
 import com.tutu.common.annotation.PermissionRequired;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -19,6 +20,18 @@ public class PermissionAspect {
      */
     @Before("@annotation(com.tutu.common.annotation.PermissionRequired)")
     public void before(JoinPoint joinPoint) {
+        // 超级管理员默认放行：避免依赖“权限点 seed 是否完整”才能访问后台能力
+        try {
+            if (StpUtil.isLogin()) {
+                String loginId = StpUtil.getLoginIdAsString();
+                if (AdminConstant.ADMIN_ID.equals(loginId)
+                        || StpUtil.hasRole("SUPER_ADMIN")
+                        || StpUtil.hasRole("ADMIN")) {
+                    return;
+                }
+            }
+        } catch (Exception ignore) {
+        }
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         PermissionRequired permissionRequired = method.getAnnotation(PermissionRequired.class);

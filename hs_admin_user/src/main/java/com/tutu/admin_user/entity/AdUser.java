@@ -3,6 +3,7 @@ package com.tutu.admin_user.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.util.List;
 
@@ -15,16 +16,13 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TableName("ad_user")
 public class AdUser extends BaseUserEntity {
     /**
      * 主键ID
      */
     @TableId(type = IdType.ASSIGN_UUID)
     private String id;
-    /**
-     * 真实姓名
-     */
-    private String nickname;
 
     /**
      * 手机号

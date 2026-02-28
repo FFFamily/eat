@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TableName("ad_operation_log")
 public class AdOperationLog extends BaseEntity {
     
     /**

@@ -1,6 +1,7 @@
 package com.tutu.user.service;
 
-import cn.dev33.satoken.secure.SaSecureUtil;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.StrUtil;
 import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.enums.AccountBusinessTypeEnum;
@@ -8,6 +9,7 @@ import jakarta.annotation.Resource;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.common.exceptions.ServiceException;
@@ -15,20 +17,25 @@ import com.tutu.user.entity.Account;
 import com.tutu.user.entity.AccountType;
 import com.tutu.user.enums.UserUseTypeEnum;
 import com.tutu.user.mapper.AccountMapper;
+import com.tutu.user.mapper.AccountUsernameSeqMapper;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AccountService extends ServiceImpl<AccountMapper, Account> {
 
     @Resource
     private AccountTypeService accountTypeService;
+    @Resource
+    private AccountUsernameSeqMapper accountUsernameSeqMapper;
 
 
     /**
@@ -61,21 +68,25 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
      * @param accountTypeId 用户类型
      * @return 用户账号
      */
+    @Transactional(rollbackFor = Exception.class)
     public String generateAccountUsername(String accountId,String accountTypeId) {
+        if (StrUtil.isBlank(accountTypeId)) {
+            throw new ServiceException("用户类型accountTypeId不能为空");
+        }
         if (!StrUtil.isBlank(accountId)) {
             // 老用户需要判断是否又是这个用户类型
             Account account = getById(accountId);
             if (account == null) {
                 throw new ServiceException("用户不存在");
             }
-            if (account.getType().equals(accountTypeId)) {
+            if (accountTypeId.equals(account.getAccountTypeId())) {
                 return account.getUsername();
             }
         }
-        // 查询当前用户类型对应的用户数量
-        long count = this.baseMapper.getUserCountByAccountTypeId(accountTypeId);
+        // 使用数据库序列生成编号（按类型自增）
+        long seq = nextUsernameSeq(accountTypeId);
         // 转为String
-        StringBuilder countStr = new StringBuilder(String.valueOf(count + 1));
+        StringBuilder countStr = new StringBuilder(String.valueOf(seq));
         // 根据长度构建编码：00001
         int length = countStr.length();
         while (length < 5) {
@@ -100,6 +111,9 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
      */
     public void changeUseType(String userId,String useType){
         Account account = getById(userId);
+        if (account == null) {
+            throw new ServiceException("用户不存在");
+        }
         account.setUseType(useType);
         updateById(account);
     }
@@ -158,9 +172,18 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
         if (account == null) {
             throw new ServiceException("用户不存在");
         }
-        // 加密密码
-        account.setPassword(PasswordUtil.encode(account.getPassword()));
-        updateById(account);
+        Account exist = getById(account.getId());
+        if (exist == null) {
+            throw new ServiceException("用户不存在");
+        }
+        // 加密密码（仅在显式传入时更新）
+        if (StrUtil.isNotBlank(account.getPassword())) {
+            account.setPassword(PasswordUtil.encode(account.getPassword()));
+        } else {
+            account.setPassword(null);
+        }
+        BeanUtil.copyProperties(account, exist, CopyOptions.create().setIgnoreNullValue(true));
+        updateById(exist);
     }
 
     /**
@@ -169,6 +192,9 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
      */
     public void changeAccountBusinessType(Account accountRequest) {
         Account account = getById(accountRequest.getId());
+        if (account == null) {
+            throw new ServiceException("用户不存在");
+        }
         account.setBusinessType(accountRequest.getBusinessType());
         updateById(account);
     }
@@ -181,5 +207,25 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
         LambdaQueryWrapper<Account> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Account::getBusinessType, AccountBusinessTypeEnum.SERVICE_PROVIDER.getCode());
         return list(queryWrapper);
+    }
+
+    public void updatePasswordById(String id, String encodedPassword) {
+        if (StrUtil.isBlank(id) || StrUtil.isBlank(encodedPassword)) {
+            return;
+        }
+        LambdaUpdateWrapper<Account> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Account::getId, id)
+                .set(Account::getPassword, encodedPassword)
+                .set(Account::getUpdateTime, new Date());
+        update(updateWrapper);
+    }
+
+    private long nextUsernameSeq(String accountTypeId) {
+        accountUsernameSeqMapper.upsertAndIncrement(accountTypeId);
+        Long next = accountUsernameSeqMapper.selectLastInsertId();
+        if (next == null || next <= 0) {
+            throw new ServiceException("生成账号编号失败");
+        }
+        return next;
     }
 }

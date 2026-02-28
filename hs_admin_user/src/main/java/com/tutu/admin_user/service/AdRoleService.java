@@ -162,6 +162,11 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
         if (role == null) {
             throw new RuntimeException("角色不存在");
         }
+        // 保护内置管理员角色不可删除
+        String roleCode = role.getCode();
+        if ("ADMIN".equalsIgnoreCase(roleCode) || "SUPER_ADMIN".equalsIgnoreCase(roleCode) || AdUserRoleEnum.ADMIN.getCode().equalsIgnoreCase(roleCode)) {
+            throw new RuntimeException("管理员角色不允许删除");
+        }
 
         // 检查角色是否被用户关联
         LambdaQueryWrapper<AdUserRole> userRoleQueryWrapper = new LambdaQueryWrapper<>();
@@ -199,7 +204,18 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
     public void firstCreateUserBindRole(String userId) {
         AdUserRole userRole = new AdUserRole();
         userRole.setUserId(userId);
-        AdRole role = getOne(new LambdaQueryWrapper<AdRole>().eq(AdRole::getCode, AdUserRoleEnum.USER.getCode()));
+        // 兼容：不同环境 role code 可能是 USER / user
+        AdRole role = getOne(new LambdaQueryWrapper<AdRole>()
+                .eq(AdRole::getCode, "USER")
+                .eq(AdRole::getIsDeleted, CommonConstant.NO_STR));
+        if (role == null) {
+            role = getOne(new LambdaQueryWrapper<AdRole>()
+                    .eq(AdRole::getCode, AdUserRoleEnum.USER.getCode())
+                    .eq(AdRole::getIsDeleted, CommonConstant.NO_STR));
+        }
+        if (role == null) {
+            throw new RuntimeException("未初始化默认角色(USER)");
+        }
         userRole.setRoleId(role.getId());
         adUserRoleMapper.insert(userRole);
     }

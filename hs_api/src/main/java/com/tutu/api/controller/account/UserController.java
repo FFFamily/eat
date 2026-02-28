@@ -3,7 +3,6 @@ package com.tutu.api.controller.account;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.entity.Account;
 import com.tutu.user.service.AccountService;
 
@@ -85,15 +84,7 @@ public class UserController {
                 .like(StrUtil.isNotBlank(account.getNickname()), Account::getNickname,"%"+account.getNickname()+"%")
                         .eq(StrUtil.isNotBlank(account.getBusinessType()), Account::getBusinessType,account.getBusinessType())
                 );
-        if(!isFilterPass){
-            result.getRecords().forEach(item -> {
-                item.setPassword(PasswordUtil.decode(item.getPassword()));
-            });
-        }else{
-            result.getRecords().forEach(item -> {
-                item.setPassword(null);
-            });
-        }
+        result.getRecords().forEach(item -> item.setPassword(null));
         return BaseResponse.success(result);
     }
 
@@ -104,7 +95,11 @@ public class UserController {
      */
     @GetMapping("/info/{id}")
     public BaseResponse getUserById(@PathVariable String id) {
-        return BaseResponse.success(accountService.getById(id));
+        Account account = accountService.getById(id);
+        if (account != null) {
+            account.setPassword(null);
+        }
+        return BaseResponse.success(account);
     }
 
     /**
@@ -113,7 +108,9 @@ public class UserController {
      */
     @GetMapping("/list")
     public BaseResponse<List<Account>> getAllUsers() {
-        return BaseResponse.success(accountService.list());
+        List<Account> accounts = accountService.list();
+        accounts.forEach(item -> item.setPassword(null));
+        return BaseResponse.success(accounts);
     }
 
     /**

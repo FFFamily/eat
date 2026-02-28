@@ -8,10 +8,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.admin_user.dto.AdPermissionDTO;
 import com.tutu.admin_user.entity.AdPermission;
 import com.tutu.admin_user.entity.AdRolePermission;
+import com.tutu.admin_user.entity.AdRole;
 import com.tutu.admin_user.entity.AdUserRole;
 import com.tutu.admin_user.mapper.AdPermissionMapper;
 import com.tutu.admin_user.mapper.AdRolePermissionMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
+import com.tutu.common.constant.AdminConstant;
 import com.tutu.common.constant.CommonConstant;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
 @Service
 public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermission>  {
 
+    @Autowired
+    private AdRoleService adRoleService;
 
     @Autowired
     private AdRolePermissionMapper adRolePermissionMapper;
@@ -65,6 +69,10 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
 
     
     public boolean createPermission(AdPermission permission) {
+        // Normalize parentId: root = "0"
+        if (StrUtil.isBlank(permission.getParentId())) {
+            permission.setParentId("0");
+        }
         // 检查权限编码是否已存在
         if (findByCode(permission.getCode()) != null) {
             throw new RuntimeException("权限编码已存在");
@@ -88,6 +96,11 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
         AdPermission existPermission = getById(permission.getId());
         if (existPermission == null) {
             throw new RuntimeException("权限不存在");
+        }
+
+        // Normalize parentId: root = "0"
+        if (StrUtil.isBlank(permission.getParentId())) {
+            permission.setParentId("0");
         }
 
         // 检查权限编码是否被其他权限使用
@@ -145,6 +158,15 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
 
     
     public List<AdPermission> findByUserId(String userId) {
+        // 超级管理员：固定 userId=1 或具备 SUPER_ADMIN/ADMIN 角色码，直接返回全部权限
+        if (AdminConstant.ADMIN_ID.equals(userId) || hasAdminRole(userId)) {
+            LambdaQueryWrapper<AdPermission> qw = new LambdaQueryWrapper<>();
+            qw.eq(AdPermission::getIsDeleted, CommonConstant.NO_STR)
+                    .eq(AdPermission::getStatus, 1)
+                    .orderByAsc(AdPermission::getSortOrder);
+            return list(qw);
+        }
+
         // 先查询用户角色关联表
         LambdaQueryWrapper<AdUserRole> userRoleQueryWrapper = new LambdaQueryWrapper<>();
         userRoleQueryWrapper.eq(AdUserRole::getUserId, userId)
@@ -185,6 +207,20 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
         return list(permissionQueryWrapper);
     }
 
+    private boolean hasAdminRole(String userId) {
+        try {
+            List<AdRole> roles = adRoleService.findByUserId(userId);
+            return roles.stream().anyMatch(r -> {
+                String code = r.getCode();
+                return "SUPER_ADMIN".equalsIgnoreCase(code)
+                        || "ADMIN".equalsIgnoreCase(code)
+                        || "admin".equalsIgnoreCase(code);
+            });
+        } catch (Exception ignore) {
+            return false;
+        }
+    }
+
     
     public List<AdPermission> findByParentId(String parentId) {
         LambdaQueryWrapper<AdPermission> queryWrapper = new LambdaQueryWrapper<>();
@@ -200,7 +236,7 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
 
         // 找出根节点
         List<AdPermission> rootNodes = permissions.stream()
-                .filter(permission -> "0".equals(permission.getParentId()) || permission.getParentId() == null)
+                .filter(permission -> StrUtil.isBlank(permission.getParentId()) || "0".equals(permission.getParentId()))
                 .collect(Collectors.toList());
 
         // 为每个根节点构建子树
@@ -237,6 +273,18 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
 
         List<AdPermission> allMenus = list(queryWrapper);
         return buildPermissionTree(allMenus);
+    }
+
+    /**
+     * 返回全部权限点树（菜单 + 按钮/接口）。
+     * 用于角色授权等场景；如果仅需要菜单树，请使用 {@link #getMenuTree()}。
+     */
+    public List<AdPermission> getPermissionTree() {
+        LambdaQueryWrapper<AdPermission> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AdPermission::getIsDeleted, CommonConstant.NO_STR)
+                .orderByAsc(AdPermission::getSortOrder);
+        List<AdPermission> all = list(queryWrapper);
+        return buildPermissionTree(all);
     }
 
     public boolean batchDeletePermissions(List<String> ids) {

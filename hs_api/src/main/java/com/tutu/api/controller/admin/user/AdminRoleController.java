@@ -10,7 +10,7 @@ import com.tutu.user.service.UserRoleService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/role")
+@RequestMapping("/admin/user-role")
 public class AdminRoleController {
 
     @Resource
@@ -18,7 +18,7 @@ public class AdminRoleController {
 
     /**
      * 给用户分配角色
-     * POST /admin/role/assign
+     * POST /admin/user-role/assign
      */
     @PostMapping("/assign")
     public BaseResponse<UserRole> assignRoleToUser(@RequestBody UserRole userRole) {
@@ -28,7 +28,7 @@ public class AdminRoleController {
 
     /**
      * 更新用户角色分配
-     * PUT /admin/role/assign/{id}
+     * PUT /admin/user-role/assign/{id}
      */
     @PutMapping("/assign/{id}")
     public BaseResponse<UserRole> updateRoleAssignment(@PathVariable("id") String id, @RequestBody UserRole userRole) {
@@ -43,7 +43,7 @@ public class AdminRoleController {
 
     /**
      * 删除用户角色分配
-     * DELETE /admin/role/assign/{id}
+     * DELETE /admin/user-role/assign/{id}
      */
     @DeleteMapping("/assign/{id}")
     public BaseResponse<Void> deleteRoleAssignment(@PathVariable("id") String id) {
@@ -57,7 +57,7 @@ public class AdminRoleController {
 
     /**
      * 根据用户ID查询用户角色分配
-     * GET /admin/role/assign/user/{userId}
+     * GET /admin/user-role/assign/user/{userId}
      */
     @GetMapping("/assign/user/{userId}")
     public BaseResponse<List<UserRole>> getRoleAssignmentsByUserId(@PathVariable("userId") String userId) {

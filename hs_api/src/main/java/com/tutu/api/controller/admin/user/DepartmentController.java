@@ -1,10 +1,11 @@
 package com.tutu.api.controller.admin.user;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.tutu.admin_user.dto.AdDepartmentDTO;
 import com.tutu.admin_user.entity.AdDepartment;
 import com.tutu.admin_user.service.AdDepartmentService;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.annotation.AuditLog;
+import com.tutu.common.annotation.PermissionRequired;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class DepartmentController {
     /**
      * 分页查询部门列表
      */
+    @PermissionRequired("department:list")
     @GetMapping("/page")
     public BaseResponse<IPage<AdDepartment>> getPageList(
             @RequestParam(defaultValue = "1") int current,
@@ -36,6 +38,7 @@ public class DepartmentController {
     /**
      * 查询部门树
      */
+    @PermissionRequired("department:list")
     @GetMapping("/tree")
     public BaseResponse<List<AdDepartment>> getDepartmentTree() {
         List<AdDepartment> tree = adDepartmentService.getDepartmentTree();
@@ -45,6 +48,7 @@ public class DepartmentController {
     /**
      * 查询所有启用的部门
      */
+    @PermissionRequired("department:list")
     @GetMapping("/all")
     public BaseResponse<List<AdDepartment>> findAllEnabled() {
         List<AdDepartment> adDepartments = adDepartmentService.findAllEnabled();
@@ -54,6 +58,7 @@ public class DepartmentController {
     /**
      * 根据ID查询部门详情
      */
+    @PermissionRequired("department:read")
     @GetMapping("/{id}")
     public BaseResponse<AdDepartment> getById(@PathVariable String id) {
         AdDepartment adDepartment = adDepartmentService.getById(id);
@@ -66,6 +71,8 @@ public class DepartmentController {
     /**
      * 创建部门
      */
+    @PermissionRequired("department:create")
+    @AuditLog(action = "department.create", targetType = "department")
     @PostMapping
     public BaseResponse<String> createDepartment(@Valid @RequestBody AdDepartment adDepartmentDTO) {
         try {
@@ -83,6 +90,8 @@ public class DepartmentController {
     /**
      * 更新部门
      */
+    @PermissionRequired("department:update")
+    @AuditLog(action = "department.update", targetType = "department")
     @PutMapping
     public BaseResponse<String> updateDepartment(@Valid @RequestBody AdDepartment adDepartmentDTO) {
         try {
@@ -100,6 +109,8 @@ public class DepartmentController {
     /**
      * 删除部门
      */
+    @PermissionRequired("department:delete")
+    @AuditLog(action = "department.delete", targetType = "department")
     @DeleteMapping("/{id}")
     public BaseResponse<String> deleteDepartment(@PathVariable String id) {
         try {
@@ -117,6 +128,8 @@ public class DepartmentController {
     /**
      * 批量删除部门
      */
+    @PermissionRequired("department:delete")
+    @AuditLog(action = "department.batch_delete", targetType = "department")
     @DeleteMapping("/batch")
     public BaseResponse<String> batchDeleteDepartments(@RequestBody List<String> ids) {
         try {

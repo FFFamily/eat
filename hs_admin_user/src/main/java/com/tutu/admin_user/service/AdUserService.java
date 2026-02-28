@@ -1,9 +1,8 @@
 package com.tutu.admin_user.service;
 
-import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.digest.MD5;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -11,7 +10,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.admin_user.entity.AdUser;
 import com.tutu.admin_user.entity.AdUserRole;
-import com.tutu.admin_user.enums.AdUserStatusEnum;
 import com.tutu.admin_user.mapper.AdUserMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
 import com.tutu.common.constant.AdminConstant;
@@ -23,7 +21,6 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.rowset.serial.SerialException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -63,9 +60,11 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
      * @param current 当前页
      * @param size 每页数量
      * @param keyword 搜索关键词
+     * @param status 状态（可选，use/disable）
+     * @param deptId 部门（可选）
      * @return 用户分页列表
      */
-    public IPage<AdUser> getPageList(int current, int size, String keyword) {
+    public IPage<AdUser> getPageList(int current, int size, String keyword, String status, String deptId) {
         Page<AdUser> page = new Page<>(current, size);
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(keyword)) {
@@ -75,6 +74,8 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
                     .like(AdUser::getNickname, keyword)
             );
         }
+        queryWrapper.eq(StrUtil.isNotBlank(status), AdUser::getStatus, status);
+        queryWrapper.eq(StrUtil.isNotBlank(deptId), AdUser::getDeptId, deptId);
         queryWrapper.orderByDesc(AdUser::getCreateTime);
         return page(page, queryWrapper);
     }
@@ -111,25 +112,30 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
             throw new ServiceException("不能修改管理员账号");
         }
         // 检查用户名是否被其他用户使用
-        LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper
-                .eq(AdUser::getUsername, user.getUsername())
-                .ne(AdUser::getId, user.getId());
-        if (getOne(queryWrapper) != null) {
-            throw new ServiceException("用户名已被使用");
+        if (StrUtil.isNotBlank(user.getUsername())) {
+            LambdaQueryWrapper<AdUser> usernameWrapper = new LambdaQueryWrapper<>();
+            usernameWrapper.eq(AdUser::getUsername, user.getUsername())
+                    .ne(AdUser::getId, user.getId());
+            if (getOne(usernameWrapper) != null) {
+                throw new ServiceException("用户名已被使用");
+            }
         }
         // 检查手机号是否被其他用户使用
-        queryWrapper
-                .eq(AdUser::getPhone, user.getPhone())
-                .ne(AdUser::getId, user.getId());
-        if (getOne(queryWrapper) != null) {
-            throw new ServiceException("手机号已被使用");
+        if (StrUtil.isNotBlank(user.getPhone())) {
+            LambdaQueryWrapper<AdUser> phoneWrapper = new LambdaQueryWrapper<>();
+            phoneWrapper.eq(AdUser::getPhone, user.getPhone())
+                    .ne(AdUser::getId, user.getId());
+            if (getOne(phoneWrapper) != null) {
+                throw new ServiceException("手机号已被使用");
+            }
         }
         // 加密密码
         if (StrUtil.isNotBlank(user.getPassword())) {
             user.setPassword(PasswordUtil.encode(user.getPassword()));
+        } else {
+            user.setPassword(null);
         }
-        BeanUtil.copyProperties(user,existUser);
+        BeanUtil.copyProperties(user, existUser, CopyOptions.create().setIgnoreNullValue(true));
         updateById(existUser);
     }
 
@@ -142,7 +148,7 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
 
         LambdaUpdateWrapper<AdUser> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(AdUser::getId, id)
-                .set(AdUser::getPassword, MD5.create().digestHex(newPassword))
+                .set(AdUser::getPassword, PasswordUtil.encode(newPassword))
                 .set(AdUser::getUpdateTime, new Date());
 
         return update(updateWrapper);
@@ -156,16 +162,27 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         }
 
         // 验证旧密码
-        if (!user.getPassword().equals(MD5.create().digestHex(oldPassword))) {
+        if (!PasswordUtil.match(oldPassword, user.getPassword())) {
             throw new RuntimeException("原密码错误");
         }
 
         LambdaUpdateWrapper<AdUser> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(AdUser::getId, id)
-                .set(AdUser::getPassword, MD5.create().digestHex(newPassword))
+                .set(AdUser::getPassword, PasswordUtil.encode(newPassword))
                 .set(AdUser::getUpdateTime, new Date());
 
         return update(updateWrapper);
+    }
+
+    public void updatePasswordById(String id, String encodedPassword) {
+        if (StrUtil.isBlank(id) || StrUtil.isBlank(encodedPassword)) {
+            return;
+        }
+        LambdaUpdateWrapper<AdUser> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(AdUser::getId, id)
+                .set(AdUser::getPassword, encodedPassword)
+                .set(AdUser::getUpdateTime, new Date());
+        update(updateWrapper);
     }
 
 

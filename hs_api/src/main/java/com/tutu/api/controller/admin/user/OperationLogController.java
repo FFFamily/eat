@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tutu.admin_user.entity.AdOperationLog;
 import com.tutu.admin_user.service.AdOperationLogService;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.annotation.PermissionRequired;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,7 @@ public class OperationLogController {
     /**
      * 分页查询操作日志
      */
+    @PermissionRequired("audit:list")
     @GetMapping("/page")
 //    @LogAnnotation(value = "查询操作日志", type = OperationType.SELECT)
     public BaseResponse<IPage<AdOperationLog>> getPageList(
@@ -44,6 +46,7 @@ public class OperationLogController {
     /**
      * 根据ID查询操作日志详情
      */
+    @PermissionRequired("audit:list")
     @GetMapping("/{id}")
 //    @LogAnnotation(value = "查询操作日志详情", type = OperationType.SELECT)
     public BaseResponse<AdOperationLog> getById(@PathVariable String id) {
@@ -57,6 +60,7 @@ public class OperationLogController {
     /**
      * 根据用户ID查询操作日志
      */
+    @PermissionRequired("audit:list")
     @GetMapping("/user/{userId}")
 //    @LogAnnotation(value = "查询用户操作日志", type = OperationType.SELECT)
     public BaseResponse<List<AdOperationLog>> findByUserId(
@@ -69,6 +73,7 @@ public class OperationLogController {
     /**
      * 根据操作类型查询操作日志
      */
+    @PermissionRequired("audit:list")
     @GetMapping("/type/{operationType}")
 //    @LogAnnotation(value = "查询操作类型日志", type = OperationType.SELECT)
     public BaseResponse<List<AdOperationLog>> findByOperationType(
@@ -81,6 +86,7 @@ public class OperationLogController {
     /**
      * 获取操作统计信息
      */
+    @PermissionRequired("audit:list")
     @GetMapping("/statistics")
 //    @LogAnnotation(value = "查询操作统计", type = OperationType.SELECT)
     public BaseResponse<Map<String, Object>> getStatistics(@RequestParam(required = false) String userId) {
@@ -102,6 +108,7 @@ public class OperationLogController {
     /**
      * 删除操作日志
      */
+    @PermissionRequired("audit:list")
     @DeleteMapping("/{id}")
 //    @LogAnnotation(value = "删除操作日志", type = OperationType.DELETE)
     public BaseResponse<String> deleteLog(@PathVariable String id) {
@@ -120,6 +127,7 @@ public class OperationLogController {
     /**
      * 批量删除操作日志
      */
+    @PermissionRequired("audit:list")
     @DeleteMapping("/batch")
 //    @LogAnnotation(value = "批量删除操作日志", type = OperationType.DELETE)
     public BaseResponse<String> batchDeleteLogs(@RequestBody List<String> ids) {
@@ -138,6 +146,7 @@ public class OperationLogController {
     /**
      * 清理指定天数前的日志
      */
+    @PermissionRequired("audit:list")
     @DeleteMapping("/clean")
 //    @LogAnnotation(value = "清理历史日志", type = OperationType.DELETE)
     public BaseResponse<String> cleanOldLogs(@RequestParam int days) {

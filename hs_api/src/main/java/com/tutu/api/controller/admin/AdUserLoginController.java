@@ -1,6 +1,5 @@
 package com.tutu.api.controller.admin;
 
-import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import com.tutu.admin_user.entity.AdUser;
@@ -9,6 +8,7 @@ import com.tutu.admin_user.service.AdUserService;
 import com.tutu.api.service.LoginService;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.enums.user.UserStatusEnum;
+import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.request.LoginRequest;
 import com.tutu.user.response.LoginUserResponse;
 import jakarta.annotation.Resource;
@@ -35,7 +35,7 @@ public class AdUserLoginController {
     public BaseResponse<String> login(@RequestBody @Valid LoginRequest loginRequest) {
         // 获取用户信息
         AdUser user = adUserService.findByUsername(loginRequest.getUsername());
-        loginService.doLogin(user,loginRequest.getPassword());
+        loginService.doLogin(loginRequest.getUsername(), user, loginRequest.getPassword(), "ad");
         // 登录
         StpUtil.login(user.getId());
         // 返回token
@@ -81,7 +81,7 @@ public class AdUserLoginController {
         AdUser user = new AdUser();
         BeanUtil.copyProperties(loginRequest, user);
         user.setStatus(UserStatusEnum.USE.getCode());
-        user.setPassword(SaSecureUtil.md5(loginRequest.getPassword()));
+        user.setPassword(PasswordUtil.encode(loginRequest.getPassword()));
         adUserService.save(user);
         adRoleService.firstCreateUserBindRole(user.getId());
         return BaseResponse.success();

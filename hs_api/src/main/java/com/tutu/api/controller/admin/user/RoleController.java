@@ -1,10 +1,11 @@
 package com.tutu.api.controller.admin.user;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.tutu.admin_user.dto.AdRoleDTO;
 import com.tutu.admin_user.entity.AdRole;
 import com.tutu.admin_user.service.AdRoleService;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.annotation.AuditLog;
+import com.tutu.common.annotation.PermissionRequired;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class RoleController {
     /**
      * 分页查询角色列表
      */
+    @PermissionRequired("role:list")
     @GetMapping("/page")
     public BaseResponse<IPage<AdRole>> getPageList(
             @RequestParam(defaultValue = "1") int current,
@@ -36,6 +38,7 @@ public class RoleController {
     /**
      * 查询所有启用的角色
      */
+    @PermissionRequired("role:list")
     @GetMapping("/all")
     public BaseResponse<List<AdRole>> findAllEnabled() {
         List<AdRole> adRoles = adRoleService.findAllEnabled();
@@ -45,6 +48,7 @@ public class RoleController {
     /**
      * 根据ID查询角色详情
      */
+    @PermissionRequired("role:read")
     @GetMapping("/{id}")
     public BaseResponse<AdRole> getById(@PathVariable String id) {
         AdRole adRole = adRoleService.getById(id);
@@ -57,6 +61,8 @@ public class RoleController {
     /**
      * 创建角色
      */
+    @PermissionRequired("role:create")
+    @AuditLog(action = "role.create", targetType = "role")
     @PostMapping
     public BaseResponse<String> createRole(@Valid @RequestBody AdRole adRoleDTO) {
         try {
@@ -74,6 +80,8 @@ public class RoleController {
     /**
      * 更新角色
      */
+    @PermissionRequired("role:update")
+    @AuditLog(action = "role.update", targetType = "role")
     @PutMapping
     public BaseResponse<String> updateRole(@Valid @RequestBody AdRole adRoleDTO) {
         try {
@@ -91,6 +99,8 @@ public class RoleController {
     /**
      * 删除角色
      */
+    @PermissionRequired("role:delete")
+    @AuditLog(action = "role.delete", targetType = "role")
     @DeleteMapping("/{id}")
     public BaseResponse<String> deleteRole(@PathVariable String id) {
         try {
@@ -108,6 +118,8 @@ public class RoleController {
     /**
      * 批量删除角色
      */
+    @PermissionRequired("role:delete")
+    @AuditLog(action = "role.batch_delete", targetType = "role")
     @DeleteMapping("/batch")
     public BaseResponse<String> batchDeleteRoles(@RequestBody List<String> ids) {
         try {
@@ -125,6 +137,8 @@ public class RoleController {
     /**
      * 分配权限
      */
+    @PermissionRequired("role:bind_permissions")
+    @AuditLog(action = "role.bind_permissions", targetType = "role")
     @PutMapping("/{id}/permissions")
     public BaseResponse<String> assignPermissions(@PathVariable String id, @RequestBody List<String> permissionIds) {
         try {
@@ -142,6 +156,7 @@ public class RoleController {
     /**
      * 根据用户ID查询角色列表
      */
+    @PermissionRequired("role:list")
     @GetMapping("/user/{userId}")
     public BaseResponse<List<AdRole>> findByUserId(@PathVariable String userId) {
         List<AdRole> adRoles = adRoleService.findByUserId(userId);

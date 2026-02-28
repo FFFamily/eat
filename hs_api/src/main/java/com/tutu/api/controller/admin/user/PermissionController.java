@@ -1,10 +1,11 @@
 package com.tutu.api.controller.admin.user;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.tutu.admin_user.dto.AdPermissionDTO;
 import com.tutu.admin_user.entity.AdPermission;
 import com.tutu.admin_user.service.AdPermissionService;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.annotation.AuditLog;
+import com.tutu.common.annotation.PermissionRequired;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class PermissionController {
     /**
      * 分页查询权限列表
      */
+    @PermissionRequired("permission:list")
     @GetMapping("/page")
     public BaseResponse<IPage<AdPermission>> getPageList(
             @RequestParam(defaultValue = "1") int current,
@@ -36,15 +38,17 @@ public class PermissionController {
     /**
      * 查询权限树
      */
+    @PermissionRequired("permission:list")
     @GetMapping("/tree")
     public BaseResponse<List<AdPermission>> getPermissionTree() {
-        List<AdPermission> tree = permissionService.getMenuTree();
+        List<AdPermission> tree = permissionService.getPermissionTree();
         return BaseResponse.success(tree);
     }
     
     /**
      * 根据ID查询权限详情
      */
+    @PermissionRequired("permission:list")
     @GetMapping("/{id}")
     public BaseResponse<AdPermission> getById(@PathVariable String id) {
         AdPermission adPermission = permissionService.getById(id);
@@ -57,6 +61,8 @@ public class PermissionController {
     /**
      * 创建权限
      */
+    @PermissionRequired("permission:create")
+    @AuditLog(action = "permission.create", targetType = "permission")
     @PostMapping
     public BaseResponse<String> createPermission(@Valid @RequestBody AdPermission adPermissionDTO) {
         try {
@@ -74,6 +80,8 @@ public class PermissionController {
     /**
      * 更新权限
      */
+    @PermissionRequired("permission:update")
+    @AuditLog(action = "permission.update", targetType = "permission")
     @PutMapping
     public BaseResponse<String> updatePermission(@Valid @RequestBody AdPermission adPermissionDTO) {
         try {
@@ -91,6 +99,8 @@ public class PermissionController {
     /**
      * 删除权限
      */
+    @PermissionRequired("permission:delete")
+    @AuditLog(action = "permission.delete", targetType = "permission")
     @DeleteMapping("/{id}")
     public BaseResponse<String> deletePermission(@PathVariable String id) {
         try {
@@ -108,6 +118,8 @@ public class PermissionController {
     /**
      * 批量删除权限
      */
+    @PermissionRequired("permission:delete")
+    @AuditLog(action = "permission.batch_delete", targetType = "permission")
     @DeleteMapping("/batch")
     public BaseResponse<String> batchDeletePermissions(@RequestBody List<String> ids) {
         try {
@@ -125,6 +137,7 @@ public class PermissionController {
     /**
      * 根据角色ID查询权限列表
      */
+    @PermissionRequired("permission:list")
     @GetMapping("/role/{roleId}")
     public BaseResponse<List<AdPermission>> findByRoleId(@PathVariable String roleId) {
         List<AdPermission> adPermissions = permissionService.findByRoleId(roleId);
@@ -134,6 +147,7 @@ public class PermissionController {
     /**
      * 根据用户ID查询权限列表
      */
+    @PermissionRequired("permission:list")
     @GetMapping("/user/{userId}")
     public BaseResponse<List<AdPermission>> findByUserId(@PathVariable String userId) {
         List<AdPermission> adPermissions = permissionService.findByUserId(userId);

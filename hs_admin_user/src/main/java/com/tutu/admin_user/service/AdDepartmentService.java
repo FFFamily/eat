@@ -54,6 +54,21 @@ public class AdDepartmentService extends ServiceImpl<AdDepartmentMapper, AdDepar
 
     
     public boolean createDepartment(AdDepartment department) {
+        if (department == null) {
+            throw new RuntimeException("参数不能为空");
+        }
+        if (StrUtil.isBlank(department.getName())) {
+            throw new RuntimeException("部门名称不能为空");
+        }
+        if (StrUtil.isBlank(department.getCode())) {
+            throw new RuntimeException("部门编码不能为空");
+        }
+
+        // Normalize parentId: root = "0"
+        if (StrUtil.isBlank(department.getParentId())) {
+            department.setParentId("0");
+        }
+
         // 检查部门编码是否已存在
         if (findByCode(department.getCode()) != null) {
             throw new RuntimeException("部门编码已存在");
@@ -69,19 +84,29 @@ public class AdDepartmentService extends ServiceImpl<AdDepartmentMapper, AdDepar
             department.setSortOrder(0);
         }
 
-        // 设置默认父部门ID
-        if (department.getParentId() == null) {
-            department.setParentId("0");
-        }
-
         return save(department);
     }
 
     
     public boolean updateDepartment(AdDepartment department) {
+        if (department == null || StrUtil.isBlank(department.getId())) {
+            throw new RuntimeException("参数不能为空");
+        }
         AdDepartment existDepartment = getById(department.getId());
         if (existDepartment == null) {
             throw new RuntimeException("部门不存在");
+        }
+
+        if (StrUtil.isBlank(department.getName())) {
+            throw new RuntimeException("部门名称不能为空");
+        }
+        if (StrUtil.isBlank(department.getCode())) {
+            throw new RuntimeException("部门编码不能为空");
+        }
+
+        // Normalize parentId: root = "0"
+        if (StrUtil.isBlank(department.getParentId())) {
+            department.setParentId("0");
         }
 
         // 检查部门编码是否被其他部门使用
@@ -131,7 +156,7 @@ public class AdDepartmentService extends ServiceImpl<AdDepartmentMapper, AdDepar
 
         // 找出根节点
         List<AdDepartment> rootNodes = departments.stream()
-                .filter(department -> "0".equals(department.getParentId()) || department.getParentId() == null)
+                .filter(department -> StrUtil.isBlank(department.getParentId()) || "0".equals(department.getParentId()))
                 .collect(Collectors.toList());
 
         // 为每个根节点构建子树
