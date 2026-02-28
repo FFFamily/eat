@@ -45,7 +45,7 @@ public class AdUser extends BaseUserEntity {
     private List<AdRole> adRoles;
 
     /**
-     * 部门信息（非数据库字段）
+     * 部门 信息（非数据库字段）
      */
     @TableField(exist = false)
     private AdDepartment adDepartment;

@@ -2,6 +2,7 @@ package com.tutu.api.config.aspect;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.tutu.common.constant.AdminConstant;
+import com.tutu.common.constant.RoleConstant;
 import com.tutu.common.annotation.PermissionRequired;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -25,8 +26,7 @@ public class PermissionAspect {
             if (StpUtil.isLogin()) {
                 String loginId = StpUtil.getLoginIdAsString();
                 if (AdminConstant.ADMIN_ID.equals(loginId)
-                        || StpUtil.hasRole("SUPER_ADMIN")
-                        || StpUtil.hasRole("ADMIN")) {
+                        || StpUtil.hasRole(RoleConstant.SUPER_ADMIN)) {
                     return;
                 }
             }

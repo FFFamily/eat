@@ -1,16 +1,20 @@
 package com.tutu.api.controller.admin.user;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.tutu.admin_user.dto.AdPermissionDTO;
 import com.tutu.admin_user.entity.AdPermission;
 import com.tutu.admin_user.service.AdPermissionService;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.annotation.AuditLog;
 import com.tutu.common.annotation.PermissionRequired;
 import jakarta.validation.Valid;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 权限控制器
@@ -30,8 +34,10 @@ public class PermissionController {
     public BaseResponse<IPage<AdPermission>> getPageList(
             @RequestParam(defaultValue = "1") int current,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword) {
-        IPage<AdPermission> page = permissionService.getPageList(current, size, keyword);
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) Integer status) {
+        IPage<AdPermission> page = permissionService.getPageList(current, size, keyword, type, status);
         return BaseResponse.success(page);
     }
     
@@ -64,9 +70,11 @@ public class PermissionController {
     @PermissionRequired("permission:create")
     @AuditLog(action = "permission.create", targetType = "permission")
     @PostMapping
-    public BaseResponse<String> createPermission(@Valid @RequestBody AdPermission adPermissionDTO) {
+    public BaseResponse<String> createPermission(@Valid @RequestBody AdPermissionDTO dto) {
         try {
-            boolean result = permissionService.createPermission(adPermissionDTO);
+            AdPermission entity = new AdPermission();
+            BeanUtils.copyProperties(dto, entity);
+            boolean result = permissionService.createPermission(entity);
             if (result) {
                 return BaseResponse.success("创建成功");
             } else {
@@ -83,9 +91,11 @@ public class PermissionController {
     @PermissionRequired("permission:update")
     @AuditLog(action = "permission.update", targetType = "permission")
     @PutMapping
-    public BaseResponse<String> updatePermission(@Valid @RequestBody AdPermission adPermissionDTO) {
+    public BaseResponse<String> updatePermission(@Valid @RequestBody AdPermissionDTO dto) {
         try {
-            boolean result = permissionService.updatePermission(adPermissionDTO);
+            AdPermission entity = new AdPermission();
+            BeanUtils.copyProperties(dto, entity);
+            boolean result = permissionService.updatePermission(entity);
             if (result) {
                 return BaseResponse.success("更新成功");
             } else {
@@ -147,9 +157,16 @@ public class PermissionController {
     /**
      * 根据用户ID查询权限列表
      */
-    @PermissionRequired("permission:list")
     @GetMapping("/user/{userId}")
     public BaseResponse<List<AdPermission>> findByUserId(@PathVariable String userId) {
+        // Used by frontend right after login to decide menu/button visibility.
+        // Allow querying "my own" permissions without requiring `permission:list`,
+        // otherwise users without后台管理权限会在登录后立刻被 401/弹窗卡住。
+        StpUtil.checkLogin();
+        String loginId = StpUtil.getLoginIdAsString();
+        if (!Objects.equals(String.valueOf(userId), String.valueOf(loginId))) {
+            StpUtil.checkPermission("permission:list");
+        }
         List<AdPermission> adPermissions = permissionService.findByUserId(userId);
         return BaseResponse.success(adPermissions);
     }

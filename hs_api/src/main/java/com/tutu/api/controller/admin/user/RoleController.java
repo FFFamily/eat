@@ -1,6 +1,7 @@
 package com.tutu.api.controller.admin.user;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.tutu.admin_user.dto.AdRoleDTO;
 import com.tutu.admin_user.entity.AdRole;
 import com.tutu.admin_user.service.AdRoleService;
 import com.tutu.common.Response.BaseResponse;
@@ -8,6 +9,7 @@ import com.tutu.common.annotation.AuditLog;
 import com.tutu.common.annotation.PermissionRequired;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -64,17 +66,11 @@ public class RoleController {
     @PermissionRequired("role:create")
     @AuditLog(action = "role.create", targetType = "role")
     @PostMapping
-    public BaseResponse<String> createRole(@Valid @RequestBody AdRole adRoleDTO) {
-        try {
-            boolean result = adRoleService.createRole(adRoleDTO);
-            if (result) {
-                return BaseResponse.success("创建成功");
-            } else {
-                return BaseResponse.error("创建失败");
-            }
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
+    public BaseResponse<String> createRole(@Valid @RequestBody AdRoleDTO dto) {
+        AdRole entity = new AdRole();
+        BeanUtils.copyProperties(dto, entity);
+        adRoleService.createRole(entity);
+        return  BaseResponse.success();
     }
     
     /**
@@ -83,17 +79,11 @@ public class RoleController {
     @PermissionRequired("role:update")
     @AuditLog(action = "role.update", targetType = "role")
     @PutMapping
-    public BaseResponse<String> updateRole(@Valid @RequestBody AdRole adRoleDTO) {
-        try {
-            boolean result = adRoleService.updateRole(adRoleDTO);
-            if (result) {
-                return BaseResponse.success("更新成功");
-            } else {
-                return BaseResponse.error("更新失败");
-            }
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
+    public BaseResponse<String> updateRole(@Valid @RequestBody AdRoleDTO dto) {
+        AdRole entity = new AdRole();
+        BeanUtils.copyProperties(dto, entity);
+        adRoleService.updateRole(entity);
+        return  BaseResponse.success();
     }
     
     /**
@@ -103,16 +93,8 @@ public class RoleController {
     @AuditLog(action = "role.delete", targetType = "role")
     @DeleteMapping("/{id}")
     public BaseResponse<String> deleteRole(@PathVariable String id) {
-        try {
-            boolean result = adRoleService.deleteRole(id);
-            if (result) {
-                return BaseResponse.success("删除成功");
-            } else {
-                return BaseResponse.error("删除失败");
-            }
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
+        adRoleService.deleteRole(id);
+        return BaseResponse.success();
     }
     
     /**
@@ -141,16 +123,8 @@ public class RoleController {
     @AuditLog(action = "role.bind_permissions", targetType = "role")
     @PutMapping("/{id}/permissions")
     public BaseResponse<String> assignPermissions(@PathVariable String id, @RequestBody List<String> permissionIds) {
-        try {
-            boolean result = adRoleService.assignPermissions(id, permissionIds);
-            if (result) {
-                return BaseResponse.success("权限分配成功");
-            } else {
-                return BaseResponse.error("权限分配失败");
-            }
-        } catch (Exception e) {
-            return BaseResponse.error(e.getMessage());
-        }
+        adRoleService.assignPermissions(id, permissionIds);
+        return  BaseResponse.success();
     }
     
     /**

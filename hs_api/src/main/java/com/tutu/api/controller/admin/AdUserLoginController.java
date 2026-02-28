@@ -67,24 +67,4 @@ public class AdUserLoginController {
         BeanUtil.copyProperties(user, userInfo);
         return BaseResponse.success(userInfo);
     }
-    /**
-     * 注册
-     */
-    @PostMapping("/register")
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResponse<Void> register(@RequestBody @Valid LoginRequest loginRequest) {
-        // 检查用户名是否已存
-        AdUser existingUser = adUserService.findByUsername(loginRequest.getUsername());
-        if (existingUser != null) {
-            return BaseResponse.error("用户已存在");
-        }
-        AdUser user = new AdUser();
-        BeanUtil.copyProperties(loginRequest, user);
-        user.setStatus(UserStatusEnum.USE.getCode());
-        user.setPassword(PasswordUtil.encode(loginRequest.getPassword()));
-        adUserService.save(user);
-        adRoleService.firstCreateUserBindRole(user.getId());
-        return BaseResponse.success();
-    }
-
 }

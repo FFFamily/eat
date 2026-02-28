@@ -10,11 +10,11 @@ import com.tutu.admin_user.dto.AdRoleDTO;
 import com.tutu.admin_user.entity.AdRole;
 import com.tutu.admin_user.entity.AdRolePermission;
 import com.tutu.admin_user.entity.AdUserRole;
-import com.tutu.admin_user.enums.AdUserRoleEnum;
 import com.tutu.admin_user.mapper.AdRoleMapper;
 import com.tutu.admin_user.mapper.AdRolePermissionMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
 import com.tutu.common.constant.CommonConstant;
+import com.tutu.common.constant.RoleConstant;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,21 +67,28 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
 
     
     @Transactional(rollbackFor = Exception.class)
-    public boolean createRole(AdRole role) {
+    public void createRole(AdRole role) {
         // 检查角色编码是否已存在
         if (findByCode(role.getCode()) != null) {
             throw new RuntimeException("角色编码已存在");
         }
-
-        return save(role);
+        save(role);
     }
 
     
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateRole(AdRole role) {
+    public void updateRole(AdRole role) {
         AdRole existRole = getById(role.getId());
         if (existRole == null) {
             throw new RuntimeException("角色不存在");
+        }
+        // SUPER_ADMIN 为内置角色：不允许编辑（包括名称/编码/备注等）
+        if (RoleConstant.SUPER_ADMIN.equalsIgnoreCase(existRole.getCode())) {
+            throw new RuntimeException("SUPER_ADMIN 角色不允许编辑");
+        }
+        // 防止其他角色“冒充”成 SUPER_ADMIN
+        if (RoleConstant.SUPER_ADMIN.equalsIgnoreCase(role.getCode())) {
+            throw new RuntimeException("不允许将角色编码设置为 SUPER_ADMIN");
         }
 
         // 检查角色编码是否被其他角色使用
@@ -93,13 +100,21 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
         if (getOne(queryWrapper) != null) {
             throw new RuntimeException("角色编码已被使用");
         }
-
-        return updateById(role);
+        updateById(role);
     }
 
     
     @Transactional(rollbackFor = Exception.class)
-    public boolean assignPermissions(String roleId, List<String> permissionIds) {
+    public void assignPermissions(String roleId, List<String> permissionIds) {
+        AdRole role = getById(roleId);
+        if (role == null) {
+            throw new RuntimeException("角色不存在");
+        }
+        // SUPER_ADMIN 为内置角色：不允许授权（绑定权限点）
+        if (RoleConstant.SUPER_ADMIN.equalsIgnoreCase(role.getCode())) {
+            throw new RuntimeException("SUPER_ADMIN 角色不允许授权");
+        }
+
         // 先删除原有权限关联
         LambdaUpdateWrapper<AdRolePermission> deleteWrapper = new LambdaUpdateWrapper<>();
         deleteWrapper.eq(AdRolePermission::getRoleId, roleId)
@@ -119,8 +134,6 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
                 adRolePermissionMapper.insert(rolePermission);
             }
         }
-
-        return true;
     }
 
     
@@ -157,15 +170,14 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteRole(String id) {
+    public void deleteRole(String id) {
         AdRole role = getById(id);
         if (role == null) {
             throw new RuntimeException("角色不存在");
         }
-        // 保护内置管理员角色不可删除
-        String roleCode = role.getCode();
-        if ("ADMIN".equalsIgnoreCase(roleCode) || "SUPER_ADMIN".equalsIgnoreCase(roleCode) || AdUserRoleEnum.ADMIN.getCode().equalsIgnoreCase(roleCode)) {
-            throw new RuntimeException("管理员角色不允许删除");
+        // SUPER_ADMIN 为内置角色：不允许删除
+        if (RoleConstant.SUPER_ADMIN.equalsIgnoreCase(role.getCode())) {
+            throw new RuntimeException("SUPER_ADMIN 角色不允许删除");
         }
 
         // 检查角色是否被用户关联
@@ -189,34 +201,21 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
         // 软删除角色
         role.setIsDeleted(CommonConstant.YES_STR);
         role.setUpdateTime(new Date());
-        return updateById(role);
+        updateById(role);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public boolean batchDeleteRoles(List<String> ids) {
-        return removeByIds(ids);
-    }
-
-    /**
-     * 第一次创建用户绑定角色
-     * @param userId 用户id
-     */
-    public void firstCreateUserBindRole(String userId) {
-        AdUserRole userRole = new AdUserRole();
-        userRole.setUserId(userId);
-        // 兼容：不同环境 role code 可能是 USER / user
-        AdRole role = getOne(new LambdaQueryWrapper<AdRole>()
-                .eq(AdRole::getCode, "USER")
-                .eq(AdRole::getIsDeleted, CommonConstant.NO_STR));
-        if (role == null) {
-            role = getOne(new LambdaQueryWrapper<AdRole>()
-                    .eq(AdRole::getCode, AdUserRoleEnum.USER.getCode())
-                    .eq(AdRole::getIsDeleted, CommonConstant.NO_STR));
+        if (ids == null || ids.isEmpty()) {
+            return true;
         }
-        if (role == null) {
-            throw new RuntimeException("未初始化默认角色(USER)");
+        // Keep consistent with single delete rules (protected role / association checks).
+        for (String id : ids) {
+            if (id == null || id.isBlank()) {
+                continue;
+            }
+            deleteRole(id);
         }
-        userRole.setRoleId(role.getId());
-        adUserRoleMapper.insert(userRole);
+        return true;
     }
 }

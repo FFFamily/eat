@@ -258,11 +258,43 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         return list(userQueryWrapper);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteUser(String id) {
+        AdUser user = getById(id);
+        if (user == null) {
+            throw new ServiceException("用户不存在");
+        }
+        if (AdminConstant.ADMIN_ID.equals(String.valueOf(user.getId()))) {
+            throw new ServiceException("不能删除管理员账号");
+        }
+        // Dangerous op: only allow deleting disabled users.
+        if (!UserStatusEnum.DISABLE.getCode().equalsIgnoreCase(String.valueOf(user.getStatus()))) {
+            throw new ServiceException("仅允许删除已停用的用户");
+        }
         return removeById(id);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public boolean batchDeleteUsers(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return true;
+        }
+        // Validate all before deleting to avoid partial deletes.
+        List<AdUser> users = listByIds(ids);
+        if (users == null || users.size() != ids.size()) {
+            throw new ServiceException("用户不存在");
+        }
+        for (AdUser user : users) {
+            if (user == null) {
+                throw new ServiceException("用户不存在");
+            }
+            if (AdminConstant.ADMIN_ID.equals(String.valueOf(user.getId()))) {
+                throw new ServiceException("不能删除管理员账号");
+            }
+            if (!UserStatusEnum.DISABLE.getCode().equalsIgnoreCase(String.valueOf(user.getStatus()))) {
+                throw new ServiceException("仅允许删除已停用的用户");
+            }
+        }
         return removeByIds(ids);
     }
 }

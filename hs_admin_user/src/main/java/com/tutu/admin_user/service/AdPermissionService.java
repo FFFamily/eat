@@ -15,9 +15,11 @@ import com.tutu.admin_user.mapper.AdRolePermissionMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
 import com.tutu.common.constant.AdminConstant;
 import com.tutu.common.constant.CommonConstant;
+import com.tutu.common.constant.RoleConstant;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,11 +49,18 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
     }
 
     
-    public IPage<AdPermission> getPageList(int current, int size, String keyword) {
+    public IPage<AdPermission> getPageList(int current, int size, String keyword, Integer type, Integer status) {
         Page<AdPermission> page = new Page<>(current, size);
         LambdaQueryWrapper<AdPermission> queryWrapper = new LambdaQueryWrapper<>();
 
         queryWrapper.eq(AdPermission::getIsDeleted, CommonConstant.NO_STR);
+
+        if (type != null) {
+            queryWrapper.eq(AdPermission::getType, type);
+        }
+        if (status != null) {
+            queryWrapper.eq(AdPermission::getStatus, status);
+        }
 
         if (StrUtil.isNotBlank(keyword)) {
             queryWrapper.and(wrapper -> wrapper
@@ -158,8 +167,8 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
 
     
     public List<AdPermission> findByUserId(String userId) {
-        // 超级管理员：固定 userId=1 或具备 SUPER_ADMIN/ADMIN 角色码，直接返回全部权限
-        if (AdminConstant.ADMIN_ID.equals(userId) || hasAdminRole(userId)) {
+        // 超级管理员：固定 userId=1 或具备 SUPER_ADMIN 角色码，直接返回全部权限（不包含 ADMIN）
+        if (AdminConstant.ADMIN_ID.equals(userId) || hasSuperAdminRole(userId)) {
             LambdaQueryWrapper<AdPermission> qw = new LambdaQueryWrapper<>();
             qw.eq(AdPermission::getIsDeleted, CommonConstant.NO_STR)
                     .eq(AdPermission::getStatus, 1)
@@ -202,19 +211,18 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
         LambdaQueryWrapper<AdPermission> permissionQueryWrapper = new LambdaQueryWrapper<>();
         permissionQueryWrapper.in(AdPermission::getId, permissionIds)
                 .eq(AdPermission::getIsDeleted, CommonConstant.NO_STR)
+                .eq(AdPermission::getStatus, 1)
                 .orderByAsc(AdPermission::getSortOrder);
 
         return list(permissionQueryWrapper);
     }
 
-    private boolean hasAdminRole(String userId) {
+    private boolean hasSuperAdminRole(String userId) {
         try {
             List<AdRole> roles = adRoleService.findByUserId(userId);
             return roles.stream().anyMatch(r -> {
                 String code = r.getCode();
-                return "SUPER_ADMIN".equalsIgnoreCase(code)
-                        || "ADMIN".equalsIgnoreCase(code)
-                        || "admin".equalsIgnoreCase(code);
+                return RoleConstant.SUPER_ADMIN.equalsIgnoreCase(code);
             });
         } catch (Exception ignore) {
             return false;
@@ -287,7 +295,15 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
         return buildPermissionTree(all);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public boolean batchDeletePermissions(List<String> ids) {
+        // Block deletion if any selected node has children.
+        LambdaQueryWrapper<AdPermission> childQw = new LambdaQueryWrapper<>();
+        childQw.in(AdPermission::getParentId, ids)
+                .eq(AdPermission::getIsDeleted, CommonConstant.NO_STR);
+        if (count(childQw) > 0) {
+            throw new RuntimeException("存在子权限，无法批量删除");
+        }
         return removeByIds(ids);
     }
 }
