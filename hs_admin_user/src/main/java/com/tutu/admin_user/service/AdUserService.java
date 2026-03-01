@@ -10,10 +10,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.admin_user.entity.AdUser;
 import com.tutu.admin_user.entity.AdUserRole;
+import com.tutu.admin_user.entity.AdDepartment;
+import com.tutu.admin_user.entity.AdRole;
+import com.tutu.admin_user.mapper.AdDepartmentMapper;
+import com.tutu.admin_user.mapper.AdRoleMapper;
 import com.tutu.admin_user.mapper.AdUserMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
 import com.tutu.common.constant.AdminConstant;
 import com.tutu.common.constant.CommonConstant;
+import com.tutu.common.constant.RoleConstant;
 import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.common.util.PasswordUtil;
@@ -24,6 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 管理员用户服务实现类
@@ -33,6 +41,73 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
 
     @Resource
     private AdUserRoleMapper adUserRoleMapper;
+
+    @Resource
+    private AdDepartmentMapper adDepartmentMapper;
+
+    @Resource
+    private AdRoleMapper adRoleMapper;
+
+    /**
+     * Attach department names to user records (same API response, no extra HTTP calls).
+     */
+    private void fillDeptNames(List<AdUser> users) {
+        if (users == null || users.isEmpty()) {
+            return;
+        }
+        Set<String> deptIds = users.stream()
+                .map(AdUser::getDeptId)
+                .filter(id -> id != null && !id.isBlank())
+                .collect(Collectors.toSet());
+        if (deptIds.isEmpty()) {
+            return;
+        }
+        LambdaQueryWrapper<AdDepartment> w = new LambdaQueryWrapper<>();
+        w.in(AdDepartment::getId, deptIds)
+                .eq(AdDepartment::getIsDeleted, CommonConstant.NO_STR);
+        List<AdDepartment> depts = adDepartmentMapper.selectList(w);
+        if (depts == null) {
+            depts = List.of();
+        }
+        Map<String, String> idToName = depts.stream()
+                .filter(d -> d != null && d.getId() != null)
+                .collect(Collectors.toMap(AdDepartment::getId, AdDepartment::getName, (a, b) -> a));
+
+        users.forEach(u -> {
+            if (u == null) return;
+            String did = u.getDeptId();
+            if (did == null || did.isBlank()) return;
+            if (u.getDeptName() == null || u.getDeptName().isBlank()) {
+                u.setDeptName(idToName.get(did));
+            }
+        });
+    }
+
+    /**
+     * Built-in SUPER_ADMIN users should not be selectable in role assignment UI.
+     */
+    private Set<String> getSuperAdminUserIds() {
+        LambdaQueryWrapper<AdRole> roleW = new LambdaQueryWrapper<>();
+        roleW.eq(AdRole::getCode, RoleConstant.SUPER_ADMIN)
+                .eq(AdRole::getIsDeleted, CommonConstant.NO_STR)
+                .last("limit 1");
+        AdRole superRole = adRoleMapper.selectOne(roleW);
+        if (superRole == null || StrUtil.isBlank(superRole.getId())) {
+            return Set.of();
+        }
+
+        LambdaQueryWrapper<AdUserRole> urW = new LambdaQueryWrapper<>();
+        urW.eq(AdUserRole::getRoleId, superRole.getId())
+                .eq(AdUserRole::getIsDeleted, CommonConstant.NO_STR);
+        List<AdUserRole> links = adUserRoleMapper.selectList(urW);
+        if (links == null || links.isEmpty()) {
+            return Set.of();
+        }
+        return links.stream()
+                .map(AdUserRole::getUserId)
+                .filter(id -> id != null && !id.isBlank())
+                .collect(Collectors.toSet());
+    }
 
     
     public AdUser findByUsername(String username) {
@@ -50,6 +125,7 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(AdUser::getId, userIds);
         List<AdUser> users = list(queryWrapper);
+        fillDeptNames(users);
         HashMap<String,AdUser> userMap = new HashMap<>();
         users.forEach(user -> userMap.put(user.getId(), user));
         return userMap;
@@ -65,6 +141,24 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
      * @return 用户分页列表
      */
     public IPage<AdUser> getPageList(int current, int size, String keyword, String status, String deptId) {
+        return pageListInternal(current, size, keyword, status, deptId, null);
+    }
+
+    /**
+     * Same as {@link #getPageList(int, int, String, String, String)} but excludes SUPER_ADMIN users.
+     */
+    public IPage<AdUser> getPageListAssignable(int current, int size, String keyword, String status, String deptId) {
+        return pageListInternal(current, size, keyword, status, deptId, getSuperAdminUserIds());
+    }
+
+    private IPage<AdUser> pageListInternal(
+            int current,
+            int size,
+            String keyword,
+            String status,
+            String deptId,
+            Set<String> excludeUserIds
+    ) {
         Page<AdUser> page = new Page<>(current, size);
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
         if (StrUtil.isNotBlank(keyword)) {
@@ -76,8 +170,15 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         }
         queryWrapper.eq(StrUtil.isNotBlank(status), AdUser::getStatus, status);
         queryWrapper.eq(StrUtil.isNotBlank(deptId), AdUser::getDeptId, deptId);
+
+        if (excludeUserIds != null && !excludeUserIds.isEmpty()) {
+            queryWrapper.notIn(AdUser::getId, excludeUserIds);
+        }
+
         queryWrapper.orderByDesc(AdUser::getCreateTime);
-        return page(page, queryWrapper);
+        IPage<AdUser> result = page(page, queryWrapper);
+        fillDeptNames(result == null ? null : result.getRecords());
+        return result;
     }
 
     
@@ -230,7 +331,9 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         LambdaQueryWrapper<AdUser> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AdUser::getDeptId, deptId)
                 .eq(AdUser::getIsDeleted, CommonConstant.NO_STR);
-        return list(queryWrapper);
+        List<AdUser> users = list(queryWrapper);
+        fillDeptNames(users);
+        return users;
     }
 
     
@@ -255,7 +358,9 @@ public class AdUserService extends ServiceImpl<AdUserMapper, AdUser> {
         userQueryWrapper.in(AdUser::getId, userIds)
                 .eq(AdUser::getIsDeleted, CommonConstant.NO_STR);
 
-        return list(userQueryWrapper);
+        List<AdUser> users = list(userQueryWrapper);
+        fillDeptNames(users);
+        return users;
     }
 
     @Transactional(rollbackFor = Exception.class)

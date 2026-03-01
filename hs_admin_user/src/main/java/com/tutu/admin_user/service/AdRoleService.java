@@ -197,7 +197,6 @@ public class AdRoleService extends ServiceImpl<AdRoleMapper, AdRole> {
         if (adRolePermissionMapper.selectCount(rolePermissionQueryWrapper) > 0) {
             throw new RuntimeException("角色已被权限关联，无法删除");
         }
-
         // 软删除角色
         role.setIsDeleted(CommonConstant.YES_STR);
         role.setUpdateTime(new Date());

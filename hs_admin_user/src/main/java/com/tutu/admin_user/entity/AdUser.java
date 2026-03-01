@@ -49,4 +49,10 @@ public class AdUser extends BaseUserEntity {
      */
     @TableField(exist = false)
     private AdDepartment adDepartment;
+
+    /**
+     * 部门名称（非数据库字段，便于列表直接展示）
+     */
+    @TableField(exist = false)
+    private String deptName;
 }

@@ -41,6 +41,22 @@ public class AdminUserController {
         page.getRecords().forEach(adUser -> adUser.setPassword(null));
         return BaseResponse.success(page);
     }
+
+    /**
+     * 分页查询用户列表（用于角色分配：排除 SUPER_ADMIN 角色的内置用户）
+     */
+    @PermissionRequired("user:list")
+    @GetMapping("/page/assignable")
+    public BaseResponse<IPage<AdUser>> getAssignablePageList(
+            @RequestParam(defaultValue = "1") int current,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String deptId) {
+        IPage<AdUser> page = adUserService.getPageListAssignable(current, size, keyword, status, deptId);
+        page.getRecords().forEach(adUser -> adUser.setPassword(null));
+        return BaseResponse.success(page);
+    }
     
     /**
      * 根据ID查询用户详情
