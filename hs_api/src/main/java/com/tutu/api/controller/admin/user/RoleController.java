@@ -7,12 +7,16 @@ import com.tutu.admin_user.service.AdRoleService;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.annotation.AuditLog;
 import com.tutu.common.annotation.PermissionRequired;
+import com.tutu.common.exceptions.ForbiddenException;
+import com.tutu.common.tenant.TenantContext;
+import com.tutu.system.service.entitlement.TenantEntitlementService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 角色控制器
@@ -23,6 +27,8 @@ public class RoleController {
     
     @Autowired
     private AdRoleService adRoleService;
+    @Autowired
+    private TenantEntitlementService tenantEntitlementService;
     
     /**
      * 分页查询角色列表
@@ -123,6 +129,15 @@ public class RoleController {
     @AuditLog(action = "role.bind_permissions", targetType = "role")
     @PutMapping("/{id}/permissions")
     public BaseResponse<String> assignPermissions(@PathVariable String id, @RequestBody List<String> permissionIds) {
+        String tenantId = TenantContext.getRequiredTenantId();
+        Set<String> allowed = tenantEntitlementService.getAllowedPermissionIds(tenantId);
+        if (permissionIds != null && !permissionIds.isEmpty()) {
+            for (String pid : permissionIds) {
+                if (pid != null && !allowed.contains(pid)) {
+                    throw new ForbiddenException("包含未开通模块的权限点，无法授权");
+                }
+            }
+        }
         adRoleService.assignPermissions(id, permissionIds);
         return  BaseResponse.success();
     }

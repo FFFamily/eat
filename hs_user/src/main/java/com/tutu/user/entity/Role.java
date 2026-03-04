@@ -3,14 +3,14 @@ package com.tutu.user.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @TableName("role")
-public class Role extends BaseEntity {
+public class Role extends TenantBaseEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
     // 角色名称

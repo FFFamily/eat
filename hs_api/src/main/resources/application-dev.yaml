@@ -64,38 +64,6 @@ spring:
           statement-close-after-log-enabled: false
           result-set-open-after-log-enabled: false
           result-set-close-after-log-enabled: false
-      ########## 配置WebStatFilter，用于采集web关联监控的数据 ##########
-      web-stat-filter:
-        enabled: true                   # 启动 StatFilter
-        url-pattern: /*                 # 过滤所有url
-        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*" # 排除一些不必要的url
-        session-stat-enable: true       # 开启session统计功能
-        session-stat-max-count: 1000    # session的最大个数,默认100
-      ########## 配置StatViewServlet（监控页面），用于展示Druid的统计信息 ##########
-      stat-view-servlet:
-        enabled: true                   # 启用StatViewServlet
-        url-pattern: /druid/*           # 访问内置监控页面的路径，内置监控页面的首页是/druid/index.html
-        reset-enable: false              # 不允许清空统计数据,重新计算
-        login-username: root            # 配置监控页面访问密码
-        login-password: 123456
-        allow: 127.0.0.1           # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
-        deny:
-#  data:
-#    redis:
-#      host: 8.134.152.53
-#      port: 6379
-#      database: 0
-#      timeout: 10s
-#      lettuce:
-#        pool:
-#          # 连接池最大连接数
-#          max-active: 200
-#          # 连接池最大阻塞等待时间（使用负值表示没有限制）
-#          max-wait: -1ms
-#          # 连接池中的最大空闲连接
-#          max-idle: 10
-#          # 连接池中的最小空闲连接
-#          min-idle: 0
 sa-token:
   # token 名称（同时也是 cookie 名称）
   token-name: Token-Key
@@ -113,6 +81,19 @@ sa-token:
   is-log: true
   is-read-cookie: false
   is-read-body: false
+
+# Multi-tenant settings (SaaS)
+tenant:
+  # compat mode by default; set to true after frontend fully sends X-Tenant-Code
+  strict: true
+  default-tenant-id: t1
+  default-tenant-code: default
+  ignore-paths:
+    - /files/**
+    - /actuator/**
+    - /druid/**
+    - /admin/tenant/**
+    - /admin/package/**
 #decorator:
 #  datasource:
 #    p6spy:
@@ -183,4 +164,3 @@ file:
     date-folder: true
     # 是否保留原文件名
     keep-original-name: false
-

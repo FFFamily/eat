@@ -4,7 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import com.tutu.system.dto.HomeConfigDto;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("home_config")
-public class HomeConfig extends BaseEntity {
+public class HomeConfig extends TenantBaseEntity {
 
     /**
      * 主键ID

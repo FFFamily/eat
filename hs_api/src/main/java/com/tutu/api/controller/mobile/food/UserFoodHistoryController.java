@@ -6,7 +6,6 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.tutu.common.Response.BaseResponse;
-import com.tutu.common.entity.BaseEntity;
 import com.tutu.food.entity.history.EatHistory;
 import com.tutu.food.service.EatHistoryService;
 import jakarta.annotation.Resource;

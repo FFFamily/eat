@@ -3,7 +3,7 @@ package com.tutu.user.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @TableName("account_type")
-public class AccountType extends BaseEntity {
+public class AccountType extends TenantBaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

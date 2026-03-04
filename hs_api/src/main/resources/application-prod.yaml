@@ -113,6 +113,18 @@ sa-token:
   is-log: true
   is-read-cookie: false
   is-read-body: false
+
+# Multi-tenant settings (SaaS)
+tenant:
+  strict: false
+  default-tenant-id: t1
+  default-tenant-code: default
+  ignore-paths:
+    - /files/**
+    - /actuator/**
+    - /druid/**
+    - /admin/tenant/**
+    - /admin/package/**
 decorator:
   datasource:
     p6spy:

@@ -17,6 +17,9 @@ import java.util.Date;
 @Setter
 @TableName("account_username_seq")
 public class AccountUsernameSeq {
+    @TableField("tenant_id")
+    private String tenantId;
+
     @TableId(value = "account_type_id", type = IdType.INPUT)
     private String accountTypeId;
 

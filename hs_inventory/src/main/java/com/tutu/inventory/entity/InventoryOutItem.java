@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @TableName("inventory_out_item")
-public class InventoryOutItem extends BaseEntity {
+public class InventoryOutItem extends TenantBaseEntity {
     
     /**
      * 主键ID

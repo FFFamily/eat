@@ -4,10 +4,16 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tutu.admin_user.dto.AdPermissionDTO;
 import com.tutu.admin_user.entity.AdPermission;
+import com.tutu.admin_user.entity.AdRole;
 import com.tutu.admin_user.service.AdPermissionService;
+import com.tutu.admin_user.service.AdRoleService;
 import com.tutu.common.Response.BaseResponse;
 import com.tutu.common.annotation.AuditLog;
 import com.tutu.common.annotation.PermissionRequired;
+import com.tutu.common.constant.AdminConstant;
+import com.tutu.common.constant.RoleConstant;
+import com.tutu.common.tenant.TenantContext;
+import com.tutu.system.service.entitlement.TenantEntitlementService;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * 权限控制器
@@ -25,6 +34,14 @@ public class PermissionController {
     
     @Autowired
     private AdPermissionService permissionService;
+    @Autowired
+    private AdRoleService adRoleService;
+    @Autowired
+    private TenantEntitlementService tenantEntitlementService;
+
+    private boolean isPlatformAdmin() {
+        return AdminConstant.ADMIN_ID.equals(StpUtil.getLoginIdAsString());
+    }
     
     /**
      * 分页查询权限列表
@@ -37,6 +54,10 @@ public class PermissionController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer type,
             @RequestParam(required = false) Integer status) {
+        // 权限字典属于平台能力：仅 platform admin 可查看/维护
+        if (!isPlatformAdmin()) {
+            return BaseResponse.error(403, "无权访问");
+        }
         IPage<AdPermission> page = permissionService.getPageList(current, size, keyword, type, status);
         return BaseResponse.success(page);
     }
@@ -47,8 +68,14 @@ public class PermissionController {
     @PermissionRequired("permission:list")
     @GetMapping("/tree")
     public BaseResponse<List<AdPermission>> getPermissionTree() {
-        List<AdPermission> tree = permissionService.getPermissionTree();
-        return BaseResponse.success(tree);
+        List<AdPermission> full = permissionService.getPermissionTree();
+        if (isPlatformAdmin()) {
+            return BaseResponse.success(full);
+        }
+        String tenantId = TenantContext.getRequiredTenantId();
+        Set<String> allowed = tenantEntitlementService.getAllowedPermissionIds(tenantId);
+        List<AdPermission> pruned = pruneTree(full, allowed);
+        return BaseResponse.success(pruned);
     }
     
     /**
@@ -57,6 +84,9 @@ public class PermissionController {
     @PermissionRequired("permission:list")
     @GetMapping("/{id}")
     public BaseResponse<AdPermission> getById(@PathVariable String id) {
+        if (!isPlatformAdmin()) {
+            return BaseResponse.error(403, "无权访问");
+        }
         AdPermission adPermission = permissionService.getById(id);
         if (adPermission == null) {
             return BaseResponse.error("权限不存在");
@@ -71,6 +101,9 @@ public class PermissionController {
     @AuditLog(action = "permission.create", targetType = "permission")
     @PostMapping
     public BaseResponse<String> createPermission(@Valid @RequestBody AdPermissionDTO dto) {
+        if (!isPlatformAdmin()) {
+            return BaseResponse.error(403, "仅平台管理员可维护权限字典");
+        }
         try {
             AdPermission entity = new AdPermission();
             BeanUtils.copyProperties(dto, entity);
@@ -92,6 +125,9 @@ public class PermissionController {
     @AuditLog(action = "permission.update", targetType = "permission")
     @PutMapping
     public BaseResponse<String> updatePermission(@Valid @RequestBody AdPermissionDTO dto) {
+        if (!isPlatformAdmin()) {
+            return BaseResponse.error(403, "仅平台管理员可维护权限字典");
+        }
         try {
             AdPermission entity = new AdPermission();
             BeanUtils.copyProperties(dto, entity);
@@ -113,6 +149,9 @@ public class PermissionController {
     @AuditLog(action = "permission.delete", targetType = "permission")
     @DeleteMapping("/{id}")
     public BaseResponse<String> deletePermission(@PathVariable String id) {
+        if (!isPlatformAdmin()) {
+            return BaseResponse.error(403, "仅平台管理员可维护权限字典");
+        }
         try {
             boolean result = permissionService.deletePermission(id);
             if (result) {
@@ -132,6 +171,9 @@ public class PermissionController {
     @AuditLog(action = "permission.batch_delete", targetType = "permission")
     @DeleteMapping("/batch")
     public BaseResponse<String> batchDeletePermissions(@RequestBody List<String> ids) {
+        if (!isPlatformAdmin()) {
+            return BaseResponse.error(403, "仅平台管理员可维护权限字典");
+        }
         try {
             boolean result = permissionService.batchDeletePermissions(ids);
             if (result) {
@@ -167,7 +209,62 @@ public class PermissionController {
         if (!Objects.equals(String.valueOf(userId), String.valueOf(loginId))) {
             StpUtil.checkPermission("permission:list");
         }
-        List<AdPermission> adPermissions = permissionService.findByUserId(userId);
-        return BaseResponse.success(adPermissions);
+
+        // platform admin self
+        if (AdminConstant.ADMIN_ID.equals(String.valueOf(userId))) {
+            return BaseResponse.success(permissionService.listAllEnabled());
+        }
+
+        String tenantId = TenantContext.getRequiredTenantId();
+        Set<String> allowed = tenantEntitlementService.getAllowedPermissionIds(tenantId);
+        if (allowed == null || allowed.isEmpty()) {
+            return BaseResponse.success(List.of());
+        }
+
+        boolean isSuperAdmin = adRoleService.findByUserId(userId).stream()
+                .map(AdRole::getCode)
+                .filter(Objects::nonNull)
+                .anyMatch(c -> RoleConstant.SUPER_ADMIN.equalsIgnoreCase(c));
+
+        if (isSuperAdmin) {
+            return BaseResponse.success(permissionService.listByIdsEnabled(allowed));
+        }
+
+        List<AdPermission> rolePerms = permissionService.findByUserId(userId);
+        List<AdPermission> effective = (rolePerms == null ? List.<AdPermission>of() : rolePerms).stream()
+                .filter(p -> p != null && allowed.contains(p.getId()))
+                .collect(Collectors.toList());
+        return BaseResponse.success(effective);
+    }
+
+    private List<AdPermission> pruneTree(List<AdPermission> nodes, Set<String> allowedIds) {
+        if (nodes == null || nodes.isEmpty()) return List.of();
+        if (allowedIds == null || allowedIds.isEmpty()) return List.of();
+        List<AdPermission> out = new ArrayList<>();
+        for (AdPermission n : nodes) {
+            AdPermission kept = pruneNode(n, allowedIds);
+            if (kept != null) out.add(kept);
+        }
+        return out;
+    }
+
+    private AdPermission pruneNode(AdPermission node, Set<String> allowedIds) {
+        if (node == null) return null;
+        List<AdPermission> children = node.getChildren();
+        List<AdPermission> keptChildren = new ArrayList<>();
+        if (children != null && !children.isEmpty()) {
+            for (AdPermission c : children) {
+                AdPermission kept = pruneNode(c, allowedIds);
+                if (kept != null) keptChildren.add(kept);
+            }
+        }
+        boolean selfAllowed = allowedIds.contains(node.getId());
+        if (!selfAllowed && keptChildren.isEmpty()) {
+            return null;
+        }
+        AdPermission copy = new AdPermission();
+        BeanUtils.copyProperties(node, copy);
+        copy.setChildren(keptChildren.isEmpty() ? null : keptChildren);
+        return copy;
     }
 }

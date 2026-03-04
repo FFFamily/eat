@@ -6,6 +6,8 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.tutu.api.service.LoginService;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.tenant.TenantConstants;
+import com.tutu.common.tenant.TenantContext;
 import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.entity.Account;
 import com.tutu.common.enums.user.UserStatusEnum;
@@ -42,6 +44,11 @@ public class WxLoginController {
         loginService.doLogin(loginRequest.getUsername(), account, loginRequest.getPassword(), "wx");
         // 登录
         StpUtil.login(account.getId());
+        // Bind tenant to token session (used as source-of-truth after login).
+        StpUtil.getTokenSession().set(TenantConstants.SESSION_TENANT_ID, TenantContext.getRequiredTenantId());
+        if (TenantContext.getTenantCode() != null) {
+            StpUtil.getTokenSession().set(TenantConstants.SESSION_TENANT_CODE, TenantContext.getTenantCode());
+        }
         // 返回token
         String tokenValue = StpUtil.getTokenValue();
         return BaseResponse.success(tokenValue);

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,7 +14,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @TableName("point_goods_type")
-public class PointGoodsType extends BaseEntity {
+public class PointGoodsType extends TenantBaseEntity {
     
     /**
      * 主键ID

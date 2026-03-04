@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.common.exceptions.ServiceException;
+import com.tutu.common.tenant.TenantContext;
 import com.tutu.user.entity.Account;
 import com.tutu.user.entity.AccountType;
 import com.tutu.user.enums.UserUseTypeEnum;
@@ -221,7 +222,7 @@ public class AccountService extends ServiceImpl<AccountMapper, Account> {
     }
 
     private long nextUsernameSeq(String accountTypeId) {
-        accountUsernameSeqMapper.upsertAndIncrement(accountTypeId);
+        accountUsernameSeqMapper.upsertAndIncrement(TenantContext.getRequiredTenantId(), accountTypeId);
         Long next = accountUsernameSeqMapper.selectLastInsertId();
         if (next == null || next <= 0) {
             throw new ServiceException("生成账号编号失败");

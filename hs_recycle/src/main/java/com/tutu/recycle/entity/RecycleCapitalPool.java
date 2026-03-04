@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +14,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class RecycleCapitalPool extends BaseEntity {
+public class RecycleCapitalPool extends TenantBaseEntity {
     // 资金池ID
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

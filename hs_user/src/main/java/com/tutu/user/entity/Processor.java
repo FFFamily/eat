@@ -1,6 +1,7 @@
 package com.tutu.user.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
@@ -13,6 +14,9 @@ public class Processor {
     // id
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
+
+    @TableField(fill = FieldFill.INSERT)
+    private String tenantId;
     // 编号
     private String no;
     // 账号

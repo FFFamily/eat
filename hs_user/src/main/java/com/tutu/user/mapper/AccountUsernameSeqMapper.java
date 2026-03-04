@@ -15,9 +15,9 @@ public interface AccountUsernameSeqMapper extends BaseMapper<AccountUsernameSeq>
      * - 不存在则插入 seq=1
      * - 已存在则原子自增 seq，并把新值写入 LAST_INSERT_ID（连接级）
      */
-    @Insert("INSERT INTO account_username_seq(account_type_id, seq) VALUES(#{accountTypeId}, 1) " +
+    @Insert("INSERT INTO account_username_seq(tenant_id, account_type_id, seq) VALUES(#{tenantId}, #{accountTypeId}, 1) " +
             "ON DUPLICATE KEY UPDATE seq = LAST_INSERT_ID(seq + 1)")
-    int upsertAndIncrement(@Param("accountTypeId") String accountTypeId);
+    int upsertAndIncrement(@Param("tenantId") String tenantId, @Param("accountTypeId") String accountTypeId);
 
     @Select("SELECT LAST_INSERT_ID()")
     Long selectLastInsertId();

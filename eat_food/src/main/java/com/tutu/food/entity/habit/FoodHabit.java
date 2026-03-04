@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @TableName(autoResultMap = true)
-public class FoodHabit extends BaseEntity {
+public class FoodHabit extends TenantBaseEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
     // 习惯名称

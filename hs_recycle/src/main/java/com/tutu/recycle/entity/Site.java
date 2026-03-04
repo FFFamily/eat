@@ -1,9 +1,10 @@
 package com.tutu.recycle.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.tutu.common.entity.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,6 +21,9 @@ public class Site {
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+
+    @TableField(fill = FieldFill.INSERT)
+    private String tenantId;
 
     /**
      * 站点名称

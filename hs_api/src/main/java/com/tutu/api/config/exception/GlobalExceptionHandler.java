@@ -4,6 +4,7 @@ import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.NotPermissionException;
 import cn.hutool.http.HttpStatus;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.exceptions.ForbiddenException;
 import com.tutu.common.exceptions.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -19,6 +20,12 @@ import jakarta.servlet.http.HttpServletRequest;
 public class GlobalExceptionHandler {
 
     // 先处理具体的异常类型，按从具体到抽象的顺序
+    @ExceptionHandler(value = ForbiddenException.class)
+    public BaseResponse<Void> handleForbiddenException(ForbiddenException ex) {
+        logError("ForbiddenException", ex);
+        return BaseResponse.error(HttpStatus.HTTP_FORBIDDEN, ex.getMessage());
+    }
+
     @ExceptionHandler(value= ServiceException.class)
     public BaseResponse<Void> handleServiceException(ServiceException ex){
         // 在方法开始处立即输出日志，确认方法被调用

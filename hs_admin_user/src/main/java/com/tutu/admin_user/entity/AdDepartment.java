@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,7 +16,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("ad_department")
-public class AdDepartment extends BaseEntity {
+public class AdDepartment extends TenantBaseEntity {
     
     /**
      * 主键ID

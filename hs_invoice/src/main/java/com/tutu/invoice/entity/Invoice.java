@@ -1,6 +1,6 @@
 package com.tutu.invoice.entity;
 
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 @Getter
 @Setter
-public class Invoice extends BaseEntity {
+public class Invoice extends TenantBaseEntity {
     /**
      * 购买方的名称，个人用户为姓名，企业用户为企业的全称
      */

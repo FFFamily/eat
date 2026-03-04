@@ -4,14 +4,14 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.math.BigDecimal;
 
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class RecycleOrderItem extends BaseEntity {
+public class RecycleOrderItem extends TenantBaseEntity {
     // 合同ID
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

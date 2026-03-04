@@ -2,14 +2,14 @@ package com.tutu.food.entity.food;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
 // 食物饮食方式
 @Getter
 @Setter
-public class FoodDietStyle extends BaseEntity {
+public class FoodDietStyle extends TenantBaseEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
     // 名称

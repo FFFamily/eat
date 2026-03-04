@@ -3,14 +3,14 @@ package com.tutu.invoice.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import com.tutu.invoice.enums.InvoiceHeadType;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class InvoiceHead extends BaseEntity {
+public class InvoiceHead extends TenantBaseEntity {
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
     // 账号ID，关联用户账号

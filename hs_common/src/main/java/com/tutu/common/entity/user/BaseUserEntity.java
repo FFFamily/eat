@@ -2,13 +2,13 @@ package com.tutu.common.entity.user;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class BaseUserEntity extends BaseEntity {
+public class BaseUserEntity extends TenantBaseEntity {
     // 登录账号
     private String username;
     // 登录密码

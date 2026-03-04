@@ -1,6 +1,7 @@
 package com.tutu.api.config.web;
 
 import com.tutu.api.config.interceptor.AuthInterceptor;
+import com.tutu.api.config.interceptor.TenantContextInterceptor;
 import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -9,8 +10,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AppWebConfig implements WebMvcConfigurer {
     @Resource
     private AuthInterceptor authInterceptor;
+    @Resource
+    private TenantContextInterceptor tenantContextInterceptor;
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // Must run first to ensure TenantContext is available for SQL tenant interceptor.
+        registry.addInterceptor(tenantContextInterceptor)
+                .addPathPatterns("/**");
+
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns("/**")
                 // 白名单

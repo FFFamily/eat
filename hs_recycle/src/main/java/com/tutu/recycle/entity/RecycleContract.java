@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +18,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class RecycleContract extends BaseEntity{
+public class RecycleContract extends TenantBaseEntity{
     // 主键ID
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

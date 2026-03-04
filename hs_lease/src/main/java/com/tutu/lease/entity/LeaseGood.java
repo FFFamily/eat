@@ -1,6 +1,6 @@
 package com.tutu.lease.entity;
 
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 // 租赁商品
 @Getter
 @Setter
-public class LeaseGood extends BaseEntity {
+public class LeaseGood extends TenantBaseEntity {
     // id
     private String id;
     // 编码

@@ -45,6 +45,15 @@ INSERT INTO ad_permission (id, name, code, type, parent_id, sort_order, status, 
   ('perm_user_list', '用户-列表', 'user:list', 2, '0', 0, 1, 'API权限点', NOW(), NOW(), 'system', 'system', '0')
 ON DUPLICATE KEY UPDATE name=VALUES(name), code=VALUES(code), type=VALUES(type), parent_id=VALUES(parent_id), sort_order=VALUES(sort_order), status=VALUES(status), remark=VALUES(remark), update_time=NOW(), update_by=VALUES(update_by), is_deleted='0';
 
+-- 租户管理（平台菜单）：前端路由使用 `menu:${path}` 作为菜单权限码
+INSERT INTO ad_permission (id, name, code, type, parent_id, sort_order, status, remark, create_time, update_time, create_by, update_by, is_deleted) VALUES
+  ('perm_menu_admin_tenant', '租户管理(平台)', 'menu:/admin/tenant', 1, '0', 0, 1, '平台菜单；仅平台管理员可访问接口', NOW(), NOW(), 'system', 'system', '0')
+ON DUPLICATE KEY UPDATE name=VALUES(name), code=VALUES(code), type=VALUES(type), parent_id=VALUES(parent_id), sort_order=VALUES(sort_order), status=VALUES(status), remark=VALUES(remark), update_time=NOW(), update_by=VALUES(update_by), is_deleted='0';
+
+INSERT INTO ad_permission (id, name, code, type, parent_id, sort_order, status, remark, create_time, update_time, create_by, update_by, is_deleted) VALUES
+  ('perm_menu_admin_package', '套餐管理(平台)', 'menu:/admin/package', 1, '0', 0, 1, '平台菜单；仅平台管理员可访问接口', NOW(), NOW(), 'system', 'system', '0')
+ON DUPLICATE KEY UPDATE name=VALUES(name), code=VALUES(code), type=VALUES(type), parent_id=VALUES(parent_id), sort_order=VALUES(sort_order), status=VALUES(status), remark=VALUES(remark), update_time=NOW(), update_by=VALUES(update_by), is_deleted='0';
+
 INSERT INTO ad_permission (id, name, code, type, parent_id, sort_order, status, remark, create_time, update_time, create_by, update_by, is_deleted) VALUES
   ('perm_user_read', '用户-详情', 'user:read', 2, '0', 0, 1, 'API权限点', NOW(), NOW(), 'system', 'system', '0')
 ON DUPLICATE KEY UPDATE name=VALUES(name), code=VALUES(code), type=VALUES(type), parent_id=VALUES(parent_id), sort_order=VALUES(sort_order), status=VALUES(status), remark=VALUES(remark), update_time=NOW(), update_by=VALUES(update_by), is_deleted='0';

@@ -13,15 +13,14 @@ import com.tutu.admin_user.entity.AdUserRole;
 import com.tutu.admin_user.mapper.AdPermissionMapper;
 import com.tutu.admin_user.mapper.AdRolePermissionMapper;
 import com.tutu.admin_user.mapper.AdUserRoleMapper;
-import com.tutu.common.constant.AdminConstant;
 import com.tutu.common.constant.CommonConstant;
-import com.tutu.common.constant.RoleConstant;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -167,15 +166,6 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
 
     
     public List<AdPermission> findByUserId(String userId) {
-        // 超级管理员：固定 userId=1 或具备 SUPER_ADMIN 角色码，直接返回全部权限（不包含 ADMIN）
-        if (AdminConstant.ADMIN_ID.equals(userId) || hasSuperAdminRole(userId)) {
-            LambdaQueryWrapper<AdPermission> qw = new LambdaQueryWrapper<>();
-            qw.eq(AdPermission::getIsDeleted, CommonConstant.NO_STR)
-                    .eq(AdPermission::getStatus, 1)
-                    .orderByAsc(AdPermission::getSortOrder);
-            return list(qw);
-        }
-
         // 先查询用户角色关联表
         LambdaQueryWrapper<AdUserRole> userRoleQueryWrapper = new LambdaQueryWrapper<>();
         userRoleQueryWrapper.eq(AdUserRole::getUserId, userId)
@@ -217,16 +207,28 @@ public class AdPermissionService extends ServiceImpl<AdPermissionMapper, AdPermi
         return list(permissionQueryWrapper);
     }
 
-    private boolean hasSuperAdminRole(String userId) {
-        try {
-            List<AdRole> roles = adRoleService.findByUserId(userId);
-            return roles.stream().anyMatch(r -> {
-                String code = r.getCode();
-                return RoleConstant.SUPER_ADMIN.equalsIgnoreCase(code);
-            });
-        } catch (Exception ignore) {
-            return false;
-        }
+    /**
+     * 平台侧使用：返回所有启用的权限点（全局字典表）。
+     */
+    public List<AdPermission> listAllEnabled() {
+        LambdaQueryWrapper<AdPermission> qw = new LambdaQueryWrapper<>();
+        qw.eq(AdPermission::getIsDeleted, CommonConstant.NO_STR)
+                .eq(AdPermission::getStatus, 1)
+                .orderByAsc(AdPermission::getSortOrder);
+        return list(qw);
+    }
+
+    /**
+     * 查询指定权限ID集合中“启用”的权限点。
+     */
+    public List<AdPermission> listByIdsEnabled(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        LambdaQueryWrapper<AdPermission> qw = new LambdaQueryWrapper<>();
+        qw.in(AdPermission::getId, ids)
+                .eq(AdPermission::getIsDeleted, CommonConstant.NO_STR)
+                .eq(AdPermission::getStatus, 1)
+                .orderByAsc(AdPermission::getSortOrder);
+        return list(qw);
     }
 
     

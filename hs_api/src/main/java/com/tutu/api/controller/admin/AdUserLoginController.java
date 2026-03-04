@@ -7,6 +7,8 @@ import com.tutu.admin_user.service.AdRoleService;
 import com.tutu.admin_user.service.AdUserService;
 import com.tutu.api.service.LoginService;
 import com.tutu.common.Response.BaseResponse;
+import com.tutu.common.tenant.TenantConstants;
+import com.tutu.common.tenant.TenantContext;
 import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.common.util.PasswordUtil;
 import com.tutu.user.request.LoginRequest;
@@ -38,6 +40,11 @@ public class AdUserLoginController {
         loginService.doLogin(loginRequest.getUsername(), user, loginRequest.getPassword(), "ad");
         // 登录
         StpUtil.login(user.getId());
+        // Bind tenant to token session (used as source-of-truth after login).
+        StpUtil.getTokenSession().set(TenantConstants.SESSION_TENANT_ID, TenantContext.getRequiredTenantId());
+        if (TenantContext.getTenantCode() != null) {
+            StpUtil.getTokenSession().set(TenantConstants.SESSION_TENANT_CODE, TenantContext.getTenantCode());
+        }
         // 返回token
         String tokenValue = StpUtil.getTokenValue();
         return BaseResponse.success(tokenValue);

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tutu.common.entity.BaseEntity;
+import com.tutu.common.entity.TenantBaseEntity;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +15,7 @@ import java.util.Date;
 
 @Getter
 @Setter
-public class UserOrder extends BaseEntity {
+public class UserOrder extends TenantBaseEntity {
     /**
      * 主键ID
      */
