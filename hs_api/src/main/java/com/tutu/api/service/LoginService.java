@@ -1,6 +1,6 @@
 package com.tutu.api.service;
 
-import com.tutu.common.entity.user.BaseUserEntity;
+import com.tutu.common.entity.user.PasswordUser;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.common.enums.user.UserStatusEnum;
 import com.tutu.common.util.PasswordUtil;
@@ -30,7 +30,7 @@ public class LoginService {
      * @param user 用户信息
      * @param loginPassword 登录密码
      */
-    public void doLogin(String loginUsername, BaseUserEntity user, String loginPassword, String loginType) {
+    public void doLogin(String loginUsername, PasswordUser user, String loginPassword, String loginType) {
         try {
             if (user == null) {
                 recordLoginLog(loginUsername, loginType, 0, "用户名或密码错误");

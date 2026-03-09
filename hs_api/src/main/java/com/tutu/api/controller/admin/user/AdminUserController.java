@@ -64,7 +64,7 @@ public class AdminUserController {
     @PermissionRequired("user:read")
     @GetMapping("/info/{id}")
     public BaseResponse<AdUser> getById(@PathVariable String id) {
-        AdUser user = adUserService.getById(id);
+        AdUser user = adUserService.getTenantUserById(id);
         if (user == null) {
             return BaseResponse.error("用户不存在");
         }
@@ -93,7 +93,8 @@ public class AdminUserController {
                         adUserService.assignRoles(userDTO.getId(), roleIds);
                     }
                 }
-                return BaseResponse.success("创建成功");
+                // Return userId for follow-up actions (e.g. platform assigns more tenant memberships).
+                return BaseResponse.success(userDTO.getId());
             } else {
                 return BaseResponse.error("创建失败");
             }

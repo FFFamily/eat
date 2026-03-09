@@ -30,6 +30,8 @@ public class MybatisPlusConfig {
                     "sys_dict_type",
                     "sys_dict_data",
                     "ad_permission",
+                    "ad_user",
+                    "ad_user_tenant",
                     "sys_package",
                     "sys_package_permission"
             );
@@ -46,6 +48,10 @@ public class MybatisPlusConfig {
 
             @Override
             public boolean ignoreTable(String tableName) {
+                // Platform admin may bypass TenantLine for cross-tenant read operations.
+                if (TenantContext.isIgnoreTenantLine()) {
+                    return true;
+                }
                 return tableName != null && IGNORE_TABLES.contains(tableName.toLowerCase());
             }
         }));

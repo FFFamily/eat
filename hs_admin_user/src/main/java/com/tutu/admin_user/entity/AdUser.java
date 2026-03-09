@@ -34,8 +34,9 @@ public class AdUser extends BaseUserEntity {
      */
     private String avatar;
     /**
-     * 部门ID
+     * 部门ID（租户内属性：来自 ad_user_tenant.dept_id；ad_user 表不再持久化该字段）
      */
+    @TableField(exist = false)
     private String deptId;
 
     /**

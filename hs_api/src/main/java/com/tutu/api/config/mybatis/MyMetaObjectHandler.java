@@ -4,6 +4,7 @@ package com.tutu.api.config.mybatis;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.tutu.common.entity.TenantBaseEntity;
 import com.tutu.common.tenant.TenantContext;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
@@ -17,8 +18,9 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         this.strictInsertFill(metaObject, "createTime", Date.class, new Date());
         this.strictInsertFill(metaObject, "updateTime", Date.class, new Date());
-        // Fill tenantId when entity has such property (tenant-scoped tables only).
-        if (metaObject != null && metaObject.hasSetter("tenantId")) {
+        // Fill tenantId only for tenant-scoped entities (avoid polluting global tables that also have tenant_id column).
+        Object origin = metaObject == null ? null : metaObject.getOriginalObject();
+        if (origin instanceof TenantBaseEntity) {
             String tenantId = TenantContext.getTenantId();
             if (StrUtil.isNotBlank(tenantId)) {
                 this.strictInsertFill(metaObject, "tenantId", String.class, tenantId);

@@ -3,6 +3,7 @@ package com.tutu.api.config.interceptor;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tutu.api.config.tenant.TenantProperties;
+import com.tutu.common.constant.AdminConstant;
 import com.tutu.common.exceptions.ServiceException;
 import com.tutu.common.tenant.TenantConstants;
 import com.tutu.common.tenant.TenantContext;
@@ -46,45 +47,35 @@ public class TenantContextInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 1) If already logged in, session tenantId is the source of truth.
+        // Session tenantId is the only source of truth after the system switches to
+        // "global user + choose tenant after password verification" flow.
         if (StpUtil.isLogin()) {
             Object sessionTenantId = StpUtil.getTokenSession().get(TenantConstants.SESSION_TENANT_ID);
             String tenantId = sessionTenantId == null ? null : String.valueOf(sessionTenantId);
-            if (StrUtil.isNotBlank(tenantId)) {
-                TenantContext.setTenantId(tenantId);
+            if (StrUtil.isBlank(tenantId)) {
+                // Platform admin may operate without tenant context on platform-only endpoints.
+                if (AdminConstant.ADMIN_ID.equals(StpUtil.getLoginIdAsString())) {
+                    return true;
+                }
+                throw new ServiceException("缺少租户信息，请重新登录并选择租户");
+            }
+            TenantContext.setTenantId(tenantId);
+
+            Object sessionTenantCode = StpUtil.getTokenSession().get(TenantConstants.SESSION_TENANT_CODE);
+            String tenantCode = sessionTenantCode == null ? null : String.valueOf(sessionTenantCode);
+            if (StrUtil.isNotBlank(tenantCode)) {
+                TenantContext.setTenantCode(tenantCode);
             }
         }
 
-        // 2) Header tenant code (required for login/register in strict mode).
-        String tenantCode = request.getHeader(TenantConstants.HEADER_TENANT_CODE);
-        if (StrUtil.isBlank(tenantCode)) {
-            // If session already has tenantId, allow missing header.
-            if (StrUtil.isNotBlank(TenantContext.getTenantId())) {
-                return true;
-            }
-            if (tenantProperties.isStrict()) {
-                throw new ServiceException("缺少租户编码请求头: " + TenantConstants.HEADER_TENANT_CODE);
-            }
-            // Compat mode: fall back to default tenant.
-            TenantContext.setTenantId(tenantProperties.getDefaultTenantId());
-            TenantContext.setTenantCode(tenantProperties.getDefaultTenantCode());
-            return true;
-        }
-
-        SysTenant tenant = sysTenantService.getActiveByCode(tenantCode);
-        TenantContext.setTenantId(tenant.getId());
-        TenantContext.setTenantCode(tenant.getCode());
-
-        // 3) If logged in, header must match session tenant (prevent token cross-tenant reuse).
-        if (StpUtil.isLogin()) {
-            Object sessionTenantId = StpUtil.getTokenSession().get(TenantConstants.SESSION_TENANT_ID);
-            String sessionTid = sessionTenantId == null ? null : String.valueOf(sessionTenantId);
-            if (StrUtil.isBlank(sessionTid)) {
-                // Backward-compat: first request after upgrade, write it.
-                StpUtil.getTokenSession().set(TenantConstants.SESSION_TENANT_ID, tenant.getId());
-                StpUtil.getTokenSession().set(TenantConstants.SESSION_TENANT_CODE, tenant.getCode());
-            } else if (!StrUtil.equals(sessionTid, tenant.getId())) {
-                throw new ServiceException("租户不匹配：token 所属 tenantId=" + sessionTid + "，请求头租户 tenantId=" + tenant.getId());
+        // Backward/compat: allow unauthenticated requests to carry tenant header (e.g. legacy /wx/auth/login).
+        // Formal logged-in requests must rely on token session tenantId.
+        if (!StpUtil.isLogin()) {
+            String tenantCode = request.getHeader(TenantConstants.HEADER_TENANT_CODE);
+            if (StrUtil.isNotBlank(tenantCode)) {
+                SysTenant tenant = sysTenantService.getActiveByCode(tenantCode);
+                TenantContext.setTenantId(tenant.getId());
+                TenantContext.setTenantCode(tenant.getCode());
             }
         }
 

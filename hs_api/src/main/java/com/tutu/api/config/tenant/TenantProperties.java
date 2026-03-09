@@ -14,19 +14,19 @@ import java.util.List;
 public class TenantProperties {
 
     /**
-     * Strict mode: if true, requests (except ignored paths) must carry X-Tenant-Code when session does not have tenant.
+     * Legacy flag (kept for compatibility). The system now resolves tenant only from token session after login.
      */
     private boolean strict = false;
 
     /**
-     * Default tenant used in compat mode when X-Tenant-Code is absent and user not logged in.
+     * Legacy default tenant (kept for compatibility).
      */
     private String defaultTenantId = "t1";
 
     private String defaultTenantCode = "default";
 
     /**
-     * Paths that do not require tenant header / tenant context (e.g. static file serving).
+     * Paths that do not require tenant context (e.g. static file serving or platform-only endpoints).
      */
     private List<String> ignorePaths = new ArrayList<>(List.of(
             "/files/**",

@@ -4,13 +4,13 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.tutu.common.entity.user.BaseUserEntity;
+import com.tutu.common.entity.user.TenantUserEntity;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class Account extends BaseUserEntity {
+public class Account extends TenantUserEntity {
     // id
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

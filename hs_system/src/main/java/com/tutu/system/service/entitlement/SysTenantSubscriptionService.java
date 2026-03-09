@@ -96,13 +96,17 @@ public class SysTenantSubscriptionService {
         }
         String oldTid = TenantContext.getTenantId();
         String oldCode = TenantContext.getTenantCode();
+        boolean oldIgnore = TenantContext.isIgnoreTenantLine();
         try {
             TenantContext.setTenantId(tenantId);
+            // For tenant-scoped tables, ensure TenantLine is enabled inside runInTenant.
+            TenantContext.setIgnoreTenantLine(false);
             return fn.get();
         } finally {
             TenantContext.clear();
             if (StrUtil.isNotBlank(oldTid)) TenantContext.setTenantId(oldTid);
             if (StrUtil.isNotBlank(oldCode)) TenantContext.setTenantCode(oldCode);
+            if (oldIgnore) TenantContext.setIgnoreTenantLine(true);
         }
     }
 }

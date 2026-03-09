@@ -1,20 +1,24 @@
 package com.tutu.common.entity.user;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+import com.tutu.common.entity.TenantBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
-import com.tutu.common.entity.BaseEntity;
 
+/**
+ * Base entity for tenant-scoped user tables (has tenantId column and participates in TenantLine isolation).
+ */
 @Getter
 @Setter
-public class BaseUserEntity extends BaseEntity implements PasswordUser {
-    // 登录账号
+public class TenantUserEntity extends TenantBaseEntity implements PasswordUser {
+
     private String username;
-    // 登录密码
+
     @JSONField(serialize = false)
     private String password;
-    // 用户状态(使用中/已关闭)
+
     private String status;
-    // 用户昵称
+
     private String nickname;
 }
+

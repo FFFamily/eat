@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutu.admin_user.mapper.AdUserTenantMapper">
+
+    <select id="selectTenantUserPage" resultType="com.tutu.admin_user.entity.AdUser">
+        SELECT
+            u.*,
+            aut.dept_id AS deptId
+        FROM ad_user u
+        INNER JOIN ad_user_tenant aut
+            ON aut.user_id = u.id
+            AND aut.is_deleted = '0'
+        WHERE
+            u.is_deleted = '0'
+            AND aut.tenant_id = #{tenantId}
+            AND aut.status = 1
+        <if test="excludeUserIds != null and excludeUserIds.size > 0">
+            AND u.id NOT IN
+            <foreach collection="excludeUserIds" item="uid" open="(" close=")" separator=",">
+                #{uid}
+            </foreach>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                u.username LIKE CONCAT('%', #{keyword}, '%')
+                OR u.nickname LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="status != null and status != ''">
+            AND u.status = #{status}
+        </if>
+        <if test="deptId != null and deptId != ''">
+            AND aut.dept_id = #{deptId}
+        </if>
+        ORDER BY u.create_time DESC
+    </select>
+
+</mapper>

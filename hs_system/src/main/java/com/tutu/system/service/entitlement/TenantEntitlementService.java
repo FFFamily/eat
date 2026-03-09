@@ -73,6 +73,23 @@ public class TenantEntitlementService {
         return getSnapshot(tenantId).getAllowedPermissionIds();
     }
 
+    public boolean hasAnyActivePackage(String tenantId, Date now) {
+        if (StrUtil.isBlank(tenantId)) {
+            throw new ServiceException("tenantId不能为空");
+        }
+        if (now == null) now = new Date();
+        Date finalNow = now;
+        return runInTenant(tenantId, () -> {
+            LambdaQueryWrapper<SysTenantPackage> pw = new LambdaQueryWrapper<>();
+            pw.eq(SysTenantPackage::getIsDeleted, CommonConstant.NO_STR)
+                    .eq(SysTenantPackage::getStatus, CommonConstant.YES_INT)
+                    .and(w -> w.isNull(SysTenantPackage::getStartTime).or().le(SysTenantPackage::getStartTime, finalNow))
+                    .and(w -> w.isNull(SysTenantPackage::getEndTime).or().ge(SysTenantPackage::getEndTime, finalNow))
+                    .last("limit 1");
+            return sysTenantPackageMapper.selectCount(pw) > 0;
+        });
+    }
+
     public boolean isModuleActive(String tenantId, String moduleId) {
         // package-only model：不再提供模块维度
         return false;
@@ -122,13 +139,16 @@ public class TenantEntitlementService {
         }
         String oldTid = TenantContext.getTenantId();
         String oldCode = TenantContext.getTenantCode();
+        boolean oldIgnore = TenantContext.isIgnoreTenantLine();
         try {
             TenantContext.setTenantId(tenantId);
+            TenantContext.setIgnoreTenantLine(false);
             return fn.get();
         } finally {
             TenantContext.clear();
             if (StrUtil.isNotBlank(oldTid)) TenantContext.setTenantId(oldTid);
             if (StrUtil.isNotBlank(oldCode)) TenantContext.setTenantCode(oldCode);
+            if (oldIgnore) TenantContext.setIgnoreTenantLine(true);
         }
     }
 }

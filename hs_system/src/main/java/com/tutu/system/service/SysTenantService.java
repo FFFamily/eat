@@ -9,6 +9,9 @@ import com.tutu.system.entity.SysTenant;
 import com.tutu.system.mapper.SysTenantMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * 租户服务（全局表）
  */
@@ -20,7 +23,7 @@ public class SysTenantService extends ServiceImpl<SysTenantMapper, SysTenant> {
      */
     public SysTenant getActiveByCode(String code) {
         if (StrUtil.isBlank(code)) {
-            throw new ServiceException("缺少租户编码(X-Tenant-Code)");
+            throw new ServiceException("缺少租户编码");
         }
         LambdaQueryWrapper<SysTenant> w = new LambdaQueryWrapper<>();
         w.eq(SysTenant::getCode, code)
@@ -33,5 +36,37 @@ public class SysTenantService extends ServiceImpl<SysTenantMapper, SysTenant> {
         }
         return tenant;
     }
-}
 
+    public SysTenant getActiveById(String id) {
+        if (StrUtil.isBlank(id)) {
+            throw new ServiceException("tenantId不能为空");
+        }
+        LambdaQueryWrapper<SysTenant> w = new LambdaQueryWrapper<>();
+        w.eq(SysTenant::getId, id)
+                .eq(SysTenant::getIsDeleted, CommonConstant.NO_STR)
+                .eq(SysTenant::getStatus, 1)
+                .last("limit 1");
+        SysTenant tenant = getOne(w);
+        if (tenant == null) {
+            throw new ServiceException("租户不存在或已禁用: " + id);
+        }
+        return tenant;
+    }
+
+    public List<SysTenant> listActiveByIds(Set<String> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        LambdaQueryWrapper<SysTenant> w = new LambdaQueryWrapper<>();
+        w.in(SysTenant::getId, ids)
+                .eq(SysTenant::getIsDeleted, CommonConstant.NO_STR)
+                .eq(SysTenant::getStatus, 1);
+        return list(w);
+    }
+
+    public List<SysTenant> listAllActive() {
+        LambdaQueryWrapper<SysTenant> w = new LambdaQueryWrapper<>();
+        w.eq(SysTenant::getIsDeleted, CommonConstant.NO_STR)
+                .eq(SysTenant::getStatus, 1)
+                .orderByAsc(SysTenant::getCode);
+        return list(w);
+    }
+}
